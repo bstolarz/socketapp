@@ -22,6 +22,7 @@ int main(void) {
 
 	socket_send(clientSocket, "Primer mensaje por sockets", 27);
 	socket_send(clientSocket, "Segundo mensaje por sockets", 28);
+	close(clientSocket);
 
 	return 0;
 }
