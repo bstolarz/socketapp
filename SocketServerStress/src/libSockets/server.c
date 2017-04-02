@@ -42,12 +42,12 @@ int socket_server_accept_connection(int listenningSocket){
 	return accept(listenningSocket, (struct sockaddr *) &addr, &addrlen);
 }
 
-void socket_server_select(char* port, int packageSize, void(*socket_select_connection_lost)(fd_set*, int, int), void(*socket_select_recv_package)(fd_set*, int, int, char*)){
+void socket_server_select(char* port, void(*socket_select_connection_lost)(fd_set*, int, int), void(*socket_select_recv_package)(fd_set*, int, int, char*)){
 
 	int listeningSocket;
 	socket_server_create(&listeningSocket, port);
 
-	char package[packageSize];
+	char *package;
 
 	//Inicializo el select
 	fd_set master;		// conjunto maestro de descriptores de fichero
@@ -88,7 +88,7 @@ void socket_server_select(char* port, int packageSize, void(*socket_select_conne
 						}
 					}
 				} else {
-					if ((nbytes = socket_recv(i, package)) <= 0) {
+					if ((nbytes = socket_recv(i, &package, 1)) <= 0) {
 						socket_select_connection_lost(&master, i, nbytes);
 					} else {
 						if (nbytes != 0){

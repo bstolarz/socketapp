@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <commons/string.h>
 
 int socket_send(int clientSocket, void* parameter, int size){
 	char* sizeStr=malloc(sizeof(char)*11);
@@ -26,4 +27,12 @@ int socket_send(int clientSocket, void* parameter, int size){
 		free(sizeStr);
 	}
 	return -1;
+}
+
+int socket_send_string(int clientSocket, char* parameter){
+	return socket_send(clientSocket, parameter, string_length(parameter));
+}
+
+int socket_send_int(int clientSocket, int value){
+	return socket_send(clientSocket, &value, sizeof(int));
 }
