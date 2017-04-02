@@ -10,8 +10,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <commons/collections/list.h>
+#include <signal.h>
+#include <pthread.h>
+#include <errno.h>
+#include "commons/definitions.h"
+#include "threads/select.h"
 
 int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+
+	clientes = list_create();
+	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
+	pthread_join(selectThread, NULL);
+
+
 	return EXIT_SUCCESS;
 }
