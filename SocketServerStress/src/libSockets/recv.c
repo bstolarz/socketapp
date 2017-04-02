@@ -12,18 +12,22 @@
 #include <stdint.h>
 #include <pthread.h>
 
-int socket_recv(int clientSocket, void* buffer){
+int socket_recv(int clientSocket, void** buffer, int reserveSpace){
 	char* sizeStr = malloc(sizeof(char)*11);
 	if (recv(clientSocket, sizeStr, 11,  0) == 11){
 		int size = atoi(sizeStr);
 		free(sizeStr);
+
+		if(reserveSpace){
+			*buffer = malloc(size);
+		}
 
 		int magicSocketNumber = 32768;
 		char* bufAuxiliar = malloc(size);
 
 		if(size <= magicSocketNumber){
 			if(recv(clientSocket, bufAuxiliar, size, 0)==size){
-				memcpy(buffer, bufAuxiliar, size);
+				memcpy(*buffer, bufAuxiliar, size);
 				free(bufAuxiliar);
 				return size;
 			}
@@ -62,7 +66,7 @@ int socket_recv(int clientSocket, void* buffer){
 					return -1;
 				}
 			}
-			memcpy(buffer, bufAuxiliar, size);
+			memcpy(*buffer, bufAuxiliar, size);
 			free(bufAuxiliar);
 			return size;
 		}
@@ -73,5 +77,13 @@ int socket_recv(int clientSocket, void* buffer){
 	}
 
 
+}
+
+int socket_recv_string(int clientSocket, char* text){
+	return socket_recv(clientSocket, *text, 0);
+}
+
+int socket_recv_int(int clientSocket, int* value){
+	return socket_recv(clientSocket, &value, 0);
 }
 
