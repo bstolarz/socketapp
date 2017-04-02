@@ -10,8 +10,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "sockets/client.h"
-#include "sockets/send.h"
+#include "libSockets/client.h"
+#include "libSockets/send.h"
+#include <sys/socket.h>
 
 int main(void) {
 	int clientSocket;
@@ -19,8 +20,8 @@ int main(void) {
 	char* port="6667";
 	socket_client_create(&clientSocket, ip, port);
 
-	char* mensaje = "Primer mensaje por sockets";
+	socket_send(clientSocket, "Primer mensaje por sockets", 27);
+	socket_send(clientSocket, "Segundo mensaje por sockets", 28);
 
-	int* len = 22;
-	send(clientSocket, mensaje, 22, 0);
+	return 0;
 }
