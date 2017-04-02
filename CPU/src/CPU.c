@@ -34,7 +34,7 @@ void leerArchivoConfiguracionMemoria(char* path){
 }
 
 int main(int arg, char* argv[]) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	puts("!!!Hello World!!!");
 	puts("It is working now");
 	if(arg!=3){
 		printf("Te falta poner algun path! %d\n", arg);
