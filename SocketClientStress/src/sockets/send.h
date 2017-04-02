@@ -8,6 +8,6 @@
 #ifndef SOCKETS_SEND_H_
 #define SOCKETS_SEND_H_
 
-int socket_send_all(int s, char *buf, int *len);
+int socket_send(int clientSocket, void* parameter, int size);
 
 #endif /* SOCKETS_SEND_H_ */

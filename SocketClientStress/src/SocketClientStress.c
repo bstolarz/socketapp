@@ -14,13 +14,13 @@
 #include "sockets/send.h"
 
 int main(void) {
-	int serverSocket;
+	int clientSocket;
 	char* ip = "127.0.0.1";
 	char* port="6667";
-	socket_client_create(&serverSocket, ip, port);
+	socket_client_create(&clientSocket, ip, port);
 
 	char* mensaje = "Primer mensaje por sockets";
 
 	int* len = 22;
-	socket_send_all(serverSocket, mensaje, len);
+	send(clientSocket, mensaje, 22, 0);
 }

@@ -28,5 +28,5 @@ void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 }
 
 void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* package){
-
+	printf("Llego %s\n", package);
 }

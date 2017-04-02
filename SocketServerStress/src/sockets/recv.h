@@ -8,6 +8,6 @@
 #ifndef SOCKETS_RECV_H_
 #define SOCKETS_RECV_H_
 
-int socket_recv_all(int s, char *buf, int *len);
+int socket_recv(int clientSocket, void* buffer);
 
 #endif /* SOCKETS_RECV_H_ */

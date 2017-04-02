@@ -1,18 +1,18 @@
 #include <sys/types.h>
  #include <sys/socket.h>
 
-int socket_send_all(int s, char *buf, int *len){
-	int total = 0; // cuántos bytes hemos enviado
-	int bytesleft = *len; // cuántos se han quedado pendientes
-	int n;
-
-	while(total < *len) {
-		n = send(s, buf+total, bytesleft, 0);
-		if (n == -1) { break; }
-		total += n;
-		bytesleft -= n;
+int socket_send(int clientSocket, void* parameter, int size){
+	char* sizeStr=malloc(sizeof(char)*11);
+	sprintf(sizeStr,"%i",size);
+	if(send(clientSocket, sizeStr, 11, 0) == 11){
+		if(send(clientSocket, parameter, size, 0) == size){
+			free(sizeStr);
+			return 1;
+		}else{
+			free(sizeStr);
+		}
+	}else{
+		free(sizeStr);
 	}
-
-	*len = total; // devuelve aquí la cantidad enviada en realidad
-	return n==-1?-1:0; // devuelve -1 si hay fallo, 0 en otro caso
+	return 0;
 }
