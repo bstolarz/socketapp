@@ -47,7 +47,7 @@ void socket_server_select(char* port, void(*socket_select_connection_lost)(fd_se
 	int listeningSocket;
 	socket_server_create(&listeningSocket, port);
 
-	char *package;
+	char * package = "";
 
 	//Inicializo el select
 	fd_set master;		// conjunto maestro de descriptores de fichero
@@ -88,7 +88,7 @@ void socket_server_select(char* port, void(*socket_select_connection_lost)(fd_se
 						}
 					}
 				} else {
-					if ((nbytes = socket_recv(i, &package, 1)) <= 0) {
+					if ((nbytes = socket_recv(i, (void**)&package, 1)) <= 0) {
 						socket_select_connection_lost(&master, i, nbytes);
 					} else {
 						if (nbytes != 0){

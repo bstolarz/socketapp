@@ -34,5 +34,13 @@ int socket_send_string(int clientSocket, char* parameter){
 }
 
 int socket_send_int(int clientSocket, int value){
-	return socket_send(clientSocket, &value, sizeof(int));
+	char* sizeStr=malloc(sizeof(char)*11);
+	sprintf(sizeStr,"%i",value);
+	if(send(clientSocket, sizeStr, 11, 0) == 11){
+		free(sizeStr);
+		return sizeof(int);
+	}else{
+		free(sizeStr);
+	}
+	return -1;
 }

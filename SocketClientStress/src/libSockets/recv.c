@@ -79,11 +79,20 @@ int socket_recv(int clientSocket, void** buffer, int reserveSpace){
 
 }
 
-int socket_recv_string(int clientSocket, char* text){
-	return socket_recv(clientSocket, *text, 0);
+int socket_recv_string(int clientSocket, char** text){
+	return socket_recv(clientSocket, (void**)text, 1);
 }
 
 int socket_recv_int(int clientSocket, int* value){
-	return socket_recv(clientSocket, &value, 0);
+	char* sizeStr = malloc(sizeof(char)*11);
+	if (recv(clientSocket, sizeStr, 11,  0) == 11){
+		*value = atoi(sizeStr);
+		free(sizeStr);
+		return sizeof(int);
+	}
+
+	free(sizeStr);
+	return -1;
+
 }
 
