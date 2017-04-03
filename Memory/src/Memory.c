@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	if (argc != 2)
 	{
 		printf("necesito un path del config de argument\nusando un default\n");
-		configPath = "config/config.txt";
+		configPath = "default_config.txt";
 	}
 	else
 	{
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
 
 
 	log_destroy(logger);
+	free(config->cacheReplaceStrategy);
 	free(config);
 
 	return EXIT_SUCCESS;
