@@ -15,9 +15,15 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+
 #include "commons/structures.h"
 //#include "commons/definitions.h"
 //#include "threads/select.h"
+
+#include "commons/definitions.h"
+#include "threads/select.h"
+#include "libSockets/send.h"
+
 
 void leerConfiguracionDeKernel(char* path){
 	t_config* config=config_create(path);
@@ -58,6 +64,22 @@ int main(int args, char* argv[]) {
 	//pthread_join(selectThread, NULL);
 	leerConfiguracionDeKernel(argv[1]);
 
+	clientes = list_create();
+//	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
 
+
+	char str[100];
+
+	void _send_message_clients(int* i){
+		socket_send_string(*i, str);
+	}
+
+	while(1){
+		scanf("%s", str);
+		list_iterate(clientes, (void*)_send_message_clients);
+	}
+
+
+//	pthread_join(selectThread, NULL);
 	return EXIT_SUCCESS;
 }
