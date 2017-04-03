@@ -12,6 +12,9 @@
 #include <stdlib.h>
 #include <commons/config.h>
 #include "commons/structures.h"
+#include "libSockets/client.h"
+#include "libSockets/send.h"
+#include "libSockets/recv.h"
 
 void leerArchivoConfiguracion(char* path){
 
@@ -24,14 +27,23 @@ void leerArchivoConfiguracion(char* path){
 }
 
 int main(int arg, char* argv[]) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
-	puts("It is working now");
 	if(arg!=2){
 		printf("Te falta poner el path! %d\n", arg);
 		return 1;
 	}
 	leerArchivoConfiguracion(argv[1]);
 	//leerArchivoConfiguracion("/home/utnso/git/tp-2017-1c-SocketApp/console");
+
+	int serverSocket=0;
+	socket_client_create(&serverSocket, "127.0.0.1", "6667");
+	if(serverSocket){
+		socket_send_string(serverSocket, "Hola, aca  estoy :D");
+		char* mensaje = "";
+		while(1){
+			socket_recv_string(serverSocket, &mensaje);
+			printf("%s\n", mensaje);
+		}
+	}
 
 	return EXIT_SUCCESS;
 }

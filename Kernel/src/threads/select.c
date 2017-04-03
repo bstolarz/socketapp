@@ -33,7 +33,9 @@ void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* package){
 	printf("llego: %s\n", package);
 	FD_CLR(socket, master);
-	list_add(clientes, &socket);
+	int* i = malloc(sizeof(int));
+	*i = socket;
+	list_add(clientes, i);
 }
 
 void* selectThreadLauncher(void* arg){
