@@ -10,7 +10,7 @@
 
 typedef struct{
 	char* ip_kernel;
-	int puerto_kernel;
+	char* puerto_kernel;
 }t_console;
 
 #endif /* COMMONS_STRUCTURES_H_ */
