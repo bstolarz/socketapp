@@ -20,13 +20,13 @@
 
 int main(int arg, char* argv[]) {
 	if(arg!=2){
-		printf("Te falta poner el path! %d\n", arg);
-		//return -1;
+		printf("Missing config path\n");
+		return -1;
 	}
 
 	configConsole = malloc(sizeof(t_console));
-	//config_read(argv[1]);
-	config_read("/home/utnso/git/tp-2017-1c-SocketApp/console");
+	config_read(argv[1]);
+	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/console");
 	config_print();
 
 	int serverSocket=0;
