@@ -68,4 +68,5 @@ void leerConfiguracionDeKernel(char* path){
 	printf("STACK SIZE: %d\n", console->stack_size);
 	generarListaDeSemaforos(config,console);
 	generarVectorDeVariablesCompartidas(config,console);
+	config_destroy(config);
 	}
