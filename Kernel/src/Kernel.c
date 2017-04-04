@@ -30,6 +30,10 @@ int main(int args, char* argv[]) {
 	//clientes = list_create();
 	//pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
 	//pthread_join(selectThread, NULL);
+	if (args!=2){
+		printf("Parametros incorrectamente seteados. Recorda poner el path\n");
+		return 1;
+	}
 	leerConfiguracionDeKernel(argv[1]);
 
 	clientes = list_create();
