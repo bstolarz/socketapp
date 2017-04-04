@@ -8,6 +8,16 @@
 #ifndef COMMONS_STRUCTURES_H_
 #define COMMONS_STRUCTURES_H_
 
+typedef struct {
 
+	int portNum;
+	int frameCount;
+	int frameSize;
+	int cacheEntryCount;
+	int cachePerProccess;
+	char* cacheReplaceStrategy;
+	int responseDelay;
+
+} t_memory;
 
 #endif /* COMMONS_STRUCTURES_H_ */

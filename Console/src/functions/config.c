@@ -12,11 +12,13 @@
 
 void config_read(char* path){
 	t_config* config=config_create(path);
-	configConsole->ip_kernel = config_get_string_value(config,"IP_KERNEL");
-	configConsole->puerto_kernel = config_get_string_value(config,"PUERTO_KERNEL");
+	configConsole->ip_kernel = string_duplicate(config_get_string_value(config,"IP_KERNEL"));
+	configConsole->puerto_kernel = string_duplicate(config_get_string_value(config,"PUERTO_KERNEL"));
+
+	config_destroy(config);
 }
 
 void config_print(){
-	printf("La ip del kernel es: %s\n",configConsole->ip_kernel);
-	printf("El puerto del kernel es: %s\n",configConsole->puerto_kernel);
+	printf("IP KERNEL: %s\n",configConsole->ip_kernel);
+	printf("PUERTO KERNEL: %s\n",configConsole->puerto_kernel);
 }
