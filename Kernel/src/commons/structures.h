@@ -5,9 +5,11 @@
  *      Author: utnso
  */
 
+#include <commons/collections/list.h>
+
 #ifndef COMMONS_STRUCTURES_H_
 #define COMMONS_STRUCTURES_H_
-#include <commons/collections/list.h>
+
 typedef struct{
 	int puerto_prog;
 	int puerto_cpu;
@@ -22,12 +24,15 @@ typedef struct{
 	t_list* semaforos;
 	t_list* shared_vars;
 	int stack_size;
-}t_console;
+}t_kernel;
+
 typedef struct{
 	char* id;
 	int initialValue;
 }t_semaforo;
+
 typedef struct{
 	char* nombre;
-}t_sharedVars;
+}t_sharedVar;
+
 #endif /* COMMONS_STRUCTURES_H_ */

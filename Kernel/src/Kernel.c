@@ -10,33 +10,32 @@
 #include "functions/config.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <commons/collections/list.h>
-#include <commons/config.h>
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <commons/collections/list.h>
+#include <commons/config.h>
+#include <commons/string.h>
 
-#include "commons/structures.h"
-//#include "commons/definitions.h"
-//#include "threads/select.h"
-
-#include "commons/definitions.h"
-#include "threads/select.h"
+#include "commons/declarations.h"
 #include "libSockets/send.h"
+#include "threads/select.h"
+#include "commons/structures.h"
 
+int main(int argc, char* argv[]) {
+	if(argc!=2){
+		printf("Missing config path\n");
+		return -1;
+	}
 
-int main(int args, char* argv[]) {
-
-	//clientes = list_create();
-	//pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
-	//pthread_join(selectThread, NULL);
-	leerConfiguracionDeKernel(argv[1]);
+	configKernel=malloc(sizeof(t_kernel));
+	config_read(argv[1]);
+	config_print();
 
 	clientes = list_create();
-//	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
+	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
 
-
-	char str[100];
+	char *str=string_new();
 
 	void _send_message_clients(int* i){
 		socket_send_string(*i, str);
@@ -44,10 +43,11 @@ int main(int args, char* argv[]) {
 
 	while(1){
 		scanf("%s", str);
+		printf("%s\n", str);
 		list_iterate(clientes, (void*)_send_message_clients);
 	}
 
 
-//	pthread_join(selectThread, NULL);
+	pthread_join(selectThread, NULL);
 	return EXIT_SUCCESS;
 }

@@ -9,9 +9,11 @@
 #define FUNCTIONS_CONFIG_H_
 #include "../commons/structures.h"
 #include <commons/config.h>
-void generarListaDeSemaforos(t_config* config, t_console* console);
-void generarVectorDeVariablesCompartidas(t_config* config,t_console* console);
-void leerConfiguracionDeKernel(char* path);
+
+void config_read_semaforos(t_config* config);
+void config_read_shared_vars(t_config* config);
+void config_read(char* path);
+void config_print();
 
 
 

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include "../commons/declarations.h"
 
 void config_read(char* path){

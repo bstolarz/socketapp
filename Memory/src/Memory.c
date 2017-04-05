@@ -25,8 +25,11 @@ int main(int argc, char* argv[]){
 		socket_send_string(serverSocket, "MEM");
 		char* mensaje = "";
 		while(1){
-			socket_recv_string(serverSocket, &mensaje);
-			printf("%s\n", mensaje);
+			if(socket_recv_string(serverSocket, &mensaje)>0){
+				printf("%s\n", mensaje);
+			}else{
+				return -1;
+			}
 		}
 	}
 

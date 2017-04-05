@@ -17,8 +17,9 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <pthread.h>
+
+#include "../commons/declarations.h"
 #include "../libSockets/server.h"
-#include "../commons/definitions.h"
 
 void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {

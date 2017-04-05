@@ -18,8 +18,8 @@
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
 
-int main(int arg, char* argv[]) {
-	if(arg!=2){
+int main(int argc, char* argv[]) {
+	if(argc!=2){
 		printf("Missing config path\n");
 		return -1;
 	}
@@ -30,13 +30,16 @@ int main(int arg, char* argv[]) {
 	config_print();
 
 	int serverSocket=0;
-	socket_client_create(&serverSocket, configConsole->ip_kernel, configConsole->puerto_kernel);
+	socket_client_create(&serverSocket, "127.0.0.1", "6667");
 	if(serverSocket){
-		socket_send_string(serverSocket, "CON");
+		socket_send_string(serverSocket, "MEM");
 		char* mensaje = "";
 		while(1){
-			socket_recv_string(serverSocket, &mensaje);
-			printf("%s\n", mensaje);
+			if(socket_recv_string(serverSocket, &mensaje)>0){
+				printf("%s\n", mensaje);
+			}else{
+				return -1;
+			}
 		}
 	}
 

@@ -6,11 +6,13 @@
  */
 
 #include <commons/collections/list.h>
+#include "structures.h"
 
 #ifndef COMMONS_DEFINITIONS_H_
 #define COMMONS_DEFINITIONS_H_
 
 pthread_t selectThread;
 t_list* clientes;
+t_kernel* configKernel;
 
 #endif /* COMMONS_DEFINITIONS_H_ */

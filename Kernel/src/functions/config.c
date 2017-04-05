@@ -8,64 +8,87 @@
 #include <stdlib.h>
 #include <commons/collections/list.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
-#include "../commons/structures.h"
+
+#include "../commons/declarations.h"
 
 
-void generarListaDeSemaforos(t_config* config, t_console* console){
+void config_read_semaforos(t_config* config){
 	char** s=config_get_array_value(config,"SEM_IDS");
 	char** vs=config_get_array_value(config,"SEM_INIT");
-	console->semaforos=list_create();
+
+	configKernel->semaforos=list_create();
 	while(*s!=NULL && *vs!= NULL){
-					t_semaforo* sem = malloc(sizeof(t_semaforo));
-					sem->id=*s;
-					sem->initialValue=atoi(*vs);
-					list_add(console->semaforos, s);
-					s++;
-					vs++;
-					printf("%s: %d\n", sem->id, sem->initialValue);
+		t_semaforo* sem = malloc(sizeof(t_semaforo));
+		sem->id=string_duplicate(*s);
+		sem->initialValue=atoi(*vs);
+
+		list_add(configKernel->semaforos, s);
+
+		s++;
+		vs++;
 	}
 
 }
-void generarVectorDeVariablesCompartidas(t_config* config,t_console* console){
+void config_read_shared_vars(t_config* config){
 	char** vc=config_get_array_value(config,"SHARED_VARS");
-	console->shared_vars=list_create();
-	while(*vc!=NULL){
-		t_sharedVars* sv=malloc(sizeof(t_sharedVars));
-		sv->nombre=*vc;
-		list_add(console->shared_vars,sv);
-		vc++;
-		printf("%s\n", sv->nombre);
 
+	configKernel->shared_vars=list_create();
+
+	while(*vc!=NULL){
+		t_sharedVar* sv=malloc(sizeof(t_sharedVar));
+		sv->nombre=string_duplicate(*vc);
+
+		list_add(configKernel->shared_vars,sv);
+
+		vc++;
 	}
 }
-void leerConfiguracionDeKernel(char* path){
+void config_read(char* path){
 	t_config* config=config_create(path);
-	t_console* console=malloc(sizeof(t_console));
-	console->algoritmo=config_get_string_value(config,"ALGORITMO");
-	printf("Algoritmo: %s\n", console->algoritmo);
-	console->grado_multiprog=config_get_int_value(config,"GRADO_MULTIPROG");
-	printf("Grado multip: %d\n",console->grado_multiprog);
-	console->ip_fs=config_get_string_value(config,"IP_FS");
-	printf("IP FS: %s\n", console->ip_fs);
-	console->ip_memoria=config_get_string_value(config,"IP_MEMORIA");
-	printf("IP MEMORIA: %s\n", console->ip_memoria);
-	console->puerto_cpu=config_get_int_value(config,"PUERTO_CPU");
-	printf("PUERTO CPU: %d\n", console->puerto_cpu);
-	console->puerto_fs=config_get_int_value(config,"PUERTO_FS");
-	printf("PUERTO FS: %d\n", console->puerto_fs);
-	console->puerto_memoria=config_get_int_value(config,"PUERTO_MEMORIA");
-	printf("PUERTO MEMORIA: %d\n", console->puerto_memoria);
-	console->puerto_prog=config_get_int_value(config,"PUERTO_PROG");
-	printf("PUERTO PROG: %d\n", console->puerto_prog);
-	console->quantum=config_get_int_value(config,"QUANTUM");
-	printf("QUANTUM: %d\n", console->quantum);
-	console->quantum_sleep=config_get_int_value(config,"QUANTUM_SLEEP");
-	printf("QUANTUM SLEEP: %d\n", console->quantum_sleep);
-	console->stack_size=config_get_int_value(config,"STACK_SIZE");
-	printf("STACK SIZE: %d\n", console->stack_size);
-	generarListaDeSemaforos(config,console);
-	generarVectorDeVariablesCompartidas(config,console);
+
+	configKernel->algoritmo=string_duplicate(config_get_string_value(config,"ALGORITMO"));
+	configKernel->grado_multiprog=config_get_int_value(config,"GRADO_MULTIPROG");
+	configKernel->ip_fs=string_duplicate(config_get_string_value(config,"IP_FS"));
+	configKernel->ip_memoria=string_duplicate(config_get_string_value(config,"IP_MEMORIA"));
+	configKernel->puerto_cpu=config_get_int_value(config,"PUERTO_CPU");
+	configKernel->puerto_fs=config_get_int_value(config,"PUERTO_FS");
+	configKernel->puerto_memoria=config_get_int_value(config,"PUERTO_MEMORIA");
+	configKernel->puerto_prog=config_get_int_value(config,"PUERTO_PROG");
+	configKernel->quantum=config_get_int_value(config,"QUANTUM");
+	configKernel->quantum_sleep=config_get_int_value(config,"QUANTUM_SLEEP");
+	configKernel->stack_size=config_get_int_value(config,"STACK_SIZE");
+
+	config_read_semaforos(config);
+	config_read_shared_vars(config);
+
+	config_destroy(config);
+}
+
+void config_print(char* path){
+
+	printf("Algoritmo: %s\n", configKernel->algoritmo);
+	printf("Grado multip: %d\n",configKernel->grado_multiprog);
+	printf("IP FS: %s\n", configKernel->ip_fs);
+	printf("IP MEMORIA: %s\n", configKernel->ip_memoria);
+	printf("PUERTO CPU: %d\n", configKernel->puerto_cpu);
+	printf("PUERTO FS: %d\n", configKernel->puerto_fs);
+	printf("PUERTO MEMORIA: %d\n", configKernel->puerto_memoria);
+	printf("PUERTO PROG: %d\n", configKernel->puerto_prog);
+	printf("QUANTUM: %d\n", configKernel->quantum);
+	printf("QUANTUM SLEEP: %d\n", configKernel->quantum_sleep);
+	printf("STACK SIZE: %d\n", configKernel->stack_size);
+
+	void _printSemaforo(t_semaforo* semaforo){
+		printf("Semaforo: %s, Valor: %i\n", semaforo->id, semaforo->initialValue);
 	}
+	list_iterate(configKernel->semaforos, (void*)_printSemaforo);
+
+	void _printShareVar(t_sharedVar* sharevar){
+		printf("Share var: %s\n", sharevar->nombre);
+	}
+	list_iterate(configKernel->shared_vars, (void*)_printShareVar);
+}
