@@ -9,8 +9,9 @@
 #define COMMONS_STRUCTURES_H_
 
 typedef struct{
-	char* ip_kernel;
-	int puerto_kernel;
-}t_kernel;
+	int puerto;
+	char* punto_montaje;
+
+}t_fileSystem;
 
 #endif /* COMMONS_STRUCTURES_H_ */

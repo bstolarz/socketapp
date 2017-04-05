@@ -43,7 +43,6 @@ int main(int argc, char* argv[]) {
 
 	while(1){
 		scanf("%s", str);
-		printf("%s\n", str);
 		list_iterate(clientes, (void*)_send_message_clients);
 	}
 
