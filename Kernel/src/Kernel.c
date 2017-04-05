@@ -35,16 +35,7 @@ int main(int argc, char* argv[]) {
 	clientes = list_create();
 	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
 
-	char *str=string_new();
-
-	void _send_message_clients(int* i){
-		socket_send_string(*i, str);
-	}
-
-	while(1){
-		scanf("%s", str);
-		list_iterate(clientes, (void*)_send_message_clients);
-	}
+	//Reenviar mensaje al resto de los clientes
 
 
 	pthread_join(selectThread, NULL);

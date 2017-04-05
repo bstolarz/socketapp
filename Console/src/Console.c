@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include "commons/structures.h"
 #include "commons/declarations.h"
 #include "functions/config.h"
@@ -31,17 +32,26 @@ int main(int argc, char* argv[]) {
 
 	int serverSocket=0;
 	socket_client_create(&serverSocket, "127.0.0.1", "6667");
-	if(serverSocket){
-		socket_send_string(serverSocket, "MEM");
-		char* mensaje = "";
-		while(1){
-			if(socket_recv_string(serverSocket, &mensaje)>0){
-				printf("%s\n", mensaje);
-			}else{
-				return -1;
-			}
+	if(serverSocket<=0){
+		printf("No logre conectarme al serve\n");
+		return -1;
+	}
+
+	char *str=string_new();
+	while(1){
+		printf("Ingrese un mensaje:\n");
+		scanf("%s", str);
+		if(socket_send_string(serverSocket, "CON")<=0){
+			printf("No se pudo enviar el mensaje\n");
+			return -1;
+		}
+
+		if(socket_send_string(serverSocket, str)<=0){
+			printf("No se pudo enviar el mensaje\n");
+			return -1;
 		}
 	}
+
 
 	return EXIT_SUCCESS;
 }

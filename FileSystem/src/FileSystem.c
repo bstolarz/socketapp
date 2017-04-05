@@ -15,7 +15,7 @@ int main(int arg, char* argv[]) {
 	}
 
 	configFileSystem=malloc(sizeof(t_fileSystem));
-	config_read("/home/utnso/git/");
+	config_read(argv[1]);
 	config_print();
 
 	int serverSocket=0;

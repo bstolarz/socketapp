@@ -17,9 +17,12 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <commons/string.h>
 
 #include "../commons/declarations.h"
 #include "../libSockets/server.h"
+#include "../libSockets/recv.h"
+#include "../libSockets/send.h"
 
 void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {
@@ -32,11 +35,19 @@ void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 }
 
 void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* package){
-	printf("llego: %s\n", package);
-	FD_CLR(socket, master);
-	int* i = malloc(sizeof(int));
-	*i = socket;
-	list_add(clientes, i);
+	if(package[0]=='C' && package[1]=='O' && package[2]=='N'){
+		char* mensaje = string_new();
+		socket_recv_string(socket, &mensaje);
+		void _enviarMensaje(int* i){
+			socket_send_string(*i, mensaje);
+		}
+		list_iterate(clientes, (void*)_enviarMensaje);
+	}else{
+		FD_CLR(socket, master);
+		int* i = malloc(sizeof(int));
+		*i = socket;
+		list_add(clientes, i);
+	}
 }
 
 void* selectThreadLauncher(void* arg){
