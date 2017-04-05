@@ -10,4 +10,5 @@
 
 void config_print();
 void config_read(char* path);
+
 #endif /* FUNCTIONS_CONFIG_H_ */

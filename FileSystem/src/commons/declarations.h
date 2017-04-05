@@ -8,6 +8,6 @@
 #ifndef COMMONS_DECLARATIONS_H_
 #define COMMONS_DECLARATIONS_H_
 
-
 t_fileSystem* configFileSystem;
+
 #endif /* COMMONS_DECLARATIONS_H_ */
