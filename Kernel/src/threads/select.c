@@ -38,6 +38,7 @@ void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* 
 	if(package[0]=='C' && package[1]=='O' && package[2]=='N'){
 		char* mensaje = string_new();
 		socket_recv_string(socket, &mensaje);
+		printf("%s\n", mensaje);
 		void _enviarMensaje(int* i){
 			socket_send_string(*i, mensaje);
 		}

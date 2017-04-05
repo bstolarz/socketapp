@@ -30,7 +30,7 @@ int socket_send(int clientSocket, void* parameter, int size){
 }
 
 int socket_send_string(int clientSocket, char* parameter){
-	return socket_send(clientSocket, parameter, string_length(parameter));
+	return socket_send(clientSocket, parameter, string_length(parameter)+1);
 }
 
 int socket_send_int(int clientSocket, int value){
