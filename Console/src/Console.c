@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	config_print();
 
 	int serverSocket=0;
-	socket_client_create(&serverSocket, "127.0.0.1", "6667");
+	socket_client_create(&serverSocket, "25.65.80.195", "6667");
 	if(serverSocket<=0){
 		printf("No logre conectarme al serve\n");
 		close(serverSocket);
@@ -40,10 +40,12 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	char *str=string_new();
+	//char *str=string_new();
+	char str[50];
 	while(1){
 		printf("Ingrese un mensaje:\n");
-		scanf("%s", str);
+		fgets(str, 50, stdin);
+		//scanf("%s", str);
 		if(socket_send_string(serverSocket, "CON")<=0){
 			printf("No se pudo enviar el mensaje\n");
 			close(serverSocket);
