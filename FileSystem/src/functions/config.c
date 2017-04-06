@@ -19,7 +19,7 @@ void config_print(){
 void config_read(char* path){
 	t_config* config = config_create(path);
 
-	configFileSystem->puerto=config_get_int_value(config,"PUERTO");
+	configFileSystem->puerto=string_duplicate(config_get_string_value(config,"PUERTO"));
 	configFileSystem->punto_montaje=string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 
 	config_destroy(config);

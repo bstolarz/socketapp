@@ -11,7 +11,7 @@
 int main(int arg, char* argv[]) {
 	if(arg!=2){
 		printf("Path missing! %d\n", arg);
-		//return 1;
+		return 1;
 	}
 
 	configFileSystem=malloc(sizeof(t_fileSystem));

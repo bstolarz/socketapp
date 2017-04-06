@@ -10,12 +10,10 @@
 
 typedef struct{
 	char* ip_kernel;
-	int puerto_kernel;
-}t_kernel;
+	char* puerto_kernel;
 
-typedef struct{
 	char* ip_memory;
-	int puerto_memory;
-}t_memory;
+	char* puerto_memory;
+}t_cpu;
 
 #endif /* COMMONS_STRUCTURES_H_ */

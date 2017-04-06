@@ -9,7 +9,7 @@
 #define COMMONS_STRUCTURES_H_
 
 typedef struct{
-	int puerto;
+	char* puerto;
 	char* punto_montaje;
 
 }t_fileSystem;
