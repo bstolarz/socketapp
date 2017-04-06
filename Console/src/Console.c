@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
 	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/console");
 	config_print();
 
+
 	int serverSocket=0;
 	socket_client_create(&serverSocket, "25.65.80.195", "6667");
 	if(serverSocket<=0){
@@ -40,12 +41,14 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//char *str=string_new();
-	char str[50];
+
+
+	size_t cantidad = 50;
+	char *str=malloc(sizeof(char)*cantidad);
 	while(1){
 		printf("Ingrese un mensaje:\n");
-		fgets(str, 50, stdin);
-		//scanf("%s", str);
+		size_t cantLeida = getline(&str, &cantidad, stdin);
+		str[cantLeida-1]='\0';
 		if(socket_send_string(serverSocket, "CON")<=0){
 			printf("No se pudo enviar el mensaje\n");
 			close(serverSocket);
