@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include "commons/structures.h"
@@ -34,7 +35,9 @@ int main(int argc, char* argv[]) {
 	socket_client_create(&serverSocket, "127.0.0.1", "6667");
 	if(serverSocket<=0){
 		printf("No logre conectarme al serve\n");
-		return -1;
+		close(serverSocket);
+		config_free();
+		return EXIT_FAILURE;
 	}
 
 	char *str=string_new();
@@ -43,12 +46,16 @@ int main(int argc, char* argv[]) {
 		scanf("%s", str);
 		if(socket_send_string(serverSocket, "CON")<=0){
 			printf("No se pudo enviar el mensaje\n");
-			return -1;
+			close(serverSocket);
+			config_free();
+			return EXIT_FAILURE;
 		}
 
 		if(socket_send_string(serverSocket, str)<=0){
 			printf("No se pudo enviar el mensaje\n");
-			return -1;
+			close(serverSocket);
+			config_free();
+			return EXIT_FAILURE;
 		}
 	}
 

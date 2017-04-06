@@ -13,6 +13,7 @@
 
 void config_read(char* path){
 	t_config* config=config_create(path);
+
 	configConsole->ip_kernel = string_duplicate(config_get_string_value(config,"IP_KERNEL"));
 	configConsole->puerto_kernel = string_duplicate(config_get_string_value(config,"PUERTO_KERNEL"));
 
@@ -22,4 +23,10 @@ void config_read(char* path){
 void config_print(){
 	printf("IP KERNEL: %s\n",configConsole->ip_kernel);
 	printf("PUERTO KERNEL: %s\n",configConsole->puerto_kernel);
+}
+
+void config_free(){
+	free(configConsole->ip_kernel);
+	free(configConsole->puerto_kernel);
+	free(configConsole);
 }
