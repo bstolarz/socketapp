@@ -33,9 +33,9 @@ int main(int argc, char* argv[]) {
 
 
 	int serverSocket=0;
-	socket_client_create(&serverSocket, "25.65.80.195", "6667");
+	socket_client_create(&serverSocket, configConsole->ip_kernel, configConsole->puerto_kernel);
 	if(serverSocket<=0){
-		printf("No logre conectarme al serve\n");
+		printf("No logre conectarme al server\n");
 		close(serverSocket);
 		config_free();
 		return EXIT_FAILURE;
