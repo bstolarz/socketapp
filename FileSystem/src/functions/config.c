@@ -12,7 +12,7 @@
 
 
 void config_print(){
-	printf("El puerto del FS: %d\n", configFileSystem->puerto);
+	printf("El puerto del FS: %s\n", configFileSystem->puerto);
 	printf("Punto de montaje: %s\n", configFileSystem->punto_montaje);
 }
 
@@ -23,4 +23,10 @@ void config_read(char* path){
 	configFileSystem->punto_montaje=string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 
 	config_destroy(config);
+}
+
+void config_free(){
+	free(configFileSystem->puerto);
+	free(configFileSystem->punto_montaje);
+	free(configFileSystem);
 }
