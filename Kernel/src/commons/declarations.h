@@ -14,5 +14,5 @@
 pthread_t selectThread;
 t_list* clientes;
 t_kernel* configKernel;
-
+t_list* CPUs;
 #endif /* COMMONS_DEFINITIONS_H_ */

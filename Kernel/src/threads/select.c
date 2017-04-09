@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <commons/string.h>
-
+#include "../functions/handShakeWithCPU.h"
 #include "../commons/declarations.h"
 #include "../libSockets/server.h"
 #include "../libSockets/recv.h"
@@ -60,6 +60,9 @@ void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* 
 	}else if(package[0]=='M'&& package[1]=='E' && package[2]=='M'){
 		printf("Memory connected on socket: %d\n",socket);
 		memorySocket=socket;
+	}else if(package[0]=='C'&& package[1]=='P' && package[2]=='U'){
+		printf("CPU connected on socket %d\n",socket);
+		agregarCPU(socket);
 	}else{
 		FD_CLR(socket, master);
 		int* i = malloc(sizeof(int));

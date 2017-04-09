@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
+	CPUs=list_create();
 	clientes = list_create();
 	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
 
