@@ -60,8 +60,6 @@ typedef struct{
 	int exitCode;
 	int stackPosition;
 }t_pcb;
-typedef struct{
-
-};
+int memorySocket;
 
 #endif /* COMMONS_STRUCTURES_H_ */

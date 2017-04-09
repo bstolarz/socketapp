@@ -20,4 +20,9 @@ typedef struct {
 
 } t_memory;
 
+typedef struct{
+	int frame;
+	int PID;
+	int page;
+}t_invertedPageTable;
 #endif /* COMMONS_STRUCTURES_H_ */

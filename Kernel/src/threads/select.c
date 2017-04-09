@@ -40,7 +40,7 @@ void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* 
 		char* mensaje = string_new();
 		char* programPath=string_new();
 		socket_recv_string(socket, &mensaje);
-		printf("Socket Select Recive Package: %s\n", mensaje);
+		printf("Message from socket %d: %s\n", socket, mensaje);
 		switch (mensaje[0]){
 			case 'i':
 				programPath=string_duplicate(string_substring_from(mensaje,2));
@@ -57,6 +57,9 @@ void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* 
 			socket_send_string(*i, mensaje);
 		}
 		list_iterate(clientes, (void*)_enviarMensaje);
+	}else if(package[0]=='M'&& package[1]=='E' && package[2]=='M'){
+		printf("Memory connected on socket: %d\n",socket);
+		memorySocket=socket;
 	}else{
 		FD_CLR(socket, master);
 		int* i = malloc(sizeof(int));
