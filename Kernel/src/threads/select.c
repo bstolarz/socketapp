@@ -23,6 +23,7 @@
 #include "../libSockets/server.h"
 #include "../libSockets/recv.h"
 #include "../libSockets/send.h"
+#include "../functions/userInterface.h"
 
 void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {
@@ -37,8 +38,24 @@ void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* package){
 	if(package[0]=='C' && package[1]=='O' && package[2]=='N'){
 		char* mensaje = string_new();
+		char* programPath=string_new();
 		socket_recv_string(socket, &mensaje);
-		printf("%s\n", mensaje);
+		printf("Socket Select Recive Package: %s\n", mensaje);
+		switch (mensaje[0]){
+			case 'i':
+				programPath=string_duplicate(string_substring_from(mensaje,2));
+				initNewAnsisopProgram(programPath);
+				break;
+			case 'f':
+				finishAnsisopProgram(mensaje);
+				break;
+			case 'd':
+				disconnectAllConsoleThreads();
+				break;
+			case 'c':
+				cleanMessagesOnScreen();
+				break;
+		}
 		void _enviarMensaje(int* i){
 			socket_send_string(*i, mensaje);
 		}

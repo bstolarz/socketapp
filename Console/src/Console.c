@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 	size_t cantidad = 50;
 	char *str=malloc(sizeof(char)*cantidad);
 	while(1){
-		printf("Ingrese un mensaje:\n");
+		//printf("Ingrese un mensaje:\n");
 		size_t cantLeida = getline(&str, &cantidad, stdin);
 		str[cantLeida-1]='\0';
 		if(socket_send_string(serverSocket, "CON")<=0){
