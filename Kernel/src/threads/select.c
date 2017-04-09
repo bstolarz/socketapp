@@ -52,9 +52,6 @@ void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* 
 			case 'd':
 				disconnectAllConsoleThreads();
 				break;
-			case 'c':
-				cleanMessagesOnScreen();
-				break;
 		}
 		void _enviarMensaje(int* i){
 			socket_send_string(*i, mensaje);

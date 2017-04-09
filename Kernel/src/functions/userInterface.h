@@ -13,7 +13,7 @@
 void initNewAnsisopProgram(char* command);
 void finishAnsisopProgram(char* command);
 void disconnectAllConsoleThreads();
-void cleanMessagesOnScreen();
+
 
 
 #endif /* FUNCTIONS_USERINTERFACE_H_ */

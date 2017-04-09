@@ -49,18 +49,22 @@ int main(int argc, char* argv[]) {
 		//printf("Ingrese un mensaje:\n");
 		size_t cantLeida = getline(&str, &cantidad, stdin);
 		str[cantLeida-1]='\0';
-		if(socket_send_string(serverSocket, "CON")<=0){
-			printf("No se pudo enviar el mensaje\n");
-			close(serverSocket);
-			config_free();
-			return EXIT_FAILURE;
-		}
+		if(str[0]=='c'){
+			system("clear");
+		}else{
+				if(socket_send_string(serverSocket, "CON")<=0){
+					printf("No se pudo enviar el mensaje\n");
+					close(serverSocket);
+					config_free();
+					return EXIT_FAILURE;
+				}
 
-		if(socket_send_string(serverSocket, str)<=0){
-			printf("No se pudo enviar el mensaje\n");
-			close(serverSocket);
-			config_free();
-			return EXIT_FAILURE;
+				if(socket_send_string(serverSocket, str)<=0){
+					printf("No se pudo enviar el mensaje\n");
+					close(serverSocket);
+					config_free();
+					return EXIT_FAILURE;
+				}
 		}
 	}
 

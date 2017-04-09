@@ -22,6 +22,3 @@ void finishAnsisopProgram(char* command){
 void disconnectAllConsoleThreads(){
 
 }
-void cleanMessagesOnScreen(){
-
-}
