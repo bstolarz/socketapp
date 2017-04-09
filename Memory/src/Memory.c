@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,10 @@
 #include "libSockets/client.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
+
+int hayMemoriaDisponible(int memorySize, int num){
+	return memorySize>=num;
+}
 
 int main(int argc, char* argv[]){
 
@@ -33,11 +38,12 @@ int main(int argc, char* argv[]){
 		while(1){
 			if(socket_recv_string(serverSocket, &mensaje)>0){
 				switch (mensaje[0]){
+				//Recibir 'i' significa "iniciar un programa"
 					case 'i':
-						printf("Se pide iniciar un programa\n");
 						socket_recv_int(serverSocket,&num);
 						printf("El tamanio del programa es %d bytes\n", num);
-						if(memorySize>=num){
+						usleep(configMemory->responseDelay*1000);
+						if(hayMemoriaDisponible(memorySize,num)){
 							printf("Hay espacio en memoria para ejecutar el programa\n");
 							socket_send_int(serverSocket,1);
 						}
