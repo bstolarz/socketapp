@@ -11,5 +11,6 @@
 #include "../commons/structures.h"
 
 void createPCB();
+void printPCB(t_pcb* PCB);
 
 #endif /* PCB_PCBHANDLER_H_ */

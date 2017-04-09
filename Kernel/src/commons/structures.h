@@ -6,6 +6,7 @@
  */
 
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
 #include <unistd.h>
 #include <sys/types.h>
 #ifndef COMMONS_STRUCTURES_H_
@@ -49,13 +50,18 @@ typedef struct{
 }t_indiceDelStack;
 
 typedef struct{
-	pid_t PID;
-	double PC;
+	int PID;
+	int PC;
 	int cantPagsCodigo;
 	t_indiceDeCodigo indiceDeCodigo;
 	t_indiceDeEtiquetas indiceDeEtiquetas;
 	t_indiceDelStack indiceDeStack;
+	t_dictionary* processFileTable;
 	int exitCode;
+	int stackPosition;
 }t_pcb;
+typedef struct{
+
+};
 
 #endif /* COMMONS_STRUCTURES_H_ */
