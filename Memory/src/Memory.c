@@ -11,12 +11,15 @@
 #include "libSockets/recv.h"
 #include "functions/memory.h"
 
+
 int main(int argc, char* argv[]){
 
 	if (argc != 2){
 		printf("Missing config path\n");
 		return -1;
 	}
+
+	memoryLog = log_create("memory_log.txt", "Memory", false, LOG_LEVEL_DEBUG);
 
 	// config init
 	configMemory = malloc(sizeof(t_memory));
@@ -25,6 +28,11 @@ int main(int argc, char* argv[]){
 
 	memory_init();
 	
+	// test_program_init_end();
+	// test_read_write();
+
+	// return 0;
+
 	int serverSocket=0;
 	socket_client_create(&serverSocket, "127.0.0.1", "6667");
 	
@@ -60,10 +68,13 @@ int main(int argc, char* argv[]){
 						
 				}
 			}else{
+				log_destroy(memoryLog);
 				return -1;
 			}
 		}
 
 	}
+	
+	log_destroy(memoryLog);
 	return EXIT_SUCCESS;
 }
