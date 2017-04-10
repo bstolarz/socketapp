@@ -7,7 +7,8 @@
  Description : Hello World in C, Ansi-style
  ============================================================================
  */
-
+#include "functions/hiloPrograma.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,34 +41,35 @@ int main(int argc, char* argv[]) {
 		config_free();
 		return EXIT_FAILURE;
 	}
-
-
-
 	size_t cantidad = 50;
 	char *str=malloc(sizeof(char)*cantidad);
 	while(1){
 		//printf("Ingrese un mensaje:\n");
 		size_t cantLeida = getline(&str, &cantidad, stdin);
+		char* path=malloc(sizeof(char)*cantLeida);
 		str[cantLeida-1]='\0';
-		if(str[0]=='c'){
-			system("clear");
-		}else{
-				if(socket_send_string(serverSocket, "CON")<=0){
-					printf("No se pudo enviar el mensaje\n");
-					close(serverSocket);
-					config_free();
-					return EXIT_FAILURE;
-				}
+		char* ansisop=string_new();
+		switch(str[0]){
+			case 'c':
+				system("clear");
+				break;
+			case 'i':
 
-				if(socket_send_string(serverSocket, str)<=0){
-					printf("No se pudo enviar el mensaje\n");
-					close(serverSocket);
-					config_free();
-					return EXIT_FAILURE;
+				path=string_duplicate(string_substring_from(str,2));
+				printf("Path: %s",path);
+				FILE* f=fopen(path,"r");
+				if (f==NULL){
+					printf("Error abriendo archivos\n");
 				}
+				if(iniciarProgramaAnsisop(f,ansisop, serverSocket)==EXIT_SUCCESS){
+					printf("Iniciar HILO\n");
+				};
+				break;
+			case 'f':
+				path=string_duplicate(string_substring_from(str,2));
+				finalizarPrograma(path);
+				break;
 		}
 	}
-
-
 	return EXIT_SUCCESS;
 }

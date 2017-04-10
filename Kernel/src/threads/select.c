@@ -37,24 +37,16 @@ void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 
 void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* package){
 	if(package[0]=='C' && package[1]=='O' && package[2]=='N'){
-		char* mensaje = string_new();
-		char* programPath=string_new();
-		socket_recv_string(socket, &mensaje);
-		printf("Message from socket %d: %s\n", socket, mensaje);
-		switch (mensaje[0]){
-			case 'i':
-				programPath=string_duplicate(string_substring_from(mensaje,2));
-				initNewAnsisopProgram(programPath);
-				break;
-			case 'f':
-				finishAnsisopProgram(mensaje);
-				break;
-			case 'd':
-				disconnectAllConsoleThreads();
-				break;
-		}
+
+		int tamanioProgramaAnsisop;
+		socket_recv_int(socket,&tamanioProgramaAnsisop);
+		//printf("Tamanio programa: %d bytes\n",tamanioProgramaAnsisop);
+		char* programa=malloc(tamanioProgramaAnsisop*sizeof(char));
+		socket_recv_string(socket, &programa);
+
+		//printf("Message from socket %d: %s\n", socket, programa);
 		void _enviarMensaje(int* i){
-			socket_send_string(*i, mensaje);
+			socket_send_string(*i, programa);
 		}
 		list_iterate(clientes, (void*)_enviarMensaje);
 	}else if(package[0]=='M'&& package[1]=='E' && package[2]=='M'){
