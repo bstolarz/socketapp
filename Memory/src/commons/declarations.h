@@ -1,4 +1,5 @@
 #include "structures.h"
+#include <commons/log.h>
 
 #ifndef COMMONS_DECLARATIONS_H_
 #define COMMONS_DECLARATIONS_H_
@@ -10,6 +11,6 @@
                                     // (no la page en la que esta este array de entradas que sería la verdadera pag 0)
 /*extern*?*/ void* proccessPages; // la memoria RAM donde guardar y buscar datos
 /*extern*?*/ int proccessPageCount;
-
+t_log* memoryLog;
 
 #endif /* COMMONS_DECLARATIONS_H_ */
