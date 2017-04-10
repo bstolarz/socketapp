@@ -69,18 +69,17 @@ void config_read(char* path){
 }
 
 void config_print(char* path){
-
-	printf("Algoritmo: %s\n", configKernel->algoritmo);
-	printf("Grado multip: %d\n",configKernel->grado_multiprog);
-	printf("IP FS: %s\n", configKernel->ip_fs);
-	printf("IP MEMORIA: %s\n", configKernel->ip_memoria);
-	printf("PUERTO CPU: %d\n", configKernel->puerto_cpu);
-	printf("PUERTO FS: %d\n", configKernel->puerto_fs);
-	printf("PUERTO MEMORIA: %d\n", configKernel->puerto_memoria);
-	printf("PUERTO PROG: %d\n", configKernel->puerto_prog);
-	printf("QUANTUM: %d\n", configKernel->quantum);
-	printf("QUANTUM SLEEP: %d\n", configKernel->quantum_sleep);
-	printf("STACK SIZE: %d\n", configKernel->stack_size);
+	log_info(logKernel,"Algoritmo: %s\n", configKernel->algoritmo);
+	log_info(logKernel,"Grado Multiprog: %d\n", "Grado multip: %d\n",configKernel->grado_multiprog);
+	log_info(logKernel,"IP FS: %s\n", configKernel->ip_fs);
+	log_info(logKernel,"IP MEMORIA: %s\n", configKernel->ip_memoria);
+	log_info(logKernel,"PUERTO CPU: %d\n", configKernel->puerto_cpu);
+	log_info(logKernel,"PUERTO FS: %d\n", configKernel->puerto_fs);
+	log_info(logKernel,"PUERTO MEMORIA: %d\n", configKernel->puerto_memoria);
+	log_info(logKernel,"PUERTO PROG: %d\n", configKernel->puerto_prog);
+	log_info(logKernel,"QUANTUM: %d\n", configKernel->quantum);
+	log_info(logKernel,"QUANTUM SLEEP: %d\n", configKernel->quantum_sleep);
+	log_info(logKernel,"STACK SIZE: %d\n", configKernel->stack_size);
 
 	void _printSemaforo(t_semaforo* semaforo){
 		printf("Semaforo: %s, Valor: %i\n", semaforo->id, semaforo->initialValue);

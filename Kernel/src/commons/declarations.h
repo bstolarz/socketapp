@@ -7,6 +7,7 @@
 
 #include <commons/collections/list.h>
 #include "structures.h"
+#include <commons/log.h>
 
 #ifndef COMMONS_DEFINITIONS_H_
 #define COMMONS_DEFINITIONS_H_
@@ -15,4 +16,6 @@ pthread_t selectThread;
 t_list* clientes;
 t_kernel* configKernel;
 t_list* CPUs;
+t_log* logKernel;
+t_list* list_PCBs;
 #endif /* COMMONS_DEFINITIONS_H_ */

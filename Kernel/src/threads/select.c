@@ -24,7 +24,7 @@
 #include "../libSockets/recv.h"
 #include "../libSockets/send.h"
 #include "../functions/userInterface.h"
-
+#include "../PCB/pcbHandler.h"
 void socket_select_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {
 		printf("selectserver: socket %d hung up\n", socket);
@@ -43,7 +43,12 @@ void socket_select_recive_package(fd_set* master, int socket, int nbytes, char* 
 		//printf("Tamanio programa: %d bytes\n",tamanioProgramaAnsisop);
 		char* programa=malloc(tamanioProgramaAnsisop*sizeof(char));
 		socket_recv_string(socket, &programa);
-
+		log_info(logKernel, "El programa ANSISOP recibido es:\n %s\n", programa);
+		t_pcb* PCB=(t_pcb*)malloc(sizeof(t_pcb));
+		createPCB(PCB);
+		socket_send_int(socket,PCB->PID);
+		log_info(logKernel,"Se envia al socket %d el PID %d\n",socket,PCB->PID);
+		//ENVIAR ID DEL PROCESO A LA CONSOLA
 		//printf("Message from socket %d: %s\n", socket, programa);
 		void _enviarMensaje(int* i){
 			socket_send_string(*i, programa);
