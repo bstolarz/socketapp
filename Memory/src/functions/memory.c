@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "../commons/declarations.h"
 #include "../commons/structures.h"
+#include "frame.h"
 
 
 //extern t_memory* configMemory;
@@ -41,14 +42,13 @@ int memory_init()
     return 0;
 }
 
+
 // Operaciones de Memoria (pag 26)
 int program_init(int PID, int pageCount)
 {
     int* frameIndices = get_non_continguous_frames(pageCount);
     int i;
 
-    log_debug(memoryLog, "obteniendo frames para proceso PID [%d]", PID);
-    
     if (frameIndices == NULL)
     {
         log_error(memoryLog, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
@@ -60,7 +60,6 @@ int program_init(int PID, int pageCount)
         t_pageTableEntry* entry = pageTable + frameIndices[i];
         entry->page = i;
         entry->PID = PID;
-        log_debug(memoryLog, "pag %d frame %d" , i, frameIndices[i]);
     }
 
     free(frameIndices);
@@ -76,7 +75,7 @@ int* get_continguous_frames(int count)
     {
         for (end = 0; end != count; ++end)
         {
-            if (pageTable[begin + end].PID != -1)
+            if (is_frame_occupied(pageTable + begin + end))
                 break;
         }
 
@@ -109,7 +108,7 @@ int* get_non_continguous_frames(int count)
     
     for (i = 0; i != proccessPageCount; ++i)
     {
-        if (pageTable[i].PID == -1)
+        if (is_frame_free(pageTable + i))
         {
             frames[j++] = i;
 
@@ -126,16 +125,9 @@ void program_end(int PID)
 {
 	int i;
 
-	log_debug(memoryLog, "terminando programa PID [%d]", PID);
-
-    for (i = 0; i != proccessPageCount; ++i)
-    {
+	for (i = 0; i != proccessPageCount; ++i)
         if (pageTable[i].PID == PID)
-        {
-            log_debug(memoryLog, "releaseando frame [%d]", i);
             pageTable[i].PID = -1;
-        }
-    }
 }
 
 // returna una pagina o nulo

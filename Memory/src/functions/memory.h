@@ -17,4 +17,5 @@ int* get_non_continguous_frames(int count);
 // utils
 int bytes_to_pages(int byteCount);
 
+
 #endif /* FUNCTIONS_MEMORY_H_ */

@@ -10,6 +10,7 @@
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
 #include "functions/memory.h"
+#include "functions/test.h"
 
 
 int main(int argc, char* argv[]){
@@ -30,6 +31,7 @@ int main(int argc, char* argv[]){
 	
 	// test_program_init_end();
 	// test_read_write();
+	// test_console();
 
 	// return 0;
 
