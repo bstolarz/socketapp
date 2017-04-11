@@ -21,8 +21,8 @@ void config_read(char* path){
 }
 
 void config_print(){
-	printf("IP KERNEL: %s\n",configConsole->ip_kernel);
-	printf("PUERTO KERNEL: %s\n",configConsole->puerto_kernel);
+	log_info(logConsole,"IP KERNEL: %s\n",configConsole->ip_kernel);
+	log_info(logConsole,"PUERTO KERNEL: %s\n",configConsole->puerto_kernel);
 }
 
 void config_free(){
