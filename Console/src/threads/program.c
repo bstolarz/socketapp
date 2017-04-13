@@ -22,33 +22,52 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+void thread_program_destroy(t_program* program, int insideThread){
+	if(program->pid != 0){
+		bool _buscarProgramaPID(t_program* auxProgram){
+			return auxProgram->pid==program->pid;
+		}
+		list_remove_by_condition(programs, (void*)_buscarProgramaPID);
+	}
+
+	if(insideThread == 0){
+		pthread_cancel(program->thread);
+		log_info(logConsole,"El programa %i fue abortado.", program->pid);
+	}
+
+	close(program->socketKernel);
+	free(program->pathProgram);
+	free(program);
+	return;
+}
+
 void* thread_program(void * params){
 	t_program * program = params;
-	printf("Thread creado con %s\n", program->pathProgram);
+	printf("Se inicio el programa: %s\n", program->pathProgram);
+	log_info(logConsole,"Se inicio el programa: %s", program->pathProgram);
 
 	//Me conecto con el kernel
 	socket_client_create(&(program->socketKernel), configConsole->ip_kernel, configConsole->puerto_kernel);
 	if(program->socketKernel<=0){
-		log_info(logConsole,"El programa '%s' no logro conectarse con el Kernel.\n", program->pathProgram);
-		close(program->socketKernel);
+		log_info(logConsole,"El programa '%s' no logro conectarse con el Kernel.", program->pathProgram);
+		thread_program_destroy(program, 1);
 		return params;
 	}
 
 	//Le informo que soy un programa nuevo
 	if(socket_send_string(program->socketKernel, "NewProgram")<=0){
-		log_info(logConsole,"El programa '%s' no pudo hacer el handshake con el Kernel.\n", program->pathProgram);
-		close(program->socketKernel);
+		log_info(logConsole,"El programa '%s' no pudo hacer el handshake con el Kernel.", program->pathProgram);
+		thread_program_destroy(program, 1);
 		return params;
 	}
 
-	int pid=0;
-	if(socket_recv_int(program->socketKernel,&pid)<=0){
-		log_info(logConsole,"El programa '%s' no pudo obtener un PID del kernel.\n", program->pathProgram);
-		close(program->socketKernel);
+	if(socket_recv_int(program->socketKernel,&(program->pid))<=0){
+		log_info(logConsole,"El programa '%s' no pudo obtener un PID del kernel.", program->pathProgram);
+		thread_program_destroy(program, 1);
 		return params;
 	}
-	program->pid=pid;
-	log_info(logConsole,"Se inicio e l programa '%i'.\n", program->pid);
+	log_info(logConsole,"El PID del programa %s es '%i'.", program->pathProgram, program->pid);
+	list_add(programs, program);
 
 	//Levanto el archivo  del programa
 	char* code = 0;
@@ -67,18 +86,34 @@ void* thread_program(void * params){
 	  }
 	  fclose (f);
 	}else{
-		log_info(logConsole,"El archivo '%s' no existe o no puede ser abierto.\n", program->pathProgram);
-		close(program->socketKernel);
+		log_info(logConsole,"El archivo '%s' no existe o no puede ser abierto.", program->pathProgram);
+		thread_program_destroy(program, 1);
 		return params;
 	}
 
 	//Envio el archivo del programa
 	if(socket_send(program->socketKernel, code, fileSize) != fileSize){
-		log_info(logConsole,"El programa '%i' no pudo enviar su codigo al kernel.\n", program->pid);
-		close(program->socketKernel);
+		log_info(logConsole,"El programa '%i' no pudo enviar su codigo al kernel.", program->pid);
+		thread_program_destroy(program, 1);
 		return params;
 	}
 
+
+	char* printMessage = 0;
+	while(1){
+		if(socket_recv_string(program->socketKernel,&printMessage)<=0){
+			log_info(logConsole,"El programa %i no pudo recibir el mensaje del kernel.", program->pid);
+			thread_program_destroy(program, 1);
+			return params;
+		}
+
+		if(strcmp(printMessage, "FinEjecucion")==0){
+			//TODO Aca va a ir la info al finalizar la ejecucion.
+		}else{
+			printf("Program %i - %s\n", program->pid, printMessage);
+			free(printMessage);
+		}
+	}
 
 	return params;
 }

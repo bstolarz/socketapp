@@ -18,9 +18,9 @@ typedef struct{
 typedef struct{
 	int pid;
 	int socketKernel;
-	t_log* log;
 	pthread_t thread;
 	char* pathProgram;
+	int die;
 }t_program;
 
 #endif /* COMMONS_STRUCTURES_H_ */

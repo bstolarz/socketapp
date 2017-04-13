@@ -12,8 +12,10 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <signal.h>
 #include <commons/string.h>
 #include "../commons/structures.h"
+#include "../commons/declarations.h"
 #include "../threads/program.h"
 
 void command_start(){
@@ -25,21 +27,46 @@ void command_start(){
 	size_t cantLeida = getline(&path, &cantidad, stdin);
 	path[cantLeida-1]='\0';
 
-	t_program * programa = malloc(sizeof(t_program));
-	programa->pathProgram = string_duplicate(path);
+	t_program * program = malloc(sizeof(t_program));
+	program->pathProgram = string_duplicate(path);
+	program->pid = 0;
 	free(path);
 
-	pthread_create(&(programa->thread),NULL,thread_program, (void*)programa );
+	pthread_create(&(program->thread),NULL,thread_program, (void*)program);
+
+	return;
 }
 
 void command_finish(){
-	printf("Se ingreso: finalizar\n");
+	printf("Ingrese el PID del programa:\n");
+	size_t cantidad = 50;
+	char* pidS = malloc(sizeof(char)*cantidad);
+
+	size_t cantLeida = getline(&pidS, &cantidad, stdin);
+	pidS[cantLeida-1]='\0';
+
+	int pid = atoi(pidS);
+
+	bool _buscarProgramaPID(t_program* programa){
+		return programa->pid==pid;
+	}
+	t_program* program = list_remove_by_condition(programs, (void*)_buscarProgramaPID);
+
+	thread_program_destroy(program, 0);
+
+	return;
 }
 
 void command_clear(){
-	printf("Se ingreso: clear\n");
+	system("clear");
 }
 
 void command_disconnect(){
-	printf("Se ingreso: desconectar\n");
+	log_info(logConsole,"Todos los programas seran abortados.");
+
+	void _destroyProgram(t_program* program){
+		thread_program_destroy(program, 0);
+	}
+	list_clean_and_destroy_elements(programs, (void*)_destroyProgram);
+	return;
 }

@@ -53,31 +53,6 @@ int main(int argc, char* argv[]) {
 			printf("	disconnect 		Aborta la ejecucion de todos los programas.\n");
 
 		}
-
-		/*switch(str[0]){
-			case 'c':
-				log_info(logConsole,"Clean Screen\n");
-				system("clear");
-				break;
-			case 'i':
-				path=string_duplicate(string_substring_from(str,2));
-				log_info(logConsole,"Se pide iniciar programa con path %s\n",path);
-				//printf("Path: %s",path);
-				FILE* f=fopen(path,"r");
-				log_info(logConsole, "Se abre el archivo %s\n", path);
-				if (f==NULL){
-					log_info(logConsole,"Error abriendo archivos\n");
-				}
-				if(iniciarProgramaAnsisop(f,ansisop, serverSocket)==EXIT_SUCCESS){
-					log_info(logConsole,"Iniciar hilo programa para el programa ubicado en %s\n",path);
-				};
-				break;
-			case 'f':
-				log_info(logConsole,"Se pide finalizar el programa ubicado en %s\n",path);
-				path=string_duplicate(string_substring_from(str,2));
-				finalizarPrograma(path);
-				break;
-		}*/
 	}
 	return EXIT_SUCCESS;
 }
