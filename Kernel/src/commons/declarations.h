@@ -15,6 +15,7 @@
 int programID;
 
 pthread_t selectProgramThread;
+pthread_t selectCPUThread;
 
 t_kernel* configKernel;
 t_log* logKernel;
@@ -23,5 +24,7 @@ t_list* listNewPrograms;
 t_list* listReadyPrograms;
 t_list* listExecutingPrograms;
 t_list* listFinishedpPrograms;
+
+t_list* listCPUs;
 
 #endif /* COMMONS_DEFINITIONS_H_ */

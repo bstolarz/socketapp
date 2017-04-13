@@ -20,9 +20,7 @@
 
 #include "../../commons/declarations.h"
 
-#include "functions.h"
-
-void select_program_socket_connection_lost(fd_set* master, int socket, int nbytes){
+void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {
 		printf("selectserver: socket %d hung up\n", socket);
 	} else {
@@ -32,15 +30,12 @@ void select_program_socket_connection_lost(fd_set* master, int socket, int nbyte
 	FD_CLR(socket, master); // eliminar del conjunto maestro
 }
 
-void select_program_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
-	if(strcmp(package, "NewProgram") == 0){
-		program_process_new(master, socket);
-	}else{
-		printf("Error, mensaje no identificado: %s\n", package);
-	}
+void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
+	printf("Llego %s\n", package);
+	return;
 }
 
-void* select_program_thread_launcher(void* arg){
-	socket_server_select(configKernel->puerto_prog, *select_program_socket_connection_lost, *select_program_socket_recive_package);
+void* select_cpu_thread_launcher(void* arg){
+	socket_server_select(configKernel->puerto_cpu, *select_cpu_socket_connection_lost, *select_cpu_socket_recive_package);
 	return arg;
 }

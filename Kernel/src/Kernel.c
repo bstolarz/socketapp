@@ -21,6 +21,7 @@
 #include "libSockets/send.h"
 #include "commons/structures.h"
 #include "threads/program/select.h"
+#include "threads/cpu/select.h"
 
 int main(int argc, char* argv[]) {
 	logKernel=log_create("LogKernel","Kernel",false,LOG_LEVEL_DEBUG);
@@ -39,8 +40,12 @@ int main(int argc, char* argv[]) {
 	listExecutingPrograms=list_create();
 	listFinishedpPrograms=list_create();
 
+	listCPUs=list_create();
+
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
+	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);
 
 	pthread_join(selectProgramThread, NULL);
+	pthread_join(selectCPUThread, NULL);
 	return EXIT_SUCCESS;
 }
