@@ -13,12 +13,12 @@
 #define COMMONS_STRUCTURES_H_
 
 typedef struct{
-	int puerto_prog;
-	int puerto_cpu;
+	char* puerto_prog;
+	char* puerto_cpu;
 	char* ip_memoria;
-	int puerto_memoria;
+	char* puerto_memoria;
 	char* ip_fs;
-	int puerto_fs;
+	char* puerto_fs;
 	int quantum;
 	int quantum_sleep;
 	char* algoritmo;
@@ -29,11 +29,6 @@ typedef struct{
 }t_kernel;
 
 typedef struct{
-	int offset_inicio;
-	int offset_fin;
-}t_indiceDeCodigo;
-
-typedef struct{
 	char* id;
 	int initialValue;
 }t_semaforo;
@@ -42,24 +37,35 @@ typedef struct{
 	char* nombre;
 }t_sharedVar;
 
+
+typedef struct{
+	int offset_inicio;
+	int offset_fin;
+}t_indiceDeCodigo;
+
 typedef struct{
 
 }t_indiceDeEtiquetas;
+
 typedef struct{
 
 }t_indiceDelStack;
 
 typedef struct{
-	int PID;
-	int PC;
+	int pid;
+	int pc;
 	int cantPagsCodigo;
-	t_indiceDeCodigo indiceDeCodigo;
-	t_indiceDeEtiquetas indiceDeEtiquetas;
-	t_indiceDelStack indiceDeStack;
-	t_dictionary* processFileTable;
+	t_indiceDeCodigo * indiceDeCodigo;
+	t_indiceDeEtiquetas * indiceDeEtiquetas;
+	t_indiceDelStack * indiceDeStack;
+	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;
 }t_pcb;
-int memorySocket;
+
+typedef struct{
+	int socket;
+	t_pcb * pcb;
+}t_program;
 
 #endif /* COMMONS_STRUCTURES_H_ */

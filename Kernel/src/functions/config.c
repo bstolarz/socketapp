@@ -50,17 +50,17 @@ void config_read_shared_vars(t_config* config){
 void config_read(char* path){
 	t_config* config=config_create(path);
 
-	configKernel->algoritmo=string_duplicate(config_get_string_value(config,"ALGORITMO"));
-	configKernel->grado_multiprog=config_get_int_value(config,"GRADO_MULTIPROG");
-	configKernel->ip_fs=string_duplicate(config_get_string_value(config,"IP_FS"));
-	configKernel->ip_memoria=string_duplicate(config_get_string_value(config,"IP_MEMORIA"));
-	configKernel->puerto_cpu=config_get_int_value(config,"PUERTO_CPU");
-	configKernel->puerto_fs=config_get_int_value(config,"PUERTO_FS");
-	configKernel->puerto_memoria=config_get_int_value(config,"PUERTO_MEMORIA");
-	configKernel->puerto_prog=config_get_int_value(config,"PUERTO_PROG");
-	configKernel->quantum=config_get_int_value(config,"QUANTUM");
-	configKernel->quantum_sleep=config_get_int_value(config,"QUANTUM_SLEEP");
-	configKernel->stack_size=config_get_int_value(config,"STACK_SIZE");
+	configKernel->algoritmo			= string_duplicate(config_get_string_value(config,"ALGORITMO"));
+	configKernel->grado_multiprog	= config_get_int_value(config,"GRADO_MULTIPROG");
+	configKernel->ip_fs				= string_duplicate(config_get_string_value(config,"IP_FS"));
+	configKernel->ip_memoria		= string_duplicate(config_get_string_value(config,"IP_MEMORIA"));
+	configKernel->puerto_cpu		= string_duplicate(config_get_string_value(config,"PUERTO_CPU"));
+	configKernel->puerto_fs			= string_duplicate(config_get_string_value(config,"PUERTO_FS"));
+	configKernel->puerto_memoria	= string_duplicate(config_get_string_value(config,"PUERTO_MEMORIA"));
+	configKernel->puerto_prog		= string_duplicate(config_get_string_value(config,"PUERTO_PROG"));
+	configKernel->quantum			= config_get_int_value(config,"QUANTUM");
+	configKernel->quantum_sleep		= config_get_int_value(config,"QUANTUM_SLEEP");
+	configKernel->stack_size		= config_get_int_value(config,"STACK_SIZE");
 
 	config_read_semaforos(config);
 	config_read_shared_vars(config);

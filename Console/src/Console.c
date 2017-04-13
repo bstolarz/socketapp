@@ -1,27 +1,18 @@
-/*
- ============================================================================
- Name        : Console.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
-#include "functions/hiloPrograma.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include <commons/config.h>
 #include <commons/string.h>
-#include "commons/structures.h"
-#include "commons/declarations.h"
-#include "functions/config.h"
-#include "libSockets/client.h"
-#include "libSockets/send.h"
-#include "libSockets/recv.h"
 #include <commons/log.h>
 
+#include "commons/structures.h"
+#include "commons/declarations.h"
+
+#include "functions/config.h"
+#include "functions/commands.h"
+#include "threads/program.h"
 
 int main(int argc, char* argv[]) {
 	logConsole=log_create("logConsole.txt","Console",false,LOG_LEVEL_DEBUG);
@@ -35,25 +26,35 @@ int main(int argc, char* argv[]) {
 	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/console");
 	config_print();
 
+	programs = list_create();
 
-	int serverSocket=0;
-	socket_client_create(&serverSocket, configConsole->ip_kernel, configConsole->puerto_kernel);
-	if(serverSocket<=0){
-		log_info(logConsole,"No logre conectarme al server\n");
-		close(serverSocket);
-		config_free();
-		return EXIT_FAILURE;
-	}
 	size_t cantidad = 50;
-	char *str=malloc(sizeof(char)*cantidad);
+	char* comando = malloc(sizeof(char)*cantidad);
+
 	while(1){
-		log_info(logConsole,"Esperando comando\n");
-		//printf("Ingrese un mensaje:\n");
-		size_t cantLeida = getline(&str, &cantidad, stdin);
-		char* path=malloc(sizeof(char)*cantLeida);
-		str[cantLeida-1]='\0';
-		char* ansisop=string_new();
-		switch(str[0]){
+		printf("Ingrese un comando:\n");
+		size_t cantLeida = getline(&comando, &cantidad, stdin);
+		comando[cantLeida-1]='\0';
+
+		if(strcmp(comando, "clear") == 0){
+			command_clear();
+		}else if(strcmp(comando, "start") == 0){\
+			command_start();
+		}else if(strcmp(comando, "finish") == 0){
+			command_finish();
+		}else if(strcmp(comando, "disconnect") == 0){
+			command_disconnect();
+		}else{
+			printf("El comando ingresado no existe.\n");
+			printf("Los comandos permitidos son:\n");
+			printf("	start			Permite ejecutar un nuevo programa.\n");
+			printf("	finish			Aborta la ejecucion de un programa.\n");
+			printf("	clear 			Borra la  informacion en pantalla.\n");
+			printf("	disconnect 		Aborta la ejecucion de todos los programas.\n");
+
+		}
+
+		/*switch(str[0]){
 			case 'c':
 				log_info(logConsole,"Clean Screen\n");
 				system("clear");
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
 				path=string_duplicate(string_substring_from(str,2));
 				finalizarPrograma(path);
 				break;
-		}
+		}*/
 	}
 	return EXIT_SUCCESS;
 }

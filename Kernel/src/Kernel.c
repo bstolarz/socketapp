@@ -19,8 +19,8 @@
 #include <commons/log.h>
 #include "commons/declarations.h"
 #include "libSockets/send.h"
-#include "threads/select.h"
 #include "commons/structures.h"
+#include "threads/selectProgram.h"
 
 int main(int argc, char* argv[]) {
 	logKernel=log_create("LogKernel","Kernel",false,LOG_LEVEL_DEBUG);
@@ -32,14 +32,15 @@ int main(int argc, char* argv[]) {
 	configKernel=malloc(sizeof(t_kernel));
 	config_read(argv[1]);
 	config_print();
-	list_PCBs=list_create();
-	CPUs=list_create();
-	clientes = list_create();
-	pthread_create(&selectThread,NULL,selectThreadLauncher, NULL);
 
-	//Reenviar mensaje al resto de los clientes
+	programID = 0;
+	listNewPrograms=list_create();
+	listReadyPrograms=list_create();
+	listExecutingPrograms=list_create();
+	listFinishedpPrograms=list_create();
 
+	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 
-	pthread_join(selectThread, NULL);
+	pthread_join(selectProgramThread, NULL);
 	return EXIT_SUCCESS;
 }
