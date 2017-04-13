@@ -10,11 +10,11 @@
 #include <commons/string.h>
 #include <commons/log.h>
 
-#include "../libSockets/send.h"
-#include "../libSockets/recv.h"
+#include "../../libSockets/send.h"
+#include "../../libSockets/recv.h"
 
-#include "../commons/structures.h"
-#include "../commons/declarations.h"
+#include "../../commons/structures.h"
+#include "../../commons/declarations.h"
 
 int program_generate_id(){
 	programID++;

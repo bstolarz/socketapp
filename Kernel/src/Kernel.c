@@ -20,7 +20,7 @@
 #include "commons/declarations.h"
 #include "libSockets/send.h"
 #include "commons/structures.h"
-#include "threads/selectProgram.h"
+#include "threads/program/select.h"
 
 int main(int argc, char* argv[]) {
 	logKernel=log_create("LogKernel","Kernel",false,LOG_LEVEL_DEBUG);
