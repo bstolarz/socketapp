@@ -35,12 +35,27 @@ int main(int argc, char* argv[]) {
 	config_print();
 
 	programID = 0;
-	listNewPrograms=list_create();
-	listReadyPrograms=list_create();
-	listExecutingPrograms=list_create();
-	listFinishedpPrograms=list_create();
 
-	listCPUs=list_create();
+	//Inicio lista nueva
+	queueNewPrograms = malloc(sizeof(t_queue));
+	queueNewPrograms->list = list_create();
+	pthread_mutex_init(&(queueNewPrograms->mutex),NULL);
+
+	//Inicio lista listos
+	queueReadyPrograms = malloc(sizeof(t_queue));
+	queueReadyPrograms->list = list_create();
+	pthread_mutex_init(&(queueReadyPrograms->mutex),NULL);
+
+	//Inicio lista terminados
+	queueFinishedpPrograms = malloc(sizeof(t_queue));
+	queueFinishedpPrograms->list = list_create();
+	pthread_mutex_init(&(queueFinishedpPrograms->mutex),NULL);
+
+	//Inicio lista cpus
+	queueCPUs = malloc(sizeof(t_queue));
+	queueCPUs->list = list_create();
+	pthread_mutex_init(&(queueCPUs->mutex),NULL);
+
 
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);

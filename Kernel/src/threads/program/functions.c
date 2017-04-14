@@ -63,6 +63,8 @@ void program_process_new(fd_set* master, int socket){
 
 	printf("Se agrego a %i a la lista de programas\n", program->pcb->pid);
 
-	list_add(listNewPrograms, program);
+	pthread_mutex_lock(&(queueNewPrograms->mutex));
+	list_add(queueNewPrograms->list, program);
+	pthread_mutex_unlock(&(queueNewPrograms->mutex));
 	return;
 }

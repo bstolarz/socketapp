@@ -68,4 +68,9 @@ typedef struct{
 	t_pcb * pcb;
 }t_program;
 
+typedef struct{
+	pthread_mutex_t mutex;
+	t_list * list;
+}t_queue;
+
 #endif /* COMMONS_STRUCTURES_H_ */

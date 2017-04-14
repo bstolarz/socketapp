@@ -20,11 +20,10 @@ pthread_t selectCPUThread;
 t_kernel* configKernel;
 t_log* logKernel;
 
-t_list* listNewPrograms;
-t_list* listReadyPrograms;
-t_list* listExecutingPrograms;
-t_list* listFinishedpPrograms;
+t_queue* queueNewPrograms;
+t_queue* queueReadyPrograms;
+t_queue* queueFinishedpPrograms;
 
-t_list* listCPUs;
+t_queue* queueCPUs;
 
 #endif /* COMMONS_DEFINITIONS_H_ */
