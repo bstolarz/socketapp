@@ -66,7 +66,15 @@ typedef struct{
 typedef struct{
 	int socket;
 	t_pcb * pcb;
+	int interruptionCode;
+	int codeSize;
+	void* code;
 }t_program;
+
+typedef struct{
+	int socket;
+	t_program* program;
+}t_cpu;
 
 typedef struct{
 	pthread_mutex_t mutex;

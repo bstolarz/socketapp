@@ -35,6 +35,9 @@ void thread_program_destroy(t_program* program, int insideThread){
 		log_info(logConsole,"El programa %i fue abortado.", program->pid);
 	}
 
+	if(socket_send_string(program->socketKernel, "Finished")<=0){
+		log_info(logConsole,"El programa '%i' informar que fue finalizado desde la consola.", program->pid);
+	}
 	close(program->socketKernel);
 	free(program->pathProgram);
 	free(program);

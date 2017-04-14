@@ -25,13 +25,14 @@
 
 int main(int argc, char* argv[]) {
 	logKernel=log_create("LogKernel","Kernel",false,LOG_LEVEL_DEBUG);
-	if(argc!=2){
+	/*if(argc!=2){
 		printf("Missing config path\n");
 		return -1;
-	}
+	}*/
 
 	configKernel=malloc(sizeof(t_kernel));
-	config_read(argv[1]);
+	//config_read(argv[1]);
+	config_read("/home/utnso/git/tp-2017-1c-SocketApp/kernel");
 	config_print();
 
 	programID = 0;
