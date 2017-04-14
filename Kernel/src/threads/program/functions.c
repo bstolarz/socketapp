@@ -74,6 +74,22 @@ void program_process_new(fd_set* master, int socket){
 	return;
 }
 
+void program_finish(t_program* program){
+	pthread_mutex_lock(&(queueFinishedpPrograms->mutex));
+
+	//TODO
+	/*
+	 * Aca deberiamos:
+	 * 		Enviar info estadistico
+	 * 		Informar del fin de ejecucion y su exitCode
+	 * 		Cerrar el socket
+	 * 		Dejar el programa finalizado.
+	 */
+
+	list_add(queueFinishedpPrograms->list, program);
+	pthread_mutex_unlock(&(queueFinishedpPrograms->mutex));
+}
+
 void program_interrup(int socket, int interruptionCode, int overrideInterruption){
 	bool _buscarProgramaSocket(t_program* programa){
 		return programa->socket==socket;
@@ -97,7 +113,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		if(cpu->program->interruptionCode == 0 || overrideInterruption == 1){
 			cpu->program->interruptionCode = interruptionCode;
 		}
-		//TODO enviar interrupcion al cpu
+		//TODO enviar interrupcion al cpu para que este lo devuelva con el error y se procese la muerte con la funcion 'program_finish'
 	}
 
 	//Reviso la cola de nuevos
@@ -107,12 +123,8 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		if(program != NULL){
 			printf("El programa %i fue encontrado en la lista de nuevos y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
 			programaEncontrado = 1;
-			if(program->interruptionCode == 0 || overrideInterruption == 1){
-				program->interruptionCode = interruptionCode;
-				pthread_mutex_lock(&(queueFinishedpPrograms->mutex));
-				list_add(queueFinishedpPrograms->list, program);
-				pthread_mutex_unlock(&(queueFinishedpPrograms->mutex));
-			}
+			program->pcb->exitCode = interruptionCode;
+			program_finish(program);
 		}
 		pthread_mutex_unlock(&(queueNewPrograms->mutex));
 	}
@@ -124,17 +136,12 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		if(program != NULL){
 			printf("El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
 			programaEncontrado = 1;
-			if(program->interruptionCode == 0 || overrideInterruption == 1){
-				program->interruptionCode = interruptionCode;
-				pthread_mutex_lock(&(queueFinishedpPrograms->mutex));
-				list_add(queueFinishedpPrograms->list, program);
-				pthread_mutex_unlock(&(queueFinishedpPrograms->mutex));
-			}
+			program->pcb->exitCode = interruptionCode;
+			program_finish(program);
 		}
 		pthread_mutex_unlock(&(queueReadyPrograms->mutex));
 	}
 
 	//Deslockeo los cpus
 	pthread_mutex_unlock(&(queueCPUs->mutex));
-
 }
