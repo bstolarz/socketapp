@@ -52,7 +52,11 @@ void command_finish(){
 	}
 	t_program* program = list_remove_by_condition(programs, (void*)_buscarProgramaPID);
 
-	thread_program_destroy(program, 0);
+	if(program != NULL){
+		thread_program_destroy(program, 0);
+	}else{
+		printf("El PID ingresado no corresponde con ningun  programa.\n");
+	}
 
 	return;
 }
