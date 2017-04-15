@@ -5,11 +5,16 @@
  *      Author: utnso
  */
 
+#include <commons/collections/list.h>
+
 #include "structures.h"
+
 
 #ifndef COMMONS_DECLARATIONS_H_
 #define COMMONS_DECLARATIONS_H_
 
 t_console* configConsole;
+t_log* logConsole;
+t_list* programs;
 
 #endif /* COMMONS_DECLARATIONS_H_ */

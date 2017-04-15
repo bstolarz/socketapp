@@ -12,10 +12,18 @@
 #ifndef COMMONS_DEFINITIONS_H_
 #define COMMONS_DEFINITIONS_H_
 
-pthread_t selectThread;
-t_list* clientes;
+int programID;
+
+pthread_t selectProgramThread;
+pthread_t selectCPUThread;
+
 t_kernel* configKernel;
-t_list* CPUs;
 t_log* logKernel;
-t_list* list_PCBs;
+
+t_queue* queueNewPrograms;
+t_queue* queueReadyPrograms;
+t_queue* queueFinishedpPrograms;
+
+t_queue* queueCPUs;
+
 #endif /* COMMONS_DEFINITIONS_H_ */
