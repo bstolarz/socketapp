@@ -1,8 +1,8 @@
-#include "structures.h"
-#include <commons/log.h>
-
 #ifndef COMMONS_DECLARATIONS_H_
 #define COMMONS_DECLARATIONS_H_
+
+#include "structures.h"
+#include <commons/log.h>
 
 /*extern*?*/ t_memory* configMemory;
 

@@ -138,7 +138,7 @@ void* frame_lookup(int PID, int page)
 
     for (i = 0; i != proccessPageCount; ++i)
         if (pageTable[i].PID == PID && pageTable[i].page == page)
-            return proccessPages + i;
+            return proccessPages + (i * configMemory->frameSize);
 
     log_error(memoryLog, "no encontro frame para proceso [%d] pag %d", PID, page);
     return NULL;
