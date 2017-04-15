@@ -85,35 +85,3 @@ void test_console()
 	program_end(1);
 	program_end(2);
 }
-
-
-void test_fill()
-{
-	int p, o;
-	int i;
-
-	program_init(0, 6);
-	program_init(1, 4);
-
-	size_t intSize = sizeof(int);
-
-	i = 0;
-	for (p = 0; p != 6; ++p) // foreach page
-	{
-		for (o = 0; o < configMemory->frameSize; o += intSize)
-		{
-			int positionValue = i++;
-			memory_write(0, p, o, intSize, &positionValue);
-		}
-	}
-
-	i = 0;
-	for (p = 6; p != 10; ++p) // foreach page
-	{
-		for (o = 0; o < configMemory->frameSize; o += intSize)
-		{
-			int positionValue = i++;
-			memory_write(1, p, o, intSize, &positionValue);
-		}
-	}
-}

@@ -43,9 +43,7 @@ int main(int argc, char* argv[]){
 	}
 
 	init(argv[1]);
-	program_init(0, 3);
 	start_server();
-	program_end(0);
 	cleanup();
 	
 	return EXIT_SUCCESS;
