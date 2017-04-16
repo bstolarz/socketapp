@@ -20,11 +20,6 @@ void config_read(char* path){
 	config_destroy(config);
 }
 
-void config_print(){
-	log_info(logConsole,"IP KERNEL: %s",configConsole->ip_kernel);
-	log_info(logConsole,"PUERTO KERNEL: %s",configConsole->puerto_kernel);
-}
-
 void config_free(){
 	free(configConsole->ip_kernel);
 	free(configConsole->puerto_kernel);

@@ -19,7 +19,7 @@
 #include "../threads/program.h"
 
 void command_start(){
-	printf("Ingrese el path al archivo:\n");
+	printf("[SISTEMA] - Ingrese el path al archivo:\n");
 
 	size_t cantidad = 200;
 	char* path = malloc(sizeof(char)*cantidad);
@@ -38,7 +38,7 @@ void command_start(){
 }
 
 void command_finish(){
-	printf("Ingrese el PID del programa:\n");
+	printf("[SISTEMA] - Ingrese el PID del programa:\n");
 	size_t cantidad = 50;
 	char* pidS = malloc(sizeof(char)*cantidad);
 
@@ -55,7 +55,7 @@ void command_finish(){
 	if(program != NULL){
 		thread_program_destroy(program, 0);
 	}else{
-		printf("El PID ingresado no corresponde con ningun  programa.\n");
+		printf("[SISTEMA] - El PID ingresado no corresponde con ningun  programa.\n");
 	}
 
 	return;
@@ -66,7 +66,7 @@ void command_clear(){
 }
 
 void command_disconnect(){
-	log_info(logConsole,"Todos los programas seran abortados.");
+	log_info(logConsole,"[SISTEMA] - Todos los programas seran abortados.");
 
 	void _destroyProgram(t_program* program){
 		thread_program_destroy(program, 0);
