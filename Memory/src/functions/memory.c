@@ -51,7 +51,7 @@ int program_init(int PID, int pageCount)
 
     if (frameIndices == NULL)
     {
-        log_error(memoryLog, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
+        log_error(logMemory, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
         return ERROR_NO_RESOURCES_FOR_PROCCESS;
     }
     
@@ -140,7 +140,7 @@ void* frame_lookup(int PID, int page)
         if (pageTable[i].PID == PID && pageTable[i].page == page)
             return proccessPages + (i * configMemory->frameSize);
 
-    log_error(memoryLog, "no encontro frame para proceso [%d] pag %d", PID, page);
+    log_error(logMemory, "no encontro frame para proceso [%d] pag %d", PID, page);
     return NULL;
 }
 

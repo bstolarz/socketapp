@@ -5,6 +5,7 @@
 #include "commons/structures.h"
 #include "commons/declarations.h"
 #include "functions/config.h"
+#include "functions/log.h"
 #include "functions/memory.h"
 #include "functions/test.h"
 #include "functions/memory_server.h"
@@ -13,28 +14,6 @@
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
 
-
-void init(char* configPath)
-{
-	memoryLog = log_create("memory_log.txt", "Memory", false, LOG_LEVEL_DEBUG);
-
-	// config init
-	config_init(configPath);
-	config_print();
-
-	memory_init();
-}
-
-void cleanup()
-{
-	config_memory_destroy();
-	free(pageTable);
-	log_destroy(memoryLog);
-}
-
-
-
-
 int main(int argc, char* argv[]){
 
 	if (argc != 2){
@@ -42,9 +21,19 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	init(argv[1]);
+	configMemory = malloc(sizeof(t_memory));
+	config_read(argv[1]);
+	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/memory");
+
+	logMemory = log_create_file();
+	log_config();
+
+	memory_init();
 	start_server();
-	cleanup();
+
+	config_free();
+	free(pageTable);
+	log_destroy(logMemory);
 	
 	return EXIT_SUCCESS;
 }

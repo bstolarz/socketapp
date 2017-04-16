@@ -79,7 +79,7 @@ void handle_frame_size(int clientSocket)
 
 void handle_command(fd_set* sockets, int socket, int byteCount, char* data)
 {
-    log_debug(memoryLog, "recibi commando %s de socket (%d)\n", data, socket);
+    log_debug(logMemory, "recibi commando %s de socket (%d)\n", data, socket);
     
     if (strcmp("read", data) == 0)
         handle_read(socket);
@@ -97,7 +97,7 @@ void handle_command(fd_set* sockets, int socket, int byteCount, char* data)
     	handle_frame_size(socket);
 
     else
-        log_warning(memoryLog, "no existe el commando %s", data);
+        log_warning(logMemory, "no existe el commando %s", data);
 }
 
 void start_server() {
