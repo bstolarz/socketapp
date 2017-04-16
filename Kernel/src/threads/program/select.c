@@ -33,6 +33,7 @@ void select_program_socket_recive_package(fd_set* master, int socket, int nbytes
 	}else if(strcmp(package, "Finished") == 0){
 		program_interrup(socket, -7, 0);
 	}else{
+		log_info(logKernel, "Error, mensaje no identificado: %s", package);
 		printf("Error, mensaje no identificado: %s\n", package);
 	}
 }

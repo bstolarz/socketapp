@@ -1,13 +1,3 @@
-/*
- ============================================================================
- Name        : Kernel.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
-#include "functions/config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -22,9 +12,11 @@
 #include "commons/structures.h"
 #include "threads/program/select.h"
 #include "threads/cpu/select.h"
+#include "functions/config.h"
+#include "functions/log.h"
 
 int main(int argc, char* argv[]) {
-	logKernel=log_create("LogKernel","Kernel",false,LOG_LEVEL_DEBUG);
+
 	if(argc!=2){
 		printf("Missing config path\n");
 		return -1;
@@ -33,7 +25,9 @@ int main(int argc, char* argv[]) {
 	configKernel=malloc(sizeof(t_kernel));
 	config_read(argv[1]);
 	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/kernel");
-	config_print();
+
+	logKernel=log_create_file();
+	log_config();
 
 	programID = 0;
 

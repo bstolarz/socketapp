@@ -61,7 +61,8 @@ void program_process_new(fd_set* master, int socket){
 	printf("\n");
 	 */
 
-	printf("Se agrego a %i a la lista de programas\n", program->pcb->pid);
+	printf("Se agrego a %i a la lista de programas nuevos\n", program->pcb->pid);
+	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
 
 	pthread_mutex_lock(&(queueNewPrograms->mutex));
 	list_add(queueNewPrograms->list, program);
@@ -103,6 +104,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	//Reviso los cpus para ver si  el programa  esta ejecutando
 	t_cpu* cpu = list_find(queueCPUs->list, (void*)_buscarProgramaSocketInCPUs);
 	if(cpu != NULL){
+		log_info(logKernel, "El programa %i fue encontrado en la lista de cpus y se le puso el interruption code: %i.", cpu->program->pcb->pid, interruptionCode);
 		printf("El programa %i fue encontrado en la lista de cpus y se le puso el interruption code: %i\n", cpu->program->pcb->pid, interruptionCode);
 		programaEncontrado = 1;
 		if(cpu->program->interruptionCode == 0 || overrideInterruption == 1){
@@ -116,6 +118,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		pthread_mutex_lock(&(queueNewPrograms->mutex));
 		t_program* program = list_remove_by_condition(queueNewPrograms->list, (void*)_buscarProgramaSocket);
 		if(program != NULL){
+			log_info(logKernel, "El programa %i fue encontrado en la lista de nuevos y se le puso el interruption code: %i.", program->pcb->pid, interruptionCode);
 			printf("El programa %i fue encontrado en la lista de nuevos y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
 			programaEncontrado = 1;
 			program->pcb->exitCode = interruptionCode;
@@ -129,6 +132,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		pthread_mutex_lock(&(queueReadyPrograms->mutex));
 		t_program* program = list_remove_by_condition(queueReadyPrograms->list, (void*)_buscarProgramaSocket);
 		if(program != NULL){
+			log_info(logKernel, "El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i.", program->pcb->pid, interruptionCode);
 			printf("El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
 			programaEncontrado = 1;
 			program->pcb->exitCode = interruptionCode;
