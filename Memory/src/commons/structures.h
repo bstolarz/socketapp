@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
 
-	int portNum;
+	char* portNumStr;
 	int frameCount;
 	int frameSize;
 	int cacheEntryCount;

@@ -2,15 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <commons/config.h>
 #include "commons/structures.h"
 #include "commons/declarations.h"
 #include "functions/config.h"
+#include "functions/memory.h"
+#include "functions/test.h"
+#include "functions/memory_server.h"
+#include <commons/log.h>
 #include "libSockets/client.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
-#include "functions/memory.h"
-#include "functions/test.h"
+
+
+void init(char* configPath)
+{
+	memoryLog = log_create("memory_log.txt", "Memory", false, LOG_LEVEL_DEBUG);
+
+	// config init
+	config_init(configPath);
+	config_print();
+
+	memory_init();
+}
+
+void cleanup()
+{
+	config_memory_destroy();
+	free(pageTable);
+	log_destroy(memoryLog);
+}
+
+
 
 
 int main(int argc, char* argv[]){
@@ -20,63 +42,9 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	memoryLog = log_create("memory_log.txt", "Memory", false, LOG_LEVEL_DEBUG);
-
-	// config init
-	configMemory = malloc(sizeof(t_memory));
-	config_read(argv[1]);
-	config_print();
-
-	memory_init();
+	init(argv[1]);
+	start_server();
+	cleanup();
 	
-	// test_program_init_end();
-	// test_read_write();
-	// test_console();
-
-	// return 0;
-
-	int serverSocket=0;
-	socket_client_create(&serverSocket, "127.0.0.1", "6667");
-	
-	if(serverSocket){
-		socket_send_string(serverSocket, "MEM");
-		char* mensaje = "";
-
-		while(1) {
-			if(socket_recv_string(serverSocket, &mensaje)>0) {
-
-				int programByteSize;
-				switch (mensaje[0]){
-				//Recibir 'i' significa "iniciar un programa"
-					case 'i':
-
-						socket_recv_int(serverSocket, &programByteSize);
-						printf("El tamanio del programa es %d bytes\n", programByteSize);
-
-						// usleep(configMemory->responseDelay * 1000);
-
-						int* programPages = get_continguous_frames(bytes_to_pages(programByteSize));
-
-						if (programPages != NULL) {
-							printf("Hay espacio en memoria para ejecutar el programa\n");
-							socket_send_int(serverSocket,1);
-						}
-						printf("inicializar progrma");
-						socket_send_int(serverSocket,1);
-
-						free(programPages);
-						break;
-
-						
-				}
-			}else{
-				log_destroy(memoryLog);
-				return -1;
-			}
-		}
-
-	}
-	
-	log_destroy(memoryLog);
 	return EXIT_SUCCESS;
 }
