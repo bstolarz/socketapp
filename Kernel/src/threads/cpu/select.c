@@ -19,6 +19,7 @@
 #include "../../libSockets/send.h"
 
 #include "../../commons/declarations.h"
+#include "functions.h"
 
 void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {
@@ -31,8 +32,14 @@ void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 }
 
 void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
-	printf("Llego %s\n", package);
-	return;
+	if(strcmp(package, "NewCPU") == 0){
+		cpu_process_new(socket);
+	}else if(strcmp(package, "FinishedQuantum") == 0){
+		cpu_process_finished_quantum(socket);
+	}else{
+		log_info(logKernel, "Error, mensaje no identificado: %s", package);
+		printf("Error, mensaje no identificado: %s\n", package);
+	}
 }
 
 void* select_cpu_thread_launcher(void* arg){
