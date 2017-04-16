@@ -14,8 +14,5 @@ int memory_write(int PID, int page, int offset, int size, void* buffer);
 int* get_continguous_frames(int count);
 int* get_non_continguous_frames(int count);
 
-// utils
-int bytes_to_pages(int byteCount);
-
 
 #endif /* FUNCTIONS_MEMORY_H_ */

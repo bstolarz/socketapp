@@ -5,38 +5,22 @@
 #include "memory.h"
 #include "../commons/declarations.h"
 #include "../commons/structures.h"
-#include "frame.h"
-
-
-//extern t_memory* configMemory;
-//t_pageTableEntry* pageTable;
-//void* proccessPages;
-//int proccessPageCount;
-int ERROR_NO_RESOURCES_FOR_PROCCESS = -1;
-int ERROR_MEMORY = -5;
+#include "utils.h"
 
 int memory_init()
 {
-    void* memoryBits = malloc(configMemory->frameCount * configMemory->frameSize);
+	pageTable = malloc(configMemory->frameCount * configMemory->frameSize);
 
-    if (memoryBits == NULL)
-        return -1;
-    
-    pageTable = (t_pageTableEntry*) memoryBits;
     int i;
-    for (i = 0; i != configMemory->frameCount; ++i)
-    {
+    for (i = 0; i<configMemory->frameCount; ++i){
         pageTable[i].PID = -1;
         pageTable[i].page = 0;
     }
-    // las ultimas entradas de la tabla no serían usadas, medio q sobran. por ahí después se me ocurre algo
 
-    // calculo cuántas páginas ocupa tabla para saber donde empiezan las páginas para procesos
     int tableSizeInBytes = sizeof(t_pageTableEntry) * configMemory->frameCount;
-    int tableSizeInPages = bytes_to_pages(tableSizeInBytes); // al menos 1 pagina
+    int tableSizeInPages = bytes_to_pages(tableSizeInBytes);
 
-    proccessPages = memoryBits + (tableSizeInPages * configMemory->frameSize);
-    //proccessFirstPage = tableSizeInPages;
+    proccessPages = pageTable + (tableSizeInPages * configMemory->frameSize);
     proccessPageCount = configMemory->frameCount - tableSizeInPages;
 
     return 0;
@@ -65,60 +49,6 @@ int program_init(int PID, int pageCount)
     free(frameIndices);
 
     return 0;
-}
-
-int* get_continguous_frames(int count)
-{
-    int begin, end;
-
-    for (begin = 0; begin != proccessPageCount; ++begin)
-    {
-        for (end = 0; end != count; ++end)
-        {
-            if (is_frame_occupied(pageTable + begin + end))
-                break;
-        }
-
-        if (end == count)
-        {
-            int* frames = (int*) malloc(sizeof(int) * count);
-            int i;
-            
-            if (frames != NULL)
-            {
-                for (i = 0; i != count; ++i)
-                    frames[i] = begin + i;
-            }
-
-            return frames;
-        }
-    }
-
-    return NULL;
-}
-
-int* get_non_continguous_frames(int count)
-{
-    int* frames = (int*) malloc(sizeof(int) * count);
-    
-    if (frames == NULL)
-        return NULL;
-    
-    int i, j = 0;
-    
-    for (i = 0; i != proccessPageCount; ++i)
-    {
-        if (is_frame_free(pageTable + i))
-        {
-            frames[j++] = i;
-
-            if (j == count)
-                return frames; 
-        }
-    }
-
-    free(frames);
-    return NULL;
 }
 
 void program_end(int PID)
@@ -155,22 +85,13 @@ void* memory_read(int PID, int page, int offset, int size)
     return frame + offset;
 }
 
-int memory_write(int PID, int page, int offset, int size, void* buffer)
-{
+int memory_write(int PID, int page, int offset, int size, void* buffer){
     // hace falta chequear que hay lugar?
     void* frame = frame_lookup(PID, page);
-    
+
     if (frame == NULL) return ERROR_MEMORY;
-    
+
     memcpy(frame + offset, buffer, size);
-    
+
     return 0;
-}
-
-
-
-// utils
-int bytes_to_pages(int byteCount)
-{
-	return (byteCount / configMemory->frameSize) + 1;
 }

@@ -12,5 +12,7 @@ t_pageTableEntry* pageTable; // la tabla para buscar frames dado un pid y una p√
 void* proccessPages; // la memoria RAM donde guardar y buscar datos
 int proccessPageCount;
 t_log* logMemory;
+int ERROR_NO_RESOURCES_FOR_PROCCESS;
+int ERROR_MEMORY;
 
 #endif /* COMMONS_DECLARATIONS_H_ */

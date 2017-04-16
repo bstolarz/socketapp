@@ -7,8 +7,7 @@
 #include "functions/config.h"
 #include "functions/log.h"
 #include "functions/memory.h"
-#include "functions/test.h"
-#include "functions/memory_server.h"
+#include "threads/select.h"
 #include <commons/log.h>
 #include "libSockets/client.h"
 #include "libSockets/send.h"
@@ -27,6 +26,9 @@ int main(int argc, char* argv[]){
 
 	logMemory = log_create_file();
 	log_config();
+
+	ERROR_NO_RESOURCES_FOR_PROCCESS = -1;
+	ERROR_MEMORY = -5;
 
 	memory_init();
 	start_server();

@@ -3,7 +3,7 @@
 #include "test.h"
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
-#include "memory.h"
+#include "../functions/memory.h"
 #include "debug_console.h"
 
 

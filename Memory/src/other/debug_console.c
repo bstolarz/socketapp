@@ -1,6 +1,6 @@
 #include "debug_console.h"
 #include "../commons/declarations.h"
-#include "frame.h"
+#include "../functions/frame.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <commons/string.h>
