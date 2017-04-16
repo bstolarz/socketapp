@@ -22,7 +22,7 @@ int program_generate_id(){
 }
 
 void program_process_new(fd_set* master, int socket){
-	t_program * program = malloc(sizeof(program));
+	t_program * program = malloc(sizeof(t_program));
 	program->socket = socket;
 	program->interruptionCode = 0;
 
@@ -43,9 +43,7 @@ void program_process_new(fd_set* master, int socket){
 		return;
 	}
 
-	char* code;
-	int codeSize;
-	if((codeSize = socket_recv(program->socket, (void**)&code, 1))<=0){
+	if((program->codeSize = socket_recv(program->socket, &(program->code), 1))<=0){
 		log_info(logKernel,"No se pudo conectar con el programa %i para obtener su codigo\n", program->pcb->pid);
 		FD_CLR(program->socket, master);
 		close(program->socket);
@@ -53,18 +51,15 @@ void program_process_new(fd_set* master, int socket){
 		free(program);
 		return;
 	}
-	program->codeSize = codeSize;
-	//program->code = code;
 
 	//CODIGO PARA TESTEAR EL ENVIO DEL PROGRAMA
 	/*
 	int i=0;
-	for(i=0; i<codeSize; i++){
-		printf("%c", code[i]);
+	for(i=0; i<program->codeSize; i++){
+		printf("%c", ((char*)program->code)[i]);
 	}
 	printf("\n");
-	*/
-
+	 */
 
 	printf("Se agrego a %i a la lista de programas\n", program->pcb->pid);
 
