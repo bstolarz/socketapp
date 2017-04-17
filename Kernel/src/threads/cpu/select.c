@@ -33,6 +33,7 @@ void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 
 void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
 	if(strcmp(package, "NewCPU") == 0){
+		log_info(logKernel,"New CPU connected on socket %d\n",socket);
 		cpu_process_new(socket);
 	}else if(strcmp(package, "FinishedQuantum") == 0){
 		cpu_process_finished_quantum(socket);

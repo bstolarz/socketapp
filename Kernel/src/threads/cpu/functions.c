@@ -18,8 +18,40 @@
 
 #include "../../functions/dispatcher.h"
 
+void send_field_by_field_of_pcb(t_cpu* cpu){
+	if(socket_send_int(cpu->socket,cpu->program->pcb->pid)>0){
+		log_info(logKernel,"Envio el PID del programa: %d\n",cpu->program->pcb->pid);
+	}else{
+		log_info(logKernel,"Error enviando el PID del programa con PID: %d\n",cpu->program->pcb->pid);
+	}
+	if(socket_send_int(cpu->socket,cpu->program->pcb->pc)>0){
+		log_info(logKernel,"Envio el PC: %d del programa: %d\n",cpu->program->pcb->pc,cpu->program->pcb->pid);
+	}else{
+		log_info(logKernel,"Error enviando el PC %d del programa con PID: %d\n",cpu->program->pcb->pc, cpu->program->pcb->pid);
+	}
+	if(socket_send_int(cpu->socket,cpu->program->pcb->cantPagsCodigo)>0){
+		log_info(logKernel,"Envio paginas de codigo: %d del programa: %d\n",cpu->program->pcb->cantPagsCodigo,cpu->program->pcb->pid);
+	}else{
+		log_info(logKernel,"Error enviando paginas de codigo: %d del programa con PID: %d\n",cpu->program->pcb->cantPagsCodigo, cpu->program->pcb->pid);
+	}
+	if(socket_send_int(cpu->socket,cpu->program->pcb->indiceDeCodigo->offset_inicio)>0){
+		log_info(logKernel,"Envio offset de inicio de indice de codigo: %d del programa: %d\n",cpu->program->pcb->indiceDeCodigo->offset_inicio,cpu->program->pcb->pid);
+	}else{
+		log_info(logKernel,"Error enviando offset de inicio de indice de codigo: %d del programa con PID: %d\n",cpu->program->pcb->indiceDeCodigo->offset_inicio, cpu->program->pcb->pid);
+	}
+
+	if(socket_send_int(cpu->socket,cpu->program->pcb->stackPosition)>0){
+		log_info(logKernel,"Envio stack position: %d del programa: %d\n",cpu->program->pcb->stackPosition,cpu->program->pcb->pid);
+	}else{
+		log_info(logKernel,"Error enviando paginas de codigo: %d del programa con PID: %d\n",cpu->program->pcb->stackPosition, cpu->program->pcb->pid);
+	}
+
+}
 void cpu_send_pcb(t_cpu* cpu){
-	//TODO
+	log_info(logKernel,"socket is: %d\n",cpu->socket);
+	socket_send_string(cpu->socket,"PCB");
+	log_info(logKernel,"Envio la PCB del programa con PID: %d\n",cpu->program->pcb->pid);
+	send_field_by_field_of_pcb(cpu);
 }
 
 void cpu_recv_pcb(t_cpu* cpu){
@@ -40,7 +72,8 @@ t_cpu* cpu_find(int socket){
 void cpu_process_new(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
-
+	list_add(queueCPUs->list,cpu);
+	log_info(logKernel,"New CPU added to list\n");
 	cpu->program = planificar();
 	cpu_send_pcb(cpu);
 	//TODO send quantum
