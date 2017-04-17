@@ -21,7 +21,9 @@ int main(int arg, char* argv[]) {
 		config_print();
 
 		int serverSocket=0;
+		int serverMemory=0;
 		socket_client_create(&serverSocket, "127.0.0.1", "6667");
+		socket_client_create(&serverMemory, "127.0.0.1", "6668");
 		if(serverSocket){
 			socket_send_string(serverSocket, "CPU");
 			char* mensaje = "";
