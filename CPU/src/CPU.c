@@ -23,8 +23,8 @@ int serverKernel=0;
 int serverMemory=0;
 
 
-int recv_pcb(int socketServer){
-	t_pcb* pcb=(t_pcb*)malloc(sizeof(t_pcb));
+int recv_pcb(int socketServer,t_pcb* pcb){
+
 	if (socket_recv_int(socketServer,&(pcb->pid))>0){
 		log_info(logCPU,"Recibo el PID del programa: %d\n",pcb->pid);
 	}else{
@@ -85,18 +85,37 @@ t_log* logCreate(){
 
 		return logs;
 }
+void incrementarPC(t_pcb* pcb){
+	pcb->pc++;
+}
 void kernel_lost_conection(fd_set* master, int socket, int nbytes){
 	//program_interrup(socket, -6, 0);
 	FD_CLR(socket, master);
 }
+int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
+	//El offset inicio y fin no es siempre el mismo si envío ese send?
+	if (socket_send_int(serverMemory,pcb->indiceDeCodigo->offset_inicio)>0){
+		log_info(logCPU,"Envio correctamente el offset inicio del indice de codigo\n",pcb->indiceDeCodigo->offset_inicio);
+	}else{
+		log_info(logCPU,"Error enviando offset inicio del indice de codigo\n");
+		return -1;
+	}
+	if (socket_send_int(serverMemory,pcb->indiceDeCodigo->offset_fin)>0){
+		log_info(logCPU,"Envio correctamente el offset fin del indice de codigo\n",pcb->indiceDeCodigo->offset_fin);
+	}else{
+		log_info(logCPU,"Error enviando el offset fin del indice de codigo\n",pcb->indiceDeCodigo->offset_fin);
+		return -1;
+	}
+	return 1;
+}
 void kernel_recv_package(fd_set* master, int socket, int nbytes, char* package){
 	if(strcmp(package, "PCB") == 0){
-		recv_pcb(socket);
-	}else if(strcmp(package, "FinishedQuantum") == 0){
-		//cpu_process_finished_quantum(socket);
-	}else{
-		log_info(logCPU, "Error, mensaje no identificado: %s", package);
-		printf("Error, mensaje no identificado: %s\n", package);
+		t_pcb* pcb=(t_pcb*)malloc(sizeof(t_pcb));
+		recv_pcb(socket,pcb);
+		incrementarPC(pcb);
+		if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
+
+		};
 	}
 }
 void* recv_from_kernel(void* arg){
