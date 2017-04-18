@@ -7,6 +7,7 @@
 
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
+#include <parser/metadata_program.h>
 #include <unistd.h>
 #include <sys/types.h>
 #ifndef COMMONS_STRUCTURES_H_
@@ -61,6 +62,7 @@ typedef struct{
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;
+	t_metadata_program* metadata;
 }t_pcb;
 
 typedef struct{
