@@ -9,6 +9,7 @@
 #include <commons/config.h>
 #include <commons/string.h>
 #include <commons/log.h>
+#include <parser/metadata_program.h>
 
 #include "../../libSockets/send.h"
 #include "../../libSockets/recv.h"
@@ -51,6 +52,8 @@ void program_process_new(fd_set* master, int socket){
 		free(program);
 		return;
 	}
+
+	program->pcb->metadata = metadata_desde_literal(program->code);
 
 	//CODIGO PARA TESTEAR EL ENVIO DEL PROGRAMA
 	/*
