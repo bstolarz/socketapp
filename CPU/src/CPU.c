@@ -93,17 +93,47 @@ void kernel_lost_conection(fd_set* master, int socket, int nbytes){
 	FD_CLR(socket, master);
 }
 int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
-	//El offset inicio y fin no es siempre el mismo si envío ese send?
-	if (socket_send_int(serverMemory,pcb->indiceDeCodigo->offset_inicio)>0){
-		log_info(logCPU,"Envio correctamente el offset inicio del indice de codigo\n",pcb->indiceDeCodigo->offset_inicio);
+	//Envio el comando read a Memoria
+	if (socket_send_string(serverMemory,"read")>0){
+		log_info(logCPU,"Se envia correctamente el comando read a Memoria\n");
 	}else{
-		log_info(logCPU,"Error enviando offset inicio del indice de codigo\n");
+		log_info(logCPU,"Error enviando el comando read a Memoria\n");
+	}
+	//Envio el PID
+	if (socket_send_int(serverMemory,pcb->pid)>0){
+		log_info(logCPU,"Envio del PID del programa a Memoria\n");
+	}else{
+		log_info(logCPU,"Error enviando el PID del programa a Memoria\n");
 		return -1;
 	}
-	if (socket_send_int(serverMemory,pcb->indiceDeCodigo->offset_fin)>0){
-		log_info(logCPU,"Envio correctamente el offset fin del indice de codigo\n",pcb->indiceDeCodigo->offset_fin);
+	int pageSize;
+
+	//Recibo el tamanio de pagina desde Memoria
+	if(socket_recv_int(serverMemory,&pageSize)>0){
+		log_info(logCPU,"Recibo el tamanio de pagina: %d\n",pageSize);
 	}else{
-		log_info(logCPU,"Error enviando el offset fin del indice de codigo\n",pcb->indiceDeCodigo->offset_fin);
+		log_info(logCPU,"Error recibiendo el tamanio de pagina\n");
+		return -1;
+	}
+	div_t values;
+	int offsetToMemory;
+	values=div(pcb->indiceDeCodigo->offset_inicio,pageSize);
+	int page=values.quot;
+
+	//Envio el numero de pagina
+	if (socket_send_int(serverMemory,page)>0){
+		log_info(logCPU,"Se envia el numero de pagina: %d\n",page);
+	}else{
+		log_info(logCPU,"Error enviando el numero de pagina %d al Memoria\n",page);
+		return -1;
+	}
+	offsetToMemory=(pcb->indiceDeCodigo->offset_inicio)-(page*pageSize);
+
+	//Envio el offset
+	if (socket_send_int(serverMemory,offsetToMemory)>0){
+		log_info(logCPU,"Envio el offset a Memoria: %d\n",offsetToMemory);
+	}else{
+		log_info(logCPU,"Error enviando el offset a Memoria\n");
 		return -1;
 	}
 	return 1;

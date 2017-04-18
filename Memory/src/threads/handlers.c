@@ -34,6 +34,8 @@ void handle_read(int socket){
     int PID, page, offset, size;
 
     socket_recv_int(socket, &PID);
+    //Agrego un send para notificarle a CPU el tamanio de pagina
+    socket_send_int(socket,configMemory->frameSize);
     socket_recv_int(socket, &page);
     socket_recv_int(socket, &offset);
     socket_recv_int(socket, &size);
