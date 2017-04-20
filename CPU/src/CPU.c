@@ -167,17 +167,13 @@ int main(int arg, char* argv[]) {
 		logCPU=logCreate();
 		//Me conenecto al Kernel
 		socket_client_create(&serverKernel, "127.0.0.1", "6668");
-
+		socket_send_string(serverKernel, "NewCPU");
 		//Me conecto a la Memoria
 		socket_client_create(&serverMemory, "127.0.0.1", "6667");
 		if(serverKernel){
-			socket_send_string(serverKernel, "NewCPU");
+			t_pcb* pcb=(t_pcb*)malloc(sizeof(t_pcb));
+			recv_pcb(serverKernel,pcb);
 
-			pthread_create(&pthreadKernel,NULL,recv_from_kernel,NULL);
-			pthread_create(&pthreadMemory,NULL,recv_from_memory,NULL);
-
-			pthread_join(pthreadKernel,NULL);
-			pthread_join(pthreadMemory,NULL);
 		}
 
 		return EXIT_SUCCESS;

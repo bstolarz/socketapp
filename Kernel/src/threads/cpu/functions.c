@@ -74,8 +74,13 @@ void cpu_process_new(int socket){
 	cpu->socket = socket;
 	list_add(queueCPUs->list,cpu);
 	log_info(logKernel,"New CPU added to list\n");
-	cpu->program = planificar();
-	cpu_send_pcb(cpu);
+	if(list_size(queueReadyPrograms->list)>0){
+		cpu->program = planificar();
+			cpu_send_pcb(cpu);
+
+	}else{
+
+	}
 	//TODO send quantum
 }
 
