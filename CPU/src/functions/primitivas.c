@@ -94,11 +94,11 @@ void *AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 		}
 }
 t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
-	int value;
+	int* value=(int*)malloc(sizeof(int));
 	if (socket_send_string(serverKernel, "ValueOfSharedVariable")>0){
 		if (socket_send_string(serverKernel,variable)>0){
 
-			socket_recv_int(serverKernel,&value);
+			socket_recv_int(serverKernel,value);
 		}
 	}
 	return value;
