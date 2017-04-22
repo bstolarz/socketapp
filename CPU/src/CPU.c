@@ -106,7 +106,6 @@ int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
 		log_info(logCPU,"Error enviando el PID del programa a Memoria\n");
 		return -1;
 	}
-	int pageSize;
 
 	//Recibo el tamanio de pagina desde Memoria
 	if(socket_recv_int(serverMemory,&pageSize)>0){
@@ -138,23 +137,7 @@ int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
 	}
 	return 1;
 }
-void kernel_recv_package(fd_set* master, int socket, int nbytes, char* package){
-	if(strcmp(package, "PCB") == 0){
-		t_pcb* pcb=(t_pcb*)malloc(sizeof(t_pcb));
-		recv_pcb(socket,pcb);
-		incrementarPC(pcb);
-		if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
 
-		};
-	}
-}
-void* recv_from_kernel(void* arg){
-	socket_server_select(configCPU->puerto_memory,*kernel_lost_conection,*kernel_recv_package);
-	return arg;
-}
-void* recv_from_memory(void* arg){
-	return arg;
-}
 int main(int arg, char* argv[]) {
 	if(arg!=2){
 			printf("Path missing! %d\n", arg);
@@ -171,9 +154,14 @@ int main(int arg, char* argv[]) {
 		//Me conecto a la Memoria
 		socket_client_create(&serverMemory, "127.0.0.1", "6667");
 		if(serverKernel){
-			t_pcb* pcb=(t_pcb*)malloc(sizeof(t_pcb));
+			pcb=(t_pcb*)malloc(sizeof(t_pcb));
 			recv_pcb(serverKernel,pcb);
-
+			incrementarPC(pcb);
+			if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
+				void* buffer;
+				socket_recv(serverKernel,&buffer,pcb->indiceDeCodigo->offset_fin);
+				analizadorLinea((char*)buffer,funciones,kernel);
+			}
 		}
 
 		return EXIT_SUCCESS;
