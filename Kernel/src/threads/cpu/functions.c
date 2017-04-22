@@ -100,6 +100,7 @@ int find_variable(char* varFromCPU){
 }
 void cpu_send_sharedVariableValue(int socket, char* var){
 	int valueToSend=find_variable(var);
+	//Faltan los semaforos para la variable var
 	socket_send_int(socket,valueToSend);
 
 }
