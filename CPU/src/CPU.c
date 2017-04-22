@@ -161,6 +161,10 @@ int main(int arg, char* argv[]) {
 				void* buffer;
 				socket_recv(serverKernel,&buffer,pcb->indiceDeCodigo->offset_fin);
 				analizadorLinea((char*)buffer,funciones,kernel);
+				//actualiza los valores del programa en la memoria
+				incrementarPC(pcb);
+				//notifico al Kernel que terminé de ejecutar
+				socket_send_string(serverKernel,"FinishedQuantum");
 			}
 		}
 

@@ -18,6 +18,10 @@
 #include <commons/string.h>
 #include <commons/string.h>
 #include <commons/error.h>
+#include "libSockets/client.h"
+#include "libSockets/send.h"
+#include "libSockets/recv.h"
+#include "libSockets/server.h"
 
 
 int off=0;
@@ -63,4 +67,32 @@ t_puntero* AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_varia
 t_valor_variable *AnSISOP_dereferenciar(t_puntero direccion_variable){
 	return find_position(direccion_variable);
 
+}
+void *AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
+	div_t values;
+		values=div(direccion_variable,pageSize);
+		int page=values.quot;
+		int offsetToMemory=values.rem;
+		socket_send_string(serverMemory,"write");
+		log_info(logCPU,"Le aviso a Memoria que quiero asignar en %d el valor %d\n", direccion_variable, valor);
+		if(socket_send_int(serverMemory,pcb->pid)>0){
+			log_info(logCPU,"Envio el PID: %d\n", pcb->pid);
+			if (socket_send_int(serverMemory,page)>0){
+				log_info(logCPU, "Envio la pagina: %d\n", page);
+				if(socket_send_int(serverMemory,offsetToMemory)>0){
+					log_info(logCPU,"Envio el offset: %d\n", offsetToMemory);
+					if(socket_send_int(serverMemory,size)){
+						log_info(logCPU,"Envio el size: %d\n", size);
+					}else{
+						log_info(logCPU,"Error enviando el size: %d\n", size);
+					}
+				}else{
+					log_info(logCPU,"Error enviando el offset: %d\n", offsetToMemory);
+				}
+			}else{
+				log_info(logCPU,"Error enviando el numero de pagina: %d\n", page);
+			}
+		}else{
+			log_info(logCPU,"Error enviando el PID: %d\n", pcb->pid);
+		}
 }
