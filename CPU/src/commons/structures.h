@@ -25,9 +25,15 @@ typedef struct{
 typedef struct{
 
 }t_indiceDeEtiquetas;
+typedef struct{
+	int page;
+	int off;
+	int size;
+}t_pos;
 
 typedef struct{
-
+	char ID;
+	t_pos pos;
 }t_indiceDelStack;
 
 typedef struct{
@@ -36,7 +42,7 @@ typedef struct{
 	int cantPagsCodigo;
 	t_indiceDeCodigo * indiceDeCodigo;
 	t_indiceDeEtiquetas * indiceDeEtiquetas;
-	t_indiceDelStack * indiceDeStack;
+	t_dictionary * indiceDeStack;
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;

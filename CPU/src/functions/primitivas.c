@@ -20,11 +20,21 @@
 #include <commons/error.h>
 
 
-int initialSize=-4;
+int off=0;
 int currentPage=0;
+int size=4;
 t_puntero* AnSISOP_definirVariable (t_nombre_variable identificador_variable){
-	dictionary_put()
+	t_pos* pos= (t_pos*)malloc(sizeof(t_pos));
+	if(off+size>pageSize){
+		currentPage++;
+	}
+	pos->page=currentPage;
+	pos->off=off;
+	pos->size=size;
+ 	dictionary_put(pcb->indiceDeStack,&identificador_variable,(void*)pos);
+ 	off+=size;
+ 	t_puntero* p=(t_puntero*)malloc(sizeof(t_puntero));
+ 	*p=currentPage*pageSize+off;
+ 	return p;
 }
-/*t_puntero* AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable){
 
-}*/
