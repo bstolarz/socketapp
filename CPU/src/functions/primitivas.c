@@ -18,10 +18,7 @@
 #include <commons/string.h>
 #include <commons/string.h>
 #include <commons/error.h>
-#include "libSockets/client.h"
-#include "libSockets/send.h"
-#include "libSockets/recv.h"
-#include "libSockets/server.h"
+
 
 
 int off=0;
@@ -95,4 +92,14 @@ void *AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 		}else{
 			log_info(logCPU,"Error enviando el PID: %d\n", pcb->pid);
 		}
+}
+t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
+	int value;
+	if (socket_send_string(serverKernel, "ValueOfSharedVariable")>0){
+		if (socket_send_string(serverKernel,variable)>0){
+
+			socket_recv_int(serverKernel,&value);
+		}
+	}
+	return value;
 }

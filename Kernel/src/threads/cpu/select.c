@@ -37,6 +37,12 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 		cpu_process_new(socket);
 	}else if(strcmp(package, "FinishedQuantum") == 0){
 		cpu_process_finished_quantum(socket);
+	}else if (strcmp(package, "ValueOfSharedVariable")==0){
+		char* sharedVariable=string_new();
+		if (socket_recv_string(socket,&sharedVariable)>0){
+			cpu_send_sharedVariableValue(socket, sharedVariable);
+		}
+
 	}else{
 		log_info(logKernel, "Error, mensaje no identificado: %s", package);
 		printf("Error, mensaje no identificado: %s\n", package);

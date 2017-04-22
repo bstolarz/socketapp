@@ -21,4 +21,6 @@ AnSISOP_funciones* funciones;
 AnSISOP_kernel* kernel;
 t_pcb* pcb;
 int pageSize;
+int serverMemory;
+int serverKernel;
 #endif /* COMMONS_DECLARATIONS_H_ */

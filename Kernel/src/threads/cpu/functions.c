@@ -91,5 +91,16 @@ void cpu_process_finished_quantum(int socket){
 	cpu->program = planificar();
 	cpu_send_pcb(cpu);
 }
+int find_variable(char* varFromCPU){
+	int _is_the_variable(t_sharedVar* var){
+		return strcmp(varFromCPU,var->nombre);
+	}
+	return (int)list_find(configKernel->shared_vars,(void*)_is_the_variable);
 
+}
+void cpu_send_sharedVariableValue(int socket, char* var){
+	int valueToSend=find_variable(var);
+	socket_send_int(socket,valueToSend);
+
+}
 

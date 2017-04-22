@@ -11,6 +11,9 @@
 #include <parser/metadata_program.h>
 #include <parser/parser.h>
 #include <parser/metadata_program.h>
-
+#include "../libSockets/client.h"
+#include "../libSockets/send.h"
+#include "../libSockets/recv.h"
+#include "../libSockets/server.h"
 
 #endif /* FUNCTIONS_PRIMITIVAS_H_ */
