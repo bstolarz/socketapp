@@ -13,5 +13,6 @@ void cpu_recv_pcb(t_cpu* cpu);
 t_cpu* cpu_find(int socket);
 void cpu_process_new(int socket);
 void cpu_process_finished_quantum(int socket);
+void cpu_send_sharedVariableValue(int socket, char* var);
 
 #endif /* THREADS_CPU_FUNCTIONS_H_ */

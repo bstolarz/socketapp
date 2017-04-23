@@ -93,38 +93,51 @@ void kernel_lost_conection(fd_set* master, int socket, int nbytes){
 	FD_CLR(socket, master);
 }
 int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
-	//El offset inicio y fin no es siempre el mismo si envío ese send?
-	if (socket_send_int(serverMemory,pcb->indiceDeCodigo->offset_inicio)>0){
-		log_info(logCPU,"Envio correctamente el offset inicio del indice de codigo\n",pcb->indiceDeCodigo->offset_inicio);
+	//Envio el comando read a Memoria
+	if (socket_send_string(serverMemory,"read")>0){
+		log_info(logCPU,"Se envia correctamente el comando read a Memoria\n");
 	}else{
-		log_info(logCPU,"Error enviando offset inicio del indice de codigo\n");
+		log_info(logCPU,"Error enviando el comando read a Memoria\n");
+	}
+	//Envio el PID
+	if (socket_send_int(serverMemory,pcb->pid)>0){
+		log_info(logCPU,"Envio del PID del programa a Memoria\n");
+	}else{
+		log_info(logCPU,"Error enviando el PID del programa a Memoria\n");
 		return -1;
 	}
-	if (socket_send_int(serverMemory,pcb->indiceDeCodigo->offset_fin)>0){
-		log_info(logCPU,"Envio correctamente el offset fin del indice de codigo\n",pcb->indiceDeCodigo->offset_fin);
+
+	//Recibo el tamanio de pagina desde Memoria
+	if(socket_recv_int(serverMemory,&pageSize)>0){
+		log_info(logCPU,"Recibo el tamanio de pagina: %d\n",pageSize);
 	}else{
-		log_info(logCPU,"Error enviando el offset fin del indice de codigo\n",pcb->indiceDeCodigo->offset_fin);
+		log_info(logCPU,"Error recibiendo el tamanio de pagina\n");
+		return -1;
+	}
+	div_t values;
+	int offsetToMemory;
+	values=div(pcb->indiceDeCodigo->offset_inicio,pageSize);
+	int page=values.quot;
+
+	//Envio el numero de pagina
+	if (socket_send_int(serverMemory,page)>0){
+		log_info(logCPU,"Se envia el numero de pagina: %d\n",page);
+	}else{
+		log_info(logCPU,"Error enviando el numero de pagina %d al Memoria\n",page);
+		return -1;
+	}
+	offsetToMemory=(pcb->indiceDeCodigo->offset_inicio)-(page*pageSize);
+
+	//Envio el offset
+	if (socket_send_int(serverMemory,offsetToMemory)>0){
+		log_info(logCPU,"Envio el offset a Memoria: %d\n",offsetToMemory);
+	}else{
+		log_info(logCPU,"Error enviando el offset a Memoria\n");
 		return -1;
 	}
 	return 1;
 }
-void kernel_recv_package(fd_set* master, int socket, int nbytes, char* package){
-	if(strcmp(package, "PCB") == 0){
-		t_pcb* pcb=(t_pcb*)malloc(sizeof(t_pcb));
-		recv_pcb(socket,pcb);
-		incrementarPC(pcb);
-		if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
 
-		};
-	}
-}
-void* recv_from_kernel(void* arg){
-	socket_server_select(configCPU->puerto_memory,*kernel_lost_conection,*kernel_recv_package);
-	return arg;
-}
-void* recv_from_memory(void* arg){
-	return arg;
-}
 int main(int arg, char* argv[]) {
 	if(arg!=2){
 			printf("Path missing! %d\n", arg);
@@ -137,17 +150,22 @@ int main(int arg, char* argv[]) {
 		logCPU=logCreate();
 		//Me conenecto al Kernel
 		socket_client_create(&serverKernel, "127.0.0.1", "6668");
-
+		socket_send_string(serverKernel, "NewCPU");
 		//Me conecto a la Memoria
 		socket_client_create(&serverMemory, "127.0.0.1", "6667");
 		if(serverKernel){
-			socket_send_string(serverKernel, "NewCPU");
-
-			pthread_create(&pthreadKernel,NULL,recv_from_kernel,NULL);
-			pthread_create(&pthreadMemory,NULL,recv_from_memory,NULL);
-
-			pthread_join(pthreadKernel,NULL);
-			pthread_join(pthreadMemory,NULL);
+			pcb=(t_pcb*)malloc(sizeof(t_pcb));
+			recv_pcb(serverKernel,pcb);
+			incrementarPC(pcb);
+			if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
+				void* buffer;
+				socket_recv(serverKernel,&buffer,pcb->indiceDeCodigo->offset_fin);
+				analizadorLinea((char*)buffer,funciones,kernel);
+				//actualiza los valores del programa en la memoria
+				incrementarPC(pcb);
+				//notifico al Kernel que terminé de ejecutar
+				socket_send_string(serverKernel,"FinishedQuantum");
+			}
 		}
 
 		return EXIT_SUCCESS;

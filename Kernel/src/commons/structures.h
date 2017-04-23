@@ -76,6 +76,7 @@ typedef struct{
 typedef struct{
 	int socket;
 	t_program* program;
+	int ociosa;
 }t_cpu;
 
 typedef struct{

@@ -8,6 +8,7 @@
 #ifndef COMMONS_STRUCTURES_H_
 #define COMMONS_STRUCTURES_H_
 
+#include <commons/collections/list.h>
 typedef struct{
 	char* ip_kernel;
 	char* puerto_kernel;
@@ -25,9 +26,15 @@ typedef struct{
 typedef struct{
 
 }t_indiceDeEtiquetas;
+typedef struct{
+	int page;
+	int off;
+	int size;
+}t_pos;
 
 typedef struct{
-
+	char ID;
+	t_pos* pos;
 }t_indiceDelStack;
 
 typedef struct{
@@ -36,7 +43,7 @@ typedef struct{
 	int cantPagsCodigo;
 	t_indiceDeCodigo * indiceDeCodigo;
 	t_indiceDeEtiquetas * indiceDeEtiquetas;
-	t_indiceDelStack * indiceDeStack;
+	t_list * indiceDeStack;
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;

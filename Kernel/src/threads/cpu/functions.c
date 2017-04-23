@@ -74,8 +74,13 @@ void cpu_process_new(int socket){
 	cpu->socket = socket;
 	list_add(queueCPUs->list,cpu);
 	log_info(logKernel,"New CPU added to list\n");
-	cpu->program = planificar();
-	cpu_send_pcb(cpu);
+	if(list_size(queueReadyPrograms->list)>0){
+		cpu->program = planificar();
+		cpu->ociosa=0;
+			cpu_send_pcb(cpu);
+	}else{
+		cpu->ociosa=1;
+	}
 	//TODO send quantum
 }
 
@@ -86,5 +91,17 @@ void cpu_process_finished_quantum(int socket){
 	cpu->program = planificar();
 	cpu_send_pcb(cpu);
 }
+int find_variable(char* varFromCPU){
+	int _is_the_variable(t_sharedVar* var){
+		return strcmp(varFromCPU,var->nombre);
+	}
+	return (int)list_find(configKernel->shared_vars,(void*)_is_the_variable);
 
+}
+void cpu_send_sharedVariableValue(int socket, char* var){
+	int valueToSend=find_variable(var);
+	//Faltan los semaforos para la variable var
+	socket_send_int(socket,valueToSend);
+
+}
 
