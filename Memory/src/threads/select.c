@@ -36,6 +36,8 @@ void handle_command(fd_set* sockets, int socket, int byteCount, char* data){
     }
 }
 
-void start_server() {
+void* start_server(void* _) {
     socket_server_select(configMemory->portNumStr, &handle_connection_lost, &handle_command);
+
+    return NULL;
 }

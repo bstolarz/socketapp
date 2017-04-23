@@ -17,6 +17,6 @@
 
 void handle_connection_lost(fd_set* master, int socket, int byteCount);
 void handle_command(fd_set* sockets, int socket, int byteCount, char* data);
-void start_server();
+void* start_server(void*);
 
 #endif /* THREADS_SELECT_H_ */

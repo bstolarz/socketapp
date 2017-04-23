@@ -1,7 +1,5 @@
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "commons/structures.h"
 #include "commons/declarations.h"
 #include "functions/config.h"
@@ -9,9 +7,9 @@
 #include "functions/memory.h"
 #include "threads/select.h"
 #include <commons/log.h>
-#include "libSockets/client.h"
-#include "libSockets/send.h"
-#include "libSockets/recv.h"
+#include "other/debug_console.h"
+#include "other/test.h"
+#include "pthread.h"
 
 int main(int argc, char* argv[]){
 
@@ -31,7 +29,12 @@ int main(int argc, char* argv[]){
 	ERROR_MEMORY = -5;
 
 	memory_init();
-	start_server();
+	pthread_t serverThread;
+	pthread_create(&serverThread, NULL, &start_server, NULL);
+	//init_some_programs();
+	debug_console();
+
+	pthread_join(serverThread, NULL);
 
 	config_free();
 	free(pageTable);

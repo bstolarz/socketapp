@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_MEMORY_H_
 #define FUNCTIONS_MEMORY_H_
 
+#include "../commons/structures.h"
+
 // 0 si pudo allocar memoria, -1 si no pudo 
 int memory_init();
 
@@ -10,9 +12,7 @@ void program_end(int PID);
 void* memory_read(int PID, int page, int offset, int size);
 int memory_write(int PID, int page, int offset, int size, void* buffer);
 
-// retorna array[count] de paginas
-int* get_continguous_frames(int count);
-int* get_non_continguous_frames(int count);
-
+char* get_frame(int i); // busca el frame por indice
+int frame_count(_Bool (*framePredicate)(t_pageTableEntry*));
 
 #endif /* FUNCTIONS_MEMORY_H_ */

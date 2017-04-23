@@ -5,6 +5,7 @@
 #include "../commons/declarations.h"
 #include "../functions/memory.h"
 #include "debug_console.h"
+#include "pthread.h"
 
 
 void test_program_init_end()
@@ -43,45 +44,78 @@ void test_read_write()
 	program_end(0);
 }
 
-void test_console()
+void* _init_proccess(void* PIDptr)
+{
+	program_init(*(int*) PIDptr, 10);
+	return NULL;
+}
+
+void test_threads_init()
+{
+	int i, threadCount = 10;
+
+	pthread_t initThreads[threadCount];
+	int pids[threadCount];
+	pids[0] = 1;
+	pids[1] = 2;
+	pids[2] = 3;
+	pids[3] = 4;
+	pids[4] = 5;
+	pids[5] = 6;
+	pids[6] = 7;
+	pids[7] = 8;
+	pids[8] = 9;
+	pids[9] = 10;
+
+	for (i = 0; i != threadCount; ++i)
+	{
+		pthread_create(initThreads + i, NULL, _init_proccess, (void*)(pids + i));
+	}
+
+	for (i = 0; i != threadCount; ++i)
+	{
+		pthread_join(initThreads[i], NULL);
+	}
+
+	for (i = 0; i != threadCount; ++i)
+	{
+		char* proccessSizeStr = proccess_size_str(pids[i]);
+		printf("%s", proccessSizeStr);
+		free(proccessSizeStr);
+	}
+}
+
+void init_some_programs()
 {
 	int pageResult = program_init(0, 10);
-	log_debug(logMemory, "pedi 50 pages. result: %d", pageResult);
 
-	pageResult = program_init(1, 25);
-	log_debug(logMemory, "pedi 25 mas. result: %d", pageResult);
+	pageResult = program_init(1, 10);
+	int pageCount = 10;
+	int i, j, varVal;
+
+	for (i = 0; i != pageCount; ++i)
+	{
+		varVal = i * 1000;
+
+		for (j = 0; j < configMemory->frameSize; j += sizeof(int))
+		{
+			++varVal;
+			memory_write(1, i, j, sizeof(int), &varVal);
+		}
+	}
 
 	program_end(0);
 
-	pageResult = program_init(2, 30);
-	log_debug(logMemory, "y 25 mas. result: %d", pageResult);
+	pageResult = program_init(2, 20);
 
-	char* pageTableStr = page_table_str();
-	log_debug(logMemory, pageTableStr);
-	free(pageTableStr);
+	for (i = 0; i != pageCount; ++i)
+	{
+		varVal = i * 1000;
 
-	log_debug(logMemory, "\n\n\n\n");
-
-	char* memorySizeStr = memory_size_str();
-	log_debug(logMemory, memorySizeStr);
-	free(memorySizeStr);
-
-
-	log_debug(logMemory, "\n\n\n\n");
-
-	char* proccess1SizeStr = proccess_size_str(1);
-	log_debug(logMemory, proccess1SizeStr);
-	free(proccess1SizeStr);
-
-
-
-	log_debug(logMemory, "\n\n\n\n");
-
-	char* proccess2SizeStr = proccess_size_str(2);
-	log_debug(logMemory, proccess2SizeStr);
-	free(proccess2SizeStr);
-
-
-	program_end(1);
-	program_end(2);
+		for (j = 0; j < configMemory->frameSize; j += sizeof(int))
+		{
+			++varVal;
+			memory_write(2, i, j, sizeof(int), &varVal);
+		}
+	}
 }
