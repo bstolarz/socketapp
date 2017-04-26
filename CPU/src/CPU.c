@@ -107,13 +107,6 @@ int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
 		return -1;
 	}
 
-	//Recibo el tamanio de pagina desde Memoria
-	if(socket_recv_int(serverMemory,&pageSize)>0){
-		log_info(logCPU,"Recibo el tamanio de pagina: %d\n",pageSize);
-	}else{
-		log_info(logCPU,"Error recibiendo el tamanio de pagina\n");
-		return -1;
-	}
 	div_t values;
 	int offsetToMemory;
 	values=div(pcb->indiceDeCodigo->offset_inicio,pageSize);
@@ -138,36 +131,70 @@ int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
 	return 1;
 }
 
+void connect_to_memory()
+{
+	socket_client_create(&serverMemory, configCPU->ip_memory, configCPU->puerto_memory);
+
+	// obtener tamanio de pagina
+	int askPageSizeResult = socket_send_string(serverMemory, "frame_size");
+
+	if (askPageSizeResult > 0)
+	{
+		log_info(logCPU, "[page_size] se mando bien\n");
+	}
+	else
+	{
+		log_error(logCPU, "[page_size] no se mando bien exit program\n");
+		exit(EXIT_FAILURE);
+	}
+
+	//Recibo el tamanio de pagina desde Memoria
+	if (socket_recv_int(serverMemory, &pageSize) > 0)
+	{
+		log_info(logCPU,"[page_size] pageSize = %d\n", pageSize);
+	}
+	else
+	{
+		log_info(logCPU, "[page_size] error en recv(). exit program\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
 int main(int arg, char* argv[]) {
 	if(arg!=2){
-			printf("Path missing! %d\n", arg);
-			return 1;
-		}
+		printf("Path missing! %d\n", arg);
+		return 1;
+	}
 
-		configCPU=malloc(sizeof(t_cpu));
-		config_read(argv[1]);
-		config_print();
-		logCPU=logCreate();
-		//Me conenecto al Kernel
-		socket_client_create(&serverKernel, "127.0.0.1", "6668");
-		socket_send_string(serverKernel, "NewCPU");
-		//Me conecto a la Memoria
-		socket_client_create(&serverMemory, "127.0.0.1", "6667");
-		if(serverKernel){
-			pcb=(t_pcb*)malloc(sizeof(t_pcb));
-			recv_pcb(serverKernel,pcb);
+	// inicializacion - init()?
+	configCPU = malloc(sizeof(t_cpu));
+	config_read(argv[1]);
+	config_print();
+
+	logCPU = logCreate();
+
+	// Me conenecto al Kernel
+	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
+	socket_send_string(serverKernel, "NewCPU");
+
+	connect_to_memory();
+
+	if(serverKernel)
+	{
+		pcb=(t_pcb*)malloc(sizeof(t_pcb));
+		recv_pcb(serverKernel,pcb);
+		incrementarPC(pcb);
+		if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
+			void* buffer;
+			socket_recv(serverKernel,&buffer,pcb->indiceDeCodigo->offset_fin);
+			analizadorLinea((char*)buffer,funciones,kernel);
+			//actualiza los valores del programa en la memoria
 			incrementarPC(pcb);
-			if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
-				void* buffer;
-				socket_recv(serverKernel,&buffer,pcb->indiceDeCodigo->offset_fin);
-				analizadorLinea((char*)buffer,funciones,kernel);
-				//actualiza los valores del programa en la memoria
-				incrementarPC(pcb);
-				//notifico al Kernel que terminé de ejecutar
-				socket_send_string(serverKernel,"FinishedQuantum");
-			}
+			//notifico al Kernel que terminé de ejecutar
+			socket_send_string(serverKernel,"FinishedQuantum");
 		}
+	}
 
-		return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
