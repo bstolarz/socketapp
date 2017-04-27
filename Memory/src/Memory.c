@@ -31,7 +31,6 @@ int main(int argc, char* argv[]){
 	memory_init();
 	pthread_t serverThread;
 	pthread_create(&serverThread, NULL, &start_server, NULL);
-	//init_some_programs();
 	debug_console();
 
 	pthread_join(serverThread, NULL);
