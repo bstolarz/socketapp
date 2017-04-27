@@ -172,10 +172,10 @@ int main(int arg, char* argv[]) {
 	config_print();
 	logCPU=logCreate();
 	//Me conenecto al Kernel
-	socket_client_create(&serverKernel, "127.0.0.1", "6668");
+	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");
 	//Me conecto a la Memoria
-	socket_client_create(&serverMemory, "127.0.0.1", "5002");
+	socket_client_create(&serverMemory, configCPU->ip_memory, configCPU->puerto_memory);
 	if(serverKernel){
 		pcb=(t_pcb*)malloc(sizeof(t_pcb));
 		recv_pcb(serverKernel,pcb);
