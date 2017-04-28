@@ -24,8 +24,17 @@
 int serverKernel=0;
 int serverMemory=0;
 
-void test_memory_connection()
+void pcb_memory_connection()
 {
+	pcb = malloc(sizeof(t_pcb));
+
+	// esto viene del kernel. hardcodeo aca para probar loop de programa
+	pcb->pid = 0;
+	pcb->pc = 0;
+	pcb->stackPosition = 0;
+	pcb->indiceDeStack = list_create();
+
+
 	char* code = 0;
 	FILE *f = fopen("../programas-ejemplo/facil.ansisop", "rb");
 	int fileSize;
@@ -49,12 +58,21 @@ void test_memory_connection()
 		exit(EXIT_FAILURE);
 	}
 
-	t_metadata_program* programMetadata = metadata_desde_literal(code);
+
+	pcb->metadata = metadata_desde_literal(code);
+	pcb->cantPagsCodigo = fileSize / pageSize;
+
+	free(code);
+}
+
+void test_memory_connection()
+{
+	pcb_memory_connection();
 
 	int i;
-	t_intructions* instructionsBeginSize = programMetadata->instrucciones_serializado;
+	t_intructions* instructionsBeginSize = pcb->metadata->instrucciones_serializado;
 
-	for (i = 0; i != programMetadata->instrucciones_size; ++i)
+	for (i = 0; i != pcb->metadata->instrucciones_size; ++i)
 	{
 		//printf("instruccion %d: empieza en %d y termina en %d\n", i, instructionsBeginSize[i].start, instructionsBeginSize[i].offset);
 		int codePage = instructionsBeginSize[i].start / pageSize;
@@ -66,9 +84,22 @@ void test_memory_connection()
 		else printf("instruccion %d desde memoria: %s\n", i, (char*)data);
 	}
 
-	metadata_destruir(programMetadata);
-	free(code);
+	metadata_destruir(pcb->metadata);
 	exit(EXIT_SUCCESS);
+}
+
+// ejecutar instrucciones del programa
+void programLoop()
+{
+	// mientras no termino el programa ni hubo instrucciones
+	// instructionCycle();
+}
+
+void instructionCycle()
+{
+	// buscar en memoria la instruccion
+	// parsear / ejecutar
+	// inc pc
 }
 
 int recv_pcb(int socketServer,t_pcb* pcb){
@@ -218,7 +249,7 @@ int main(int arg, char* argv[]) {
 	socket_send_string(serverKernel, "NewCPU");
 
 	connect_to_memory();
-	//test_memory_connection();
+	// test_memory_connection();
 
 	if(serverKernel){
 		pcb=(t_pcb*)malloc(sizeof(t_pcb));
