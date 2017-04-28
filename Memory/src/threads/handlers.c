@@ -46,6 +46,7 @@ void* handle_read(void* request)
     socket_send(readRequest->clientSocket, data, readRequest->size);
 
     free(request);
+    free(data);
 
     return NULL;
 }

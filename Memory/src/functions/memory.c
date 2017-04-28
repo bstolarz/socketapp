@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <math.h>
 
 #include "memory.h"
 #include "../commons/declarations.h"
@@ -32,8 +33,6 @@ int memory_init()
     proccessPages = ((char*) pageTable) + (adminSizeInPages * configMemory->frameSize);
     proccessPageCount = configMemory->frameCount - adminSizeInPages;
     freeFrameCount = proccessPageCount;
-
-
 
     return 0;
 }
@@ -113,24 +112,54 @@ char* frame_lookup(int PID, int page)
     return NULL;
 }
 
+// no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
 void* memory_read(int PID, int page, int offset, int size)
 {
-	char* frame = frame_lookup(PID, page);
+	char* buffer = malloc(sizeof(char) * size);
+	char* bufferStart = buffer;
 
-    if (frame == NULL) return NULL;
+	// voy copiando en buffer cada pedazo de pagina
+	// puede pasar que me pidan una instruccion que empieza en pag 1 y siga en pag 2
+	while (size > 0)
+	{
+		int currentPageSize = (size < (configMemory->frameSize - offset)) ? size : (configMemory->frameSize - offset);
+		size -= currentPageSize;
 
-    // hay que hacer copia de esta data?
-    // la data puede seguir en otro frame?
-    return frame + offset;
+		char* frame = frame_lookup(PID, page);
+
+		if (frame == NULL)
+		{
+			free(buffer);
+			return NULL;
+		}
+
+		memcpy(bufferStart, frame + offset, currentPageSize);
+
+		bufferStart = bufferStart + currentPageSize;
+		offset = 0;
+		++page;
+	}
+
+    return buffer;
 }
 
-int memory_write(int PID, int page, int offset, int size, void* buffer){
-    // hace falta chequear que hay lugar?
-	char* frame = frame_lookup(PID, page);
+// no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
+int memory_write(int PID, int page, int offset, int size, void* buffer)
+{
+	while (size > 0)
+	{
+		int currentPageSize = (size < configMemory->frameSize - offset) ? size : (configMemory->frameSize - offset);
+		size -= currentPageSize;
 
-    if (frame == NULL) return ERROR_MEMORY;
+		char* frame = frame_lookup(PID, page);
 
-    memcpy(frame + offset, buffer, size);
+		if (frame == NULL) return ERROR_MEMORY;
+
+		memcpy(frame + offset, buffer, currentPageSize);
+
+		offset = 0;
+		++page;
+	}
 
     return 0;
 }
