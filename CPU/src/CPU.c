@@ -174,8 +174,9 @@ int main(int arg, char* argv[]) {
 	//Me conenecto al Kernel
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");
-	//Me conecto a la Memoria
-	socket_client_create(&serverMemory, configCPU->ip_memory, configCPU->puerto_memory);
+
+	connect_to_memory();
+
 	if(serverKernel){
 		pcb=(t_pcb*)malloc(sizeof(t_pcb));
 		recv_pcb(serverKernel,pcb);
