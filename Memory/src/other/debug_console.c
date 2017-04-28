@@ -141,7 +141,7 @@ char* stringify_frame_content_str(char* frame)
 {
 	// TODO: lockear?
 	char* strContent = malloc(sizeof(char) * (configMemory->frameSize + 1));
-	memcpy(frame, strContent, configMemory->frameSize);
+	memcpy(strContent, frame, configMemory->frameSize);
 	strContent[configMemory->frameSize] = '\0';
 
 	return strContent;

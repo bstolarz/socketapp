@@ -20,7 +20,6 @@ int main(int argc, char* argv[]){
 
 	configMemory = malloc(sizeof(t_memory));
 	config_read(argv[1]);
-	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/memory");
 
 	logMemory = log_create_file();
 	log_config();
@@ -29,6 +28,9 @@ int main(int argc, char* argv[]){
 	ERROR_MEMORY = -5;
 
 	memory_init();
+	test_cpu_connection();
+
+	// server and console loop
 	pthread_t serverThread;
 	pthread_create(&serverThread, NULL, &start_server, NULL);
 	debug_console();
