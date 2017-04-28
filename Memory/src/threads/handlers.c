@@ -15,7 +15,7 @@
 void* handle_init(void* request)
 {
 	t_init_program_request* initRequest = (t_init_program_request*) request;
-	_Bool success = program_init(initRequest->PID, initRequest->pageCount);
+	int success = program_init(initRequest->PID, initRequest->pageCount);
 
 	socket_send_int(initRequest->clientSocket, success);
 
@@ -29,6 +29,8 @@ void* handle_end(void* request)
 	t_end_program_request* endRequest = (t_end_program_request*) request;
 
 	program_end(endRequest->PID);
+
+	socket_send_int(endRequest->clientSocket, 0);
 
 	free(request);
 
