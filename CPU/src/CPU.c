@@ -18,10 +18,58 @@
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
 #include "libSockets/server.h"
+#include "functions/memory_requests.h"
+#include <parser/metadata_program.h>
 
 int serverKernel=0;
 int serverMemory=0;
 
+void test_memory_connection()
+{
+	char* code = 0;
+	FILE *f = fopen("../programas-ejemplo/facil.ansisop", "rb");
+	int fileSize;
+
+	if (f)
+	{
+	  fseek (f, 0, SEEK_END);
+	  fileSize = ftell (f);
+
+	  fseek (f, 0, SEEK_SET);
+	  code = malloc(fileSize);
+
+	  if (code){
+		fread (code, 1, fileSize, f);
+	  }
+	  fclose (f);
+
+	  printf("codigo leido: %s\n", code);
+	}else{
+		printf("lei mal el archivo!");
+		exit(EXIT_FAILURE);
+	}
+
+	t_metadata_program* programMetadata = metadata_desde_literal(code);
+
+	int i;
+	t_intructions* instructionsBeginSize = programMetadata->instrucciones_serializado;
+
+	for (i = 0; i != programMetadata->instrucciones_size; ++i)
+	{
+		//printf("instruccion %d: empieza en %d y termina en %d\n", i, instructionsBeginSize[i].start, instructionsBeginSize[i].offset);
+		int codePage = instructionsBeginSize[i].start / pageSize;
+		int codeOffset = instructionsBeginSize[i].start % pageSize;
+		int size = instructionsBeginSize[i].offset;
+		void* data = memory_request_read(serverMemory, 0, codePage, codeOffset, size);
+
+		if (data == NULL) printf("no pude obtener instruccion\n");
+		else printf("instruccion %d desde memoria: %s\n", i, (char*)data);
+	}
+
+	metadata_destruir(programMetadata);
+	free(code);
+	exit(EXIT_SUCCESS);
+}
 
 int recv_pcb(int socketServer,t_pcb* pcb){
 
@@ -63,6 +111,7 @@ int recv_pcb(int socketServer,t_pcb* pcb){
 	}
 	return 1;
 }
+
 t_log* logCreate(){
 	char pid[10];
 		snprintf(pid, 10,"%d",(int)getpid());
@@ -85,13 +134,16 @@ t_log* logCreate(){
 
 		return logs;
 }
+
 void incrementarPC(t_pcb* pcb){
 	pcb->pc++;
 }
+
 void kernel_lost_conection(fd_set* master, int socket, int nbytes){
 	//program_interrup(socket, -6, 0);
 	FD_CLR(socket, master);
 }
+
 int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
 	//Envio el comando read a Memoria
 	if (socket_send_string(serverMemory,"read")>0){
@@ -136,26 +188,15 @@ void connect_to_memory()
 	socket_client_create(&serverMemory, configCPU->ip_memory, configCPU->puerto_memory);
 
 	// obtener tamanio de pagina
-	int askPageSizeResult = socket_send_string(serverMemory, "frame_size");
+	pageSize = memory_request_frame_size(serverMemory);
 
-	if (askPageSizeResult > 0)
+	if (pageSize > 0)
 	{
-		log_info(logCPU, "[page_size] se mando bien\n");
+		log_info(logCPU,"[page_size] se obtuvo pageSize = %d\n", pageSize);
 	}
 	else
 	{
-		log_error(logCPU, "[page_size] no se mando bien exit program\n");
-		exit(EXIT_FAILURE);
-	}
-
-	//Recibo el tamanio de pagina desde Memoria
-	if (socket_recv_int(serverMemory, &pageSize) > 0)
-	{
-		log_info(logCPU,"[page_size] pageSize = %d\n", pageSize);
-	}
-	else
-	{
-		log_info(logCPU, "[page_size] error en recv(). exit program\n");
+		log_error(logCPU, "[page_size] no se mando bien. exit program\n");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -166,16 +207,18 @@ int main(int arg, char* argv[]) {
 		return 1;
 	}
 
-
 	configCPU=malloc(sizeof(t_cpu));
 	config_read(argv[1]);
 	config_print();
 	logCPU=logCreate();
+
+
 	//Me conenecto al Kernel
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");
 
 	connect_to_memory();
+	//test_memory_connection();
 
 	if(serverKernel){
 		pcb=(t_pcb*)malloc(sizeof(t_pcb));

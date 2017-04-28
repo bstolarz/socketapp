@@ -9,6 +9,7 @@
 #define COMMONS_STRUCTURES_H_
 
 #include <commons/collections/list.h>
+
 typedef struct{
 	char* ip_kernel;
 	char* puerto_kernel;
@@ -26,6 +27,7 @@ typedef struct{
 typedef struct{
 
 }t_indiceDeEtiquetas;
+
 typedef struct{
 	int page;
 	int off;
