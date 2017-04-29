@@ -36,8 +36,10 @@ typedef struct{
 }t_pos;
 
 typedef struct{
-	char ID;
-	t_pos* pos;
+	t_dictionary* vars;
+	t_dictionary* args;
+	int retPos;
+	t_pos* retVar;
 }t_indiceDelStack;
 
 typedef struct{
@@ -47,7 +49,7 @@ typedef struct{
 	t_metadata_program* metadata;
 	t_indiceDeCodigo * indiceDeCodigo;
 	t_indiceDeEtiquetas * indiceDeEtiquetas;
-	t_list * indiceDeStack; // cambiar por diccionario t_dictionary vars;
+	t_dictionary * indiceDeStack; // cambiar por diccionario t_dictionary vars;
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;

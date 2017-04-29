@@ -20,7 +20,7 @@
 #include "libSockets/server.h"
 #include "functions/memory_requests.h"
 #include <parser/metadata_program.h>
-
+#include "functions/primitivas.h"
 int serverKernel=0;
 int serverMemory=0;
 
@@ -32,7 +32,7 @@ void pcb_memory_connection()
 	pcb->pid = 0;
 	pcb->pc = 0;
 	pcb->stackPosition = 0;
-	pcb->indiceDeStack = list_create();
+	pcb->indiceDeStack = dictionary_create();
 
 
 	char* code = 0;
@@ -242,8 +242,12 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 	logCPU=logCreate();
-
-
+	AnSISOP_funciones* funciones=(AnSISOP_funciones*)malloc(sizeof(AnSISOP_funciones));
+	AnSISOP_kernel* kernel=(AnSISOP_kernel*)malloc(sizeof(AnSISOP_kernel));
+	funciones->AnSISOP_asignar=AnSISOP_asignar;
+	funciones->AnSISOP_definirVariable=AnSISOP_definirVariable;
+	funciones->AnSISOP_dereferenciar=AnSISOP_dereferenciar;
+	funciones->AnSISOP_obtenerPosicionVariable=AnSISOP_obtenerPosicionVariable;
 	//Me conenecto al Kernel
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");

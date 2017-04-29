@@ -28,7 +28,7 @@ int size=4;
 
 // cambiar a t_puntero (sin *)
 // se puede entonces retornar un int pos->data * pageSize + pos->offset
-t_puntero* AnSISOP_definirVariable (t_nombre_variable identificador_variable){
+t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	//Hay que liberar pos por los memory leaks
 	t_pos* pos= (t_pos*)malloc(sizeof(t_pos));
 	if(off+size>pageSize){
@@ -37,33 +37,34 @@ t_puntero* AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	pos->page=currentPage;
 	pos->off=off;
 	pos->size=size;
-	list_add(pcb->indiceDeStack,pos);
+	dictionary_put(pcb->indiceDeStack,string_from_format("%c",identificador_variable),pos);
+	//list_add(pcb->indiceDeStack,pos);
  	//dictionary_put(pcb->indiceDeStack,&identificador_variable,(void*)pos);
- 	off+=size;
+ 	int off_defined=off;
+	off+=size;
  	//Hay que liberar p por los mem leaks
- 	t_puntero* p=(t_puntero*)malloc(sizeof(t_puntero));
- 	*p=currentPage*pageSize+off;
- 	return p;
+ 	return currentPage*pageSize+off_defined;
+
 }
 
 // esto te lo ahorras si usas diccionario
-t_pos* find_identificador(t_nombre_variable ident){
-	int _is_the_id(t_indiceDelStack* s){
-		return s->ID==ident;
+/*t_pos* find_identificador(t_nombre_variable ident){
+	int _is_the_id(t_pos* pos){
+		return pos==ident;
 	}
 	return list_find(pcb->indiceDeStack, (void*)find_identificador);
-}
+}*/
 
 // cambiar a t_puntero (sin *)
 // se puede entonces retornar un int pos->data * pageSize + pos->offset
 // no hace falta allocar nada
 // acordate de multiplicar pos->page por pageSize!s
-t_puntero* AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable){
-	t_puntero* p = (t_puntero*)malloc(sizeof(t_puntero));
+t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable){
+
 	//t_pos* data=dictionary_get(pcb->indiceDeStack,&identificador_variable);
-	t_pos* data = (t_pos*)find_identificador(identificador_variable);
-	*p=data->page+data->off;
-	return p;
+	t_pos* data = (t_pos*)dictionary_get(pcb->indiceDeStack,string_from_format("%c",identificador_variable));
+	return data->page+data->off;
+
 }
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
@@ -94,7 +95,7 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 
 // cambiar a t_valor_variable (sin *), (un int)
 // alcanza con devolver lo que te manda el kernel
-t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
+/*t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 	int* value=(int*)malloc(sizeof(int));
 	if (socket_send_string(serverKernel, "ValueOfSharedVariable")>0){
 		if (socket_send_string(serverKernel,variable)>0){
@@ -103,4 +104,4 @@ t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 		}
 	}
 	return value;
-}
+}*/
