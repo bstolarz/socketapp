@@ -92,7 +92,7 @@ void program_process_new(fd_set* master, int socket){
 	list_add(queueNewPrograms->list, program);
 	pthread_mutex_unlock(&(queueNewPrograms->mutex));
 
-	//planificadorLargoPlazo();
+	planificadorLargoPlazo();
 
 	return;
 }
