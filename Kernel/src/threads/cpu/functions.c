@@ -41,10 +41,10 @@ void cpu_send_pcb(t_cpu* cpu){
 		log_info(logKernel,"Error enviando paginas de codigo: %d del programa con PID: %d\n",cpu->program->pcb->cantPagsCodigo, cpu->program->pcb->pid);
 	}
 
-	if(socket_send_int(cpu->socket,cpu->program->pcb->indiceDeCodigo->offset_inicio)>0){
-		log_info(logKernel,"Envio offset de inicio de indice de codigo: %d del programa: %d\n",cpu->program->pcb->indiceDeCodigo->offset_inicio,cpu->program->pcb->pid);
+	if(socket_send_int((int)cpu->socket,cpu->program->pcb->indiceDeCodigo->start)>0){
+		log_info(logKernel,"Envio offset de inicio de indice de codigo: %d del programa: %d\n",cpu->program->pcb->indiceDeCodigo->start, cpu->program->pcb->pid);
 	}else{
-		log_info(logKernel,"Error enviando offset de inicio de indice de codigo: %d del programa con PID: %d\n",cpu->program->pcb->indiceDeCodigo->offset_inicio, cpu->program->pcb->pid);
+		log_info(logKernel,"Error enviando offset de inicio de indice de codigo: %d del programa con PID: %d\n",cpu->program->pcb->indiceDeCodigo->start, cpu->program->pcb->pid);
 	}
 
 	if(socket_send_int(cpu->socket,cpu->program->pcb->stackPosition)>0){

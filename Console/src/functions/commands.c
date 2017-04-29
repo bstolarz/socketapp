@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <commons/string.h>
+#include <commons/temporal.h>
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 #include "../threads/program.h"
@@ -83,7 +84,4 @@ void command_disconnect(){
 	list_clean_and_destroy_elements(programs, (void*)_destroyProgram);
 	return;
 }
-
-int 
-
 

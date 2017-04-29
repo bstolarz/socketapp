@@ -26,4 +26,6 @@ t_queue* queueFinishedpPrograms;
 
 t_queue* queueCPUs;
 
+t_socket memoryServer;
+
 #endif /* COMMONS_DEFINITIONS_H_ */

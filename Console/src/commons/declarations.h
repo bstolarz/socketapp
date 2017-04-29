@@ -6,6 +6,7 @@
  */
 
 #include <commons/collections/list.h>
+#include <commons/log.h>
 
 #include "structures.h"
 
