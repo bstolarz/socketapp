@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,6 +31,14 @@ void command_start(){
 	t_program * program = malloc(sizeof(t_program));
 	program->pathProgram = string_duplicate(path);
 	program->pid = 0;
+	
+	program->stats = malloc(sizeof(t_statistics));
+	program->stats->stringInicioEjecucion = temporal_get_string_time();
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	program->stats->timestampInicio = tv.tv_sec;
+	program->stats->cantImpresionesPantalla = -1;
+	
 	free(path);
 
 	pthread_create(&(program->thread),NULL,thread_program, (void*)program);
@@ -74,3 +83,7 @@ void command_disconnect(){
 	list_clean_and_destroy_elements(programs, (void*)_destroyProgram);
 	return;
 }
+
+int 
+
+
