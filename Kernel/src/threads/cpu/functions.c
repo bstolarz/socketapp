@@ -76,10 +76,11 @@ void cpu_process_new(int socket){
 	log_info(logKernel,"New CPU added to list\n");
 	if(list_size(queueReadyPrograms->list)>0){
 		cpu->program = planificar();
-		cpu->ociosa=0;
+		if(cpu->program != NULL){
 			cpu_send_pcb(cpu);
+		}
 	}else{
-		cpu->ociosa=1;
+		cpu->program=NULL;
 	}
 	//TODO send quantum
 }

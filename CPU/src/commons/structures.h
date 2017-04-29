@@ -9,6 +9,8 @@
 #define COMMONS_STRUCTURES_H_
 
 #include <commons/collections/list.h>
+#include <parser/metadata_program.h>
+
 typedef struct{
 	char* ip_kernel;
 	char* puerto_kernel;
@@ -26,6 +28,7 @@ typedef struct{
 typedef struct{
 
 }t_indiceDeEtiquetas;
+
 typedef struct{
 	int page;
 	int off;
@@ -33,17 +36,20 @@ typedef struct{
 }t_pos;
 
 typedef struct{
-	char ID;
-	t_pos* pos;
+	t_dictionary* vars;
+	t_dictionary* args;
+	int retPos;
+	t_pos* retVar;
 }t_indiceDelStack;
 
 typedef struct{
 	int pid;
 	int pc;
 	int cantPagsCodigo;
+	t_metadata_program* metadata;
 	t_indiceDeCodigo * indiceDeCodigo;
 	t_indiceDeEtiquetas * indiceDeEtiquetas;
-	t_list * indiceDeStack;
+	t_dictionary * indiceDeStack; // cambiar por diccionario t_dictionary vars;
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;

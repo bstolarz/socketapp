@@ -18,13 +18,17 @@
 #include <commons/string.h>
 #include <commons/string.h>
 #include <commons/error.h>
+#include "memory_requests.h"
 
 
 
 int off=0;
 int currentPage=0;
 int size=4;
-t_puntero* AnSISOP_definirVariable (t_nombre_variable identificador_variable){
+
+// cambiar a t_puntero (sin *)
+// se puede entonces retornar un int pos->data * pageSize + pos->offset
+t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	//Hay que liberar pos por los memory leaks
 	t_pos* pos= (t_pos*)malloc(sizeof(t_pos));
 	if(off+size>pageSize){
@@ -33,67 +37,65 @@ t_puntero* AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	pos->page=currentPage;
 	pos->off=off;
 	pos->size=size;
-	list_add(pcb->indiceDeStack,pos);
+	dictionary_put(pcb->indiceDeStack,string_from_format("%c",identificador_variable),pos);
+	//list_add(pcb->indiceDeStack,pos);
  	//dictionary_put(pcb->indiceDeStack,&identificador_variable,(void*)pos);
- 	off+=size;
+ 	int off_defined=off;
+	off+=size;
  	//Hay que liberar p por los mem leaks
- 	t_puntero* p=(t_puntero*)malloc(sizeof(t_puntero));
- 	*p=currentPage*pageSize+off;
- 	return p;
+ 	return currentPage*pageSize+off_defined;
+
 }
 
-t_pos* find_identificador(t_nombre_variable ident){
-	int _is_the_id(t_indiceDelStack* s){
-		return s->ID==ident;
+// esto te lo ahorras si usas diccionario
+/*t_pos* find_identificador(t_nombre_variable ident){
+	int _is_the_id(t_pos* pos){
+		return pos==ident;
 	}
 	return list_find(pcb->indiceDeStack, (void*)find_identificador);
-}
-t_valor_variable* find_position(t_puntero direccion_variable){
-	int _is_the_position(t_indiceDelStack* s){
-		return s->pos->page+s->pos->off==direccion_variable;
-	}
-	return list_find(pcb->indiceDeStack,(void*)find_position);
-}
-t_puntero* AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable){
-	t_puntero* p = (t_puntero*)malloc(sizeof(t_puntero));
+}*/
+
+// cambiar a t_puntero (sin *)
+// se puede entonces retornar un int pos->data * pageSize + pos->offset
+// no hace falta allocar nada
+// acordate de multiplicar pos->page por pageSize!s
+t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable){
+
 	//t_pos* data=dictionary_get(pcb->indiceDeStack,&identificador_variable);
-	t_pos* data=(t_pos*)find_identificador(identificador_variable);
-	*p=data->page+data->off;
-	return p;
-}
-t_valor_variable *AnSISOP_dereferenciar(t_puntero direccion_variable){
-	return find_position(direccion_variable);
+	t_pos* data = (t_pos*)dictionary_get(pcb->indiceDeStack,string_from_format("%c",identificador_variable));
+	return data->page+data->off;
 
 }
-void *AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
-	div_t values;
-		values=div(direccion_variable,pageSize);
-		int page=values.quot;
-		int offsetToMemory=values.rem;
-		socket_send_string(serverMemory,"write");
-		log_info(logCPU,"Le aviso a Memoria que quiero asignar en %d el valor %d\n", direccion_variable, valor);
-		if(socket_send_int(serverMemory,pcb->pid)>0){
-			log_info(logCPU,"Envio el PID: %d\n", pcb->pid);
-			if (socket_send_int(serverMemory,page)>0){
-				log_info(logCPU, "Envio la pagina: %d\n", page);
-				if(socket_send_int(serverMemory,offsetToMemory)>0){
-					log_info(logCPU,"Envio el offset: %d\n", offsetToMemory);
-					if(socket_send_int(serverMemory,size)){
-						log_info(logCPU,"Envio el size: %d\n", size);
-					}else{
-						log_info(logCPU,"Error enviando el size: %d\n", size);
-					}
-				}else{
-					log_info(logCPU,"Error enviando el offset: %d\n", offsetToMemory);
-				}
-			}else{
-				log_info(logCPU,"Error enviando el numero de pagina: %d\n", page);
-			}
-		}else{
-			log_info(logCPU,"Error enviando el PID: %d\n", pcb->pid);
-		}
+
+t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
+	div_t values = div(direccion_variable, pageSize);
+	int page = values.quot;
+	int offsetToMemory = values.rem;
+
+	log_info(logCPU, "[dereferenciar] page = %d, offset = %d\n", page, offsetToMemory);
+	void* readResult = memory_request_read(serverMemory, pcb->pid, page, offsetToMemory, size);
+
+	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
+	else					log_info(logCPU, "[dereferenciar] leyo bien");
+
+	return *((int*)readResult);
 }
-t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
+
+void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
+	div_t values = div(direccion_variable, pageSize);
+	int page = values.quot;
+	int offsetToMemory = values.rem;
+
+	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d\n", page, offsetToMemory, valor);
+	int writeResult = memory_request_write(serverMemory, pcb->pid, page, offsetToMemory, size, &valor);
+
+	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
+	else					log_info(logCPU, "[asignar] se escribio bien en memoria");
+}
+
+// cambiar a t_valor_variable (sin *), (un int)
+// alcanza con devolver lo que te manda el kernel
+/*t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 	int* value=(int*)malloc(sizeof(int));
 	if (socket_send_string(serverKernel, "ValueOfSharedVariable")>0){
 		if (socket_send_string(serverKernel,variable)>0){
@@ -102,4 +104,4 @@ t_valor_variable *AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 		}
 	}
 	return value;
-}
+}*/

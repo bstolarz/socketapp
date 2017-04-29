@@ -10,59 +10,67 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 #include "../functions/memory.h"
+#include "handlers.h"
 
-void handle_init(int clientSocket){
-	int PID, pageCount, success;
+void* handle_init(void* request)
+{
+	t_init_program_request* initRequest = (t_init_program_request*) request;
+	int success = program_init(initRequest->PID, initRequest->pageCount);
 
-	socket_recv_int(clientSocket, &PID);
-	socket_recv_int(clientSocket, &pageCount);
+	socket_send_int(initRequest->clientSocket, success);
 
-	success = program_init(PID, pageCount);
+	free(request);
 
-	socket_send_int(clientSocket, success);
+	return NULL;
 }
 
-void handle_end(int clientSocket){
-	int PID;
+void* handle_end(void* request)
+{
+	t_end_program_request* endRequest = (t_end_program_request*) request;
 
-	socket_recv_int(clientSocket, &PID);
+	program_end(endRequest->PID);
 
-	program_end(PID);
+	socket_send_int(endRequest->clientSocket, 0);
+
+	free(request);
+
+	return NULL;
 }
 
-void handle_read(int socket){
-    int PID, page, offset, size;
+void* handle_read(void* request)
+{
+	t_read_request* readRequest = (t_read_request*) request;
 
-    socket_recv_int(socket, &PID);
-    //Agrego un send para notificarle a CPU el tamanio de pagina
-    socket_send_int(socket,configMemory->frameSize);
-    socket_recv_int(socket, &page);
-    socket_recv_int(socket, &offset);
-    socket_recv_int(socket, &size);
+    void* data = memory_read(readRequest->PID, readRequest->page, readRequest->offset, readRequest->size);
 
-    void* data = memory_read(PID, page, offset, size);
+    socket_send(readRequest->clientSocket, data, readRequest->size);
 
-    socket_send(socket, data, size);
+    free(request);
+    free(data);
+
+    return NULL;
 }
 
-void handle_write(int socket){
-    int PID, page, offset, size;
-    
-    socket_recv_int(socket, &PID);
-    socket_recv_int(socket, &page);
-    socket_recv_int(socket, &offset);
-    socket_recv_int(socket, &size);
+void* handle_write(void* request)
+{
+	t_write_request* writeRequest = (t_write_request*) request;
 
-    void* data;
-
-    socket_recv(socket, &data, size);
-    memory_write(PID, page, offset, size, data);
-
+    memory_write(writeRequest->PID, writeRequest->page, writeRequest->offset, writeRequest->size, writeRequest->buffer);
     // socket_send_int(socket, 0); // si no mandar error
+
+    free(request);
+
+    return NULL;
 }
 
-void handle_frame_size(int clientSocket){
+void* handle_frame_size(void* request)
+{
+	int clientSocket = *((int*) request);
 	socket_send_int(clientSocket, configMemory->frameSize);
+
+	free(request);
+
+	return NULL;
 }
 
 

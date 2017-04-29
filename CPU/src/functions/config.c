@@ -6,12 +6,13 @@
 
 void config_read(char* path){
 
-	t_config* config=config_create(path);
+	t_config* config = config_create(path);
 
-	configCPU->ip_kernel=string_duplicate(config_get_string_value(config,"IP_KERNEL"));
-	configCPU->puerto_kernel=string_duplicate(config_get_string_value(config,"PUERTO_KERNEL"));
-	configCPU->ip_memory=string_duplicate(config_get_string_value(config,"IP_MEMORY"));
-	configCPU->puerto_memory=string_duplicate(config_get_string_value(config,"PUERTO_MEMORY"));
+	configCPU->ip_kernel = string_duplicate(config_get_string_value(config,"IP_KERNEL"));
+	configCPU->puerto_kernel = string_duplicate(config_get_string_value(config,"PUERTO_KERNEL"));
+
+	configCPU->ip_memory = string_duplicate(config_get_string_value(config,"IP_MEMORY"));
+	configCPU->puerto_memory = string_duplicate(config_get_string_value(config,"PUERTO_MEMORY"));
 
 	config_destroy(config);
 }
