@@ -16,6 +16,7 @@
 
 #include "../../commons/structures.h"
 #include "../../commons/declarations.h"
+#include "../../functions/ltp.h"
 
 int program_generate_id(){
 	programID++;
@@ -53,7 +54,27 @@ void program_process_new(fd_set* master, int socket){
 		return;
 	}
 
-	program->pcb->metadata = metadata_desde_literal(program->code);
+	t_metadata_program* metadata = metadata_desde_literal(program->code);
+	program->pcb->pc = metadata->instruccion_inicio;
+	program->pcb->indiceDeCodigoCant = metadata->instrucciones_size;
+	program->pcb->indiceDeCodigo = metadata->instrucciones_serializado;
+	program->pcb->indiceDeEtiquetasCant = metadata->etiquetas_size;
+	program->pcb->indiceDeEtiquetas = metadata->etiquetas;
+
+	//CODIGO IMPRIMIR EL INDICE DE ETIQUETAS
+	/*int i;
+	for(i=0; i<metadata->etiquetas_size; i++){
+		printf("Etiqueta: %s\n", metadata->etiquetas[i]);
+	}*/
+
+	//CODIGO IMPRIMIR EL INDICE DE CODIGO
+	/*
+	int i;
+	for(i=0; i<metadata->instrucciones_size; i++){
+		t_intructions instr = metadata->instrucciones_serializado[i];
+		printf("Start: %i, Offset: %i\n", instr.start, instr.offset);
+	}
+	*/
 
 	//CODIGO PARA TESTEAR EL ENVIO DEL PROGRAMA
 	/*
@@ -62,7 +83,7 @@ void program_process_new(fd_set* master, int socket){
 		printf("%c", ((char*)program->code)[i]);
 	}
 	printf("\n");
-	 */
+	*/
 
 	printf("Se agrego a %i a la lista de programas nuevos\n", program->pcb->pid);
 	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
@@ -70,6 +91,9 @@ void program_process_new(fd_set* master, int socket){
 	pthread_mutex_lock(&(queueNewPrograms->mutex));
 	list_add(queueNewPrograms->list, program);
 	pthread_mutex_unlock(&(queueNewPrograms->mutex));
+
+	planificadorLargoPlazo();
+
 	return;
 }
 

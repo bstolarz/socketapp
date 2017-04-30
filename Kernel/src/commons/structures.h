@@ -38,16 +38,6 @@ typedef struct{
 	char* nombre;
 }t_sharedVar;
 
-
-typedef struct{
-	int offset_inicio;
-	int offset_fin;
-}t_indiceDeCodigo;
-
-typedef struct{
-
-}t_indiceDeEtiquetas;
-
 typedef struct{
 
 }t_indiceDelStack;
@@ -56,13 +46,14 @@ typedef struct{
 	int pid;
 	int pc;
 	int cantPagsCodigo;
-	t_indiceDeCodigo * indiceDeCodigo;
-	t_indiceDeEtiquetas * indiceDeEtiquetas;
+	int indiceDeCodigoCant;
+	t_intructions * indiceDeCodigo;
+	int indiceDeEtiquetasCant;
+	char * indiceDeEtiquetas;
 	t_indiceDelStack * indiceDeStack;
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;
-	t_metadata_program* metadata;
 }t_pcb;
 
 typedef struct{
@@ -82,5 +73,10 @@ typedef struct{
 	pthread_mutex_t mutex;
 	t_list * list;
 }t_queue;
+
+typedef struct{
+	int socket;
+	pthread_mutex_t mutex;
+}t_socket;
 
 #endif /* COMMONS_STRUCTURES_H_ */

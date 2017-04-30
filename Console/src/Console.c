@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <commons/config.h>
-#include <commons/string.h>
-#include <commons/log.h>
+//#include <commons/string.h>
+//#include <commons/log.h>
 
 #include "commons/structures.h"
 #include "commons/declarations.h"

@@ -9,6 +9,7 @@
 #include <commons/log.h>
 #include "commons/declarations.h"
 #include "libSockets/send.h"
+#include "libSockets/client.h"
 #include "commons/structures.h"
 #include "threads/program/select.h"
 #include "threads/cpu/select.h"
@@ -30,6 +31,9 @@ int main(int argc, char* argv[]) {
 	log_config();
 
 	programID = 0;
+
+	pthread_mutex_init(&(memoryServer.mutex),NULL);
+	socket_client_create(&memoryServer.socket, configKernel->ip_memoria, configKernel->puerto_memoria);
 
 	//Inicio lista nueva
 	queueNewPrograms = malloc(sizeof(t_queue));

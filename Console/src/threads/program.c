@@ -13,6 +13,7 @@
 
 #include <commons/config.h>
 #include <commons/string.h>
+#include <commons/temporal.h>
 
 #include "../libSockets/client.h"
 #include "../libSockets/recv.h"
@@ -38,6 +39,17 @@ void thread_program_destroy(t_program* program, int insideThread){
 	if(socket_send_string(program->socketKernel, "Finished")<=0){
 		log_info(logConsole,"[%i] - El programa informa que fue finalizado desde la consola.", program->pid);
 	}
+	
+	// BEGIN - Imprimo estadisticas
+	printf("[SISTEMA] - Fecha inicio del programa: %s\n", program->stats->stringInicioEjecucion);
+	printf("[SISTEMA] - Fecha fin del programa: %s\n", temporal_get_string_time());
+	printf("[SISTEMA] - Cantidad de impresiones en pantalla: %i\n", program->stats->cantImpresionesPantalla);
+
+	time_t finEjecucion;
+	time(&finEjecucion);
+	printf("[SISTEMA] - Duracion del programa: %i\n", (int)(finEjecucion - program->stats->timestampInicio));
+	//END - Imprimo estadisticas
+	
 	close(program->socketKernel);
 	free(program->pathProgram);
 	free(program);

@@ -18,5 +18,9 @@
 
 t_program* planificar(){
 	//TODO
+	// Devolver primer item de la lista queue queueReadyPrograms
+	// muteando la queue
+	//pthread_mutex_unlock(&(queueReadyPrograms->mutex));
+	//pthread_mutex_lock(&(queueReadyPrograms->mutex));
 	return NULL;
 }
