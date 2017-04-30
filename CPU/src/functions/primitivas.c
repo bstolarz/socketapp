@@ -25,22 +25,21 @@
 int off=0;
 int currentPage=0;
 int size=4;
-
+int pos=0;
 // cambiar a t_puntero (sin *)
 // se puede entonces retornar un int pos->data * pageSize + pos->offset
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	//Hay que liberar pos por los memory leaks
-	t_pos* pos= (t_pos*)malloc(sizeof(t_pos));
+	t_var* var= (t_var*)malloc(sizeof(t_var));
 	if(off+size>pageSize){
 		currentPage++;
 	}
-	pos->page=currentPage;
-	pos->off=off;
-	pos->size=size;
-	dictionary_put(pcb->indiceDeStack,string_from_format("%c",identificador_variable),pos);
-	//list_add(pcb->indiceDeStack,pos);
- 	//dictionary_put(pcb->indiceDeStack,&identificador_variable,(void*)pos);
- 	int off_defined=off;
+	var->page=currentPage;
+	var->off=off;
+	var->size=size;
+	t_indiceDelStack* ind=(t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
+	dictionary_put(ind->vars,string_from_format("%c",identificador_variable),var);
+	int off_defined=off;
 	off+=size;
  	//Hay que liberar p por los mem leaks
  	return currentPage*pageSize+off_defined;
@@ -60,10 +59,11 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 // no hace falta allocar nada
 // acordate de multiplicar pos->page por pageSize!s
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable){
-
-	//t_pos* data=dictionary_get(pcb->indiceDeStack,&identificador_variable);
-	t_pos* data = (t_pos*)dictionary_get(pcb->indiceDeStack,string_from_format("%c",identificador_variable));
-	return data->page+data->off;
+	t_indiceDelStack* ind=(t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
+	//t_var* data=dictionary_get(pcb->indiceDeStack,&identificador_variable);
+	t_var* data=dictionary_get(ind->vars,string_from_format("%c",identificador_variable));
+	//t_var* data = (t_var*)dictionary_get(varsAux,string_from_format("%c",identificador_variable));
+	return data->page*pageSize+data->off;
 
 }
 
@@ -105,3 +105,21 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	}
 	return value;
 }*/
+void AnSISOP_irAlLabel (t_nombre_etiqueta t_nombre_etiqueta){
+	pcb->pc=(int)dictionary_get(pcb->indiceDeEtiquetas,t_nombre_etiqueta);
+}
+void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
+	int offset
+	t_var* v=(t_var*)malloc(sizeof(t_var));
+	//verifico que pueda guardar el contexto en la misma pagina
+	if(off+size>pageSize){
+			currentPage++;
+			offset=0;
+	}else{
+		offset+=size;
+	}
+	int writeResult = memory_request_write(serverMemory, pcb->pid, currentPage, offsetToMemory, size, &valor);
+	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
+	else					log_info(logCPU, "[asignar] se escribio bien en memoria");
+
+}
