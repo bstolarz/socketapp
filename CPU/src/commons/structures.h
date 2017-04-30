@@ -28,11 +28,15 @@ typedef struct{
 typedef struct{
 
 }t_indiceDeEtiquetas;
-
 typedef struct{
 	int page;
 	int off;
 	int size;
+}t_position;
+
+typedef struct{
+	t_nombre_variable ID;
+	t_position* pos;
 }t_var;
 
 
