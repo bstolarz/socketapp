@@ -3,20 +3,18 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
-#include <sys/socket.h>
+#include <unistd.h>
+#include <stdbool.h>
 
-#include <commons/collections/list.h>
-#include <commons/config.h>
-#include <commons/string.h>
-#include <commons/log.h>
-#include <parser/metadata_program.h>
+#include "../libSockets/server.h"
+#include "../libSockets/recv.h"
+#include "../libSockets/send.h"
 
-#include "../../libSockets/send.h"
-#include "../../libSockets/recv.h"
+#include "../commons/structures.h"
+#include "../commons/declarations.h"
 
-#include "../../commons/structures.h"
-#include "../../commons/declarations.h"
-#include "../../functions/ltp.h"
+#include "../functions/memory.h"
+#include "../functions/ltp.h"
 
 int program_generate_id(){
 	programID++;
@@ -85,16 +83,49 @@ void program_process_new(fd_set* master, int socket){
 	printf("\n");
 	*/
 
-	printf("Se agrego a %i a la lista de programas nuevos\n", program->pcb->pid);
-	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
-
 	pthread_mutex_lock(&(queueNewPrograms->mutex));
 	list_add(queueNewPrograms->list, program);
 	pthread_mutex_unlock(&(queueNewPrograms->mutex));
 
-	//planificadorLargoPlazo();
+	printf("Se agrego a %i a la lista de programas nuevos\n", program->pcb->pid);
+	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
+
+	planificador_largo_plazo();
 
 	return;
+}
+
+int program_to_ready(t_program* program){
+
+	//Obtengo el frame size
+	int frameSize = memory_frame_size();
+	if(frameSize<=0){
+		return -20;
+	}
+
+
+	//Calculo la cantidad de paginas del codigo
+	program->pcb->cantPagsCodigo = program->codeSize / frameSize;
+	if((program->pcb->cantPagsCodigo * frameSize) < program->codeSize){
+		program->pcb->cantPagsCodigo++;
+	}
+
+	//Calculo cantidad de paginas a solicitar
+	int paginasTotales = program->pcb->cantPagsCodigo + configKernel->stack_size;
+
+	//Solicito las paginas
+	int respuestaInit;
+	if((respuestaInit = memory_init(program, paginasTotales)) != 0){
+		return respuestaInit;
+	}
+
+	//Escribo en memoria
+	int respuestaWrite;
+	if((respuestaWrite = memory_write(program, 0, 0, program->code, program->codeSize)) != 0){
+		return respuestaWrite;
+	}
+
+	return 0;
 }
 
 void program_finish(t_program* program){
@@ -171,3 +202,4 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	//Deslockeo los cpus
 	pthread_mutex_unlock(&(queueCPUs->mutex));
 }
+

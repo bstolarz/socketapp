@@ -13,11 +13,13 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-void planificadorLargoPlazo(){
+#include "../functions/memory.h"
+#include "../functions/program.h"
+
+int planificador_largo_plazo(){
 
 	pthread_mutex_lock(&queueNewPrograms->mutex);
-	pthread_mutex_lock(&queueReadyPrograms->mutex);
-	pthread_mutex_lock(&queueCPUs->mutex);
+
 
 	if(list_size(queueNewPrograms->list)>0){
 		bool _filtrarCPUsOcupados(t_cpu* cpu){
@@ -26,23 +28,24 @@ void planificadorLargoPlazo(){
 
 		int cantCorriendo = list_size(queueReadyPrograms->list) + list_size(list_filter(queueCPUs->list, (void*)_filtrarCPUsOcupados));
 
-		if(cantCorriendo < configKernel->grado_multiprog){
+		while(cantCorriendo < configKernel->grado_multiprog && list_size(queueNewPrograms->list)>0){
 			t_program* program = (t_program*)list_remove(queueNewPrograms->list, 0);
-			int frameSize = 0;
+			int programStatus;
+			if((programStatus = program_to_ready(program)) != 0){
+				program->pcb->exitCode = programStatus;
+				program_finish(program);
+			}else{
+				pthread_mutex_lock(&queueReadyPrograms->mutex);
+				list_add(queueReadyPrograms->list, program);
+				printf("El programa %i se agrego a la lista de ready\n", program->pcb->pid);
+				pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-			pthread_mutex_lock(&memoryServer.mutex);
-
-			socket_send_string(memoryServer.socket, "frame_size");
-			socket_recv_int(memoryServer.socket, &frameSize);
-
-			//TODO
-
-			pthread_mutex_unlock(&memoryServer.mutex);
-
+				cantCorriendo++;
+			}
 		}
 	}
 
-	pthread_mutex_lock(&queueCPUs->mutex);
-	pthread_mutex_lock(&queueReadyPrograms->mutex);
-	pthread_mutex_lock(&queueNewPrograms->mutex);
+	pthread_mutex_unlock(&queueNewPrograms->mutex);
+
+	return 0;
 }

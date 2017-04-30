@@ -28,19 +28,26 @@ typedef struct{
 typedef struct{
 
 }t_indiceDeEtiquetas;
-
 typedef struct{
 	int page;
 	int off;
 	int size;
-}t_pos;
+}t_position;
+
+typedef struct{
+	t_nombre_variable ID;
+	t_position* pos;
+}t_var;
+
 
 typedef struct{
 	t_dictionary* vars;
-	t_dictionary* args;
+	t_position* args;
 	int retPos;
-	t_pos* retVar;
+	t_position* retVar;
+	int pos;
 }t_indiceDelStack;
+
 
 typedef struct{
 	int pid;
@@ -48,8 +55,8 @@ typedef struct{
 	int cantPagsCodigo;
 	t_metadata_program* metadata;
 	t_indiceDeCodigo * indiceDeCodigo;
-	t_indiceDeEtiquetas * indiceDeEtiquetas;
-	t_dictionary * indiceDeStack; // cambiar por diccionario t_dictionary vars;
+	t_dictionary * indiceDeEtiquetas;
+	t_list * indiceDeStack; // cambiar por diccionario t_dictionary vars;
 	t_dictionary * processFileTable;
 	int exitCode;
 	int stackPosition;

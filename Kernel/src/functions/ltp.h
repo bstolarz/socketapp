@@ -8,6 +8,6 @@
 #ifndef FUNCTIONS_LTP_H_
 #define FUNCTIONS_LTP_H_
 
-void planificadorLargoPlazo();
+int planificador_largo_plazo();
 
 #endif /* FUNCTIONS_LTP_H_ */
