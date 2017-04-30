@@ -33,6 +33,7 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	t_var* var= (t_var*)malloc(sizeof(t_var));
 	if(off+size>pageSize){
 		currentPage++;
+		off=0;
 	}
 	var->page=currentPage;
 	var->off=off;
@@ -109,17 +110,40 @@ void AnSISOP_irAlLabel (t_nombre_etiqueta t_nombre_etiqueta){
 	pcb->pc=(int)dictionary_get(pcb->indiceDeEtiquetas,t_nombre_etiqueta);
 }
 void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
-	int offset
+	int offset;
 	t_var* v=(t_var*)malloc(sizeof(t_var));
 	//verifico que pueda guardar el contexto en la misma pagina
 	if(off+size>pageSize){
 			currentPage++;
 			offset=0;
 	}else{
-		offset+=size;
+		offset=off+size;
 	}
-	int writeResult = memory_request_write(serverMemory, pcb->pid, currentPage, offsetToMemory, size, &valor);
+	int writeResult = memory_request_write(serverMemory, pcb->pid, currentPage, offset, size, etiqueta);
 	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
 	else					log_info(logCPU, "[asignar] se escribio bien en memoria");
 
+}
+void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+	int offset;
+		t_var* v=(t_var*)malloc(sizeof(t_var));
+		//verifico que pueda guardar el contexto en la misma pagina
+		if(off+size>pageSize){
+				currentPage++;
+				offset=0;
+		}else{
+			offset=off+size;
+		}
+	t_indiceDelStack* ind=(t_indiceDelStack*)malloc(sizeof(t_indiceDelStack));
+	//GUARDO LA POSICION DE RETORNO AL FINALIZAR LA PRIMITIVA
+	ind->retPos=pcb->pc;
+	div_t div=div(donde_retornar,pageSize);
+	int pagina=div.quot;
+	int off=div.rem;
+	t_var* v=(t_var*)malloc(sizeof(t_var*));
+	v->page=pagina;
+	v->off=off;
+	v->size=size;
+	//GUARDO LA POSICION A LA QUE RETORNA LA FUNCION
+	ind->retVar=v;
 }
