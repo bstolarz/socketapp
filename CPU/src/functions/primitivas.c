@@ -27,7 +27,7 @@ int pos=0;
 // cambiar a t_puntero (sin *)
 // se puede entonces retornar un int pos->data * pageSize + pos->offset
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
-	//Identifico la variable
+	//Identifico la variable+
 	if (identificador_variable >= '0' && identificador_variable <= '9'){
 		//ES UNA VARIABLE DE UNA FUNCION
 		t_position* arg=(t_position*)malloc(sizeof(t_position));
@@ -46,10 +46,12 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable){
 	}else{
 		//Alloco memoria para almacenar una variable LOCAL
 		t_var* var= (t_var*)malloc(sizeof(t_var));
+		t_position* pos=(t_position*)malloc(sizeof(t_position));
 		if(off+size>pageSize){
 			currentPage++;
 			off=0;
 		}
+		var->pos=pos;
 		//Como es variable local, le asigno pagina, offset y size
 		var->pos->page=currentPage;
 		var->pos->off=off;

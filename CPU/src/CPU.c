@@ -20,6 +20,7 @@
 #include "libSockets/server.h"
 #include "functions/memory_requests.h"
 #include <parser/metadata_program.h>
+#include <parser/parser.h>
 #include "functions/primitivas.h"
 int serverKernel=0;
 int serverMemory=0;
@@ -32,7 +33,7 @@ void pcb_memory_connection()
 	pcb->pid = 0;
 	pcb->pc = 0;
 	pcb->stackPosition = 0;
-	pcb->indiceDeStack = dictionary_create();
+	pcb->indiceDeStack = list_create();
 
 
 	char* code = 0;
@@ -74,7 +75,7 @@ void test_memory_connection()
 
 	for (i = 0; i != pcb->metadata->instrucciones_size; ++i)
 	{
-		//printf("instruccion %d: empieza en %d y termina en %d\n", i, instructionsBeginSize[i].start, instructionsBeginSize[i].offset);
+		printf("instruccion %d: empieza en %d y termina en %d\n", i, instructionsBeginSize[i].start, instructionsBeginSize[i].offset);
 		int codePage = instructionsBeginSize[i].start / pageSize;
 		int codeOffset = instructionsBeginSize[i].start % pageSize;
 		int size = instructionsBeginSize[i].offset;
@@ -82,6 +83,7 @@ void test_memory_connection()
 
 		if (data == NULL) printf("no pude obtener instruccion\n");
 		else printf("instruccion %d desde memoria: %s\n", i, (char*)data);
+		analizadorLinea(data,funciones, kernel);
 	}
 
 	metadata_destruir(pcb->metadata);
@@ -242,19 +244,21 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 	logCPU=logCreate();
-	AnSISOP_funciones* funciones=(AnSISOP_funciones*)malloc(sizeof(AnSISOP_funciones));
-	AnSISOP_kernel* kernel=(AnSISOP_kernel*)malloc(sizeof(AnSISOP_kernel));
+	funciones=(AnSISOP_funciones*)malloc(sizeof(AnSISOP_funciones));
+	kernel=(AnSISOP_kernel*)malloc(sizeof(AnSISOP_kernel));
 	funciones->AnSISOP_asignar=AnSISOP_asignar;
 	funciones->AnSISOP_definirVariable=AnSISOP_definirVariable;
 	funciones->AnSISOP_dereferenciar=AnSISOP_dereferenciar;
 	funciones->AnSISOP_obtenerPosicionVariable=AnSISOP_obtenerPosicionVariable;
+	funciones->AnSISOP_finalizar=AnSISOP_finalizar;
 	//Me conenecto al Kernel
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");
 
 	connect_to_memory();
-	// test_memory_connection();
+	test_memory_connection();
 
+/*
 	if(serverKernel){
 		pcb=(t_pcb*)malloc(sizeof(t_pcb));
 		recv_pcb(serverKernel,pcb);
@@ -270,6 +274,7 @@ int main(int arg, char* argv[]) {
 			socket_send_string(serverKernel,"FinishedQuantum");
 		}
 	}
+*/
 
 	return EXIT_SUCCESS;
 }
