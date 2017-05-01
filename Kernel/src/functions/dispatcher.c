@@ -17,20 +17,16 @@
 #include "../commons/declarations.h"
 
 t_program* planificar(){
-	//TODO
-	// Devolver primer item de la lista queue queueReadyPrograms
-	// muteando la queue
+	t_program* program = NULL;
 
-	t_program* nextProgram;
-
-	if (configKernel->algoritmo == "FIFO"){
+	if(strcmp(configKernel->algoritmo, "FIFO") == 0){
 		pthread_mutex_lock(&(queueReadyPrograms->mutex));
-		nextProgram = list_get(&(queueReadyPrograms->list), 0);
+		program = list_remove(queueReadyPrograms->list, 0);
 		pthread_mutex_unlock(&(queueReadyPrograms->mutex));
-	}else
+	}else if(strcmp(configKernel->algoritmo, "RR") == 0)
 	{
 		//Round robin
 	}
 
-	return nextProgram;
+	return program;
 }
