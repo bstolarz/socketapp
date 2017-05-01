@@ -38,7 +38,7 @@ void command_start(){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	program->stats->timestampInicio = tv.tv_sec;
-	program->stats->cantImpresionesPantalla = -1;
+	program->stats->cantImpresionesPantalla = 0;
 	
 	free(path);
 

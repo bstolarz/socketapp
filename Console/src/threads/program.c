@@ -41,13 +41,13 @@ void thread_program_destroy(t_program* program, int insideThread){
 	}
 	
 	// BEGIN - Imprimo estadisticas
-	printf("[SISTEMA] - Fecha inicio del programa: %s\n", program->stats->stringInicioEjecucion);
-	printf("[SISTEMA] - Fecha fin del programa: %s\n", temporal_get_string_time());
-	printf("[SISTEMA] - Cantidad de impresiones en pantalla: %i\n", program->stats->cantImpresionesPantalla);
+	printf("[%i] - Fecha inicio del programa: %s\n", program->pid, program->stats->stringInicioEjecucion);
+	printf("[%i] - Fecha fin del programa: %s\n", program->pid, temporal_get_string_time());
+	printf("[%i] - Cantidad de impresiones en pantalla: %i\n", program->pid, program->stats->cantImpresionesPantalla);
 
 	time_t finEjecucion;
 	time(&finEjecucion);
-	printf("[SISTEMA] - Duracion del programa: %i\n", (int)(finEjecucion - program->stats->timestampInicio));
+	printf("[%i] - Duracion del programa: %i\n", program->pid, (int)(finEjecucion - program->stats->timestampInicio));
 	//END - Imprimo estadisticas
 	
 	close(program->socketKernel);
@@ -125,6 +125,7 @@ void* thread_program(void * params){
 		if(strcmp(printMessage, "FinEjecucion")==0){
 			//TODO Aca va a ir la info al finalizar la ejecucion.
 		}else{
+			program->stats->cantImpresionesPantalla++;
 			printf("[%i] - %s\n", program->pid, printMessage);
 			free(printMessage);
 		}
