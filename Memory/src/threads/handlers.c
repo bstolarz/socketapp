@@ -12,65 +12,130 @@
 #include "../functions/memory.h"
 #include "handlers.h"
 
-void* handle_init(void* request)
+void handle_init(int clientSocket)
 {
-	t_init_program_request* initRequest = (t_init_program_request*) request;
-	int success = program_init(initRequest->PID, initRequest->pageCount);
+	// recibir
+	int PID, pageCount;
 
-	socket_send_int(initRequest->clientSocket, success);
+	if (socket_recv_int(clientSocket, &PID) == -1 ||
+		socket_recv_int(clientSocket, &pageCount) == -1)
+	{
+		log_error(logMemory, "[init] request: problema recviendo datos (socket %d)", clientSocket);
+		return;
+	}
 
-	free(request);
 
-	return NULL;
+	// procesar
+	int success = program_init(PID, pageCount);
+
+
+	// enviar
+	int sendResult = socket_send_int(clientSocket, success);
+
+	if (sendResult == -1)
+		log_error(logMemory, 	"[init] request: problema send result (PID: %d, pageCount: %d, success: %d, socket: %d)",
+								PID, pageCount, success, clientSocket);
 }
 
-void* handle_end(void* request)
+void handle_end(int clientSocket)
 {
-	t_end_program_request* endRequest = (t_end_program_request*) request;
+	// recibir
+	int PID;
 
-	program_end(endRequest->PID);
+	if (socket_recv_int(clientSocket, &PID) == -1)
+	{
+		log_error(logMemory, "[end] request: problema recviendo datos (socket %d)", clientSocket);
+		return;
+	}
 
-	socket_send_int(endRequest->clientSocket, 0);
 
-	free(request);
+	// procesar
+	program_end(PID);
 
-	return NULL;
+
+	// enviar
+	int sendResult = socket_send_int(clientSocket, 0);
+
+	if (sendResult == -1)
+		log_error(logMemory, "[end] request: problema send (PID: %d, socket %d)", PID, clientSocket);
 }
 
-void* handle_read(void* request)
+void handle_read(int clientSocket)
 {
-	t_read_request* readRequest = (t_read_request*) request;
+	// recibir
+	int PID, page, offset, size;
 
-    void* data = memory_read(readRequest->PID, readRequest->page, readRequest->offset, readRequest->size);
+	if (socket_recv_int(clientSocket, &PID) == -1 ||
+		socket_recv_int(clientSocket, &page) == -1 ||
+		socket_recv_int(clientSocket, &offset) == -1 ||
+		socket_recv_int(clientSocket, &size) == -1)
+	{
+		log_error(logMemory, "[read] request: problema recviendo datos (socket %d)", clientSocket);
+		return;
+	}
 
-    socket_send(readRequest->clientSocket, data, readRequest->size);
 
-    free(request);
-    free(data);
+	// procesar
+    void* data = memory_read(PID, page, offset, size);
 
-    return NULL;
+
+    // responder
+    int sendResult = socket_send(clientSocket, data, size); // TODO: si data es nula hay que mandar un void* de size 0s?
+
+    if (sendResult == -1)
+    {
+    	log_error(	logMemory,
+    				"[read] request: problema en send (PID %d, page %d, offset %d, size %d, socket %d)",
+        			PID, page, offset, size, clientSocket);
+    }
+
+    if (data != NULL) free(data);
 }
 
-void* handle_write(void* request)
+void handle_write(int clientSocket)
 {
-	t_write_request* writeRequest = (t_write_request*) request;
+    // recibir
+	int PID, page, offset;
+	void* buffer;
 
-    memory_write(writeRequest->PID, writeRequest->page, writeRequest->offset, writeRequest->size, writeRequest->buffer);
-    // socket_send_int(socket, 0); // si no mandar error
+	if (socket_recv_int(clientSocket, &PID) == -1 ||
+		socket_recv_int(clientSocket, &page) == -1 ||
+		socket_recv_int(clientSocket, &offset) == -1)
+	{
+		log_error(logMemory, "[write] request: problema recviendo posicion memoria (socket %d)", clientSocket);
+		return;
+	}
 
-    free(request);
+	int size = socket_recv(clientSocket, &buffer, 1);
 
-    return NULL;
+	if (size == -1)
+	{
+		log_error(logMemory, "[write] request: problema recviendo datos (socket %d)", clientSocket);
+		return;
+	}
+
+	// procesar
+    int writeResult = memory_write(PID, page, offset, size, buffer);
+
+    // responder
+    int sendResult = socket_send_int(clientSocket, writeResult);
+
+    if (sendResult == -1)
+    {
+    	log_debug(	logMemory,
+    				"[write] problema send result (PID: %d, page: %d, offset: %d, size: %d, socket %d)",
+    				PID, page, offset, size, clientSocket);
+    }
+
+    free(buffer);
 }
 
-void* handle_frame_size(void* request)
+void handle_frame_size(int clientSocket)
 {
-	int clientSocket = *((int*) request);
-	socket_send_int(clientSocket, configMemory->frameSize);
+	int sendResult = socket_send_int(clientSocket, configMemory->frameSize);
 
-	free(request);
-
-	return NULL;
+	if (sendResult == -1)
+		log_error(logMemory, "[frame_size] request: send malo a socket %s (socket %d)", clientSocket);
 }
 
 

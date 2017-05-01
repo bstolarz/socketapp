@@ -13,7 +13,8 @@ int memory_request_end(int serverSocket, int PID);
 // retorna una lo que leyo. si hubo error, retorna NULL
 void* memory_request_read(int serverSocket, int PID, int page, int offset, int size);
 
-// retorn size si pudo
+// retorn size si pudo;
+// si no -1 si hubo problema mandando o recviendo; ERROR_MEMORY si memoria no pudo escribir
 int memory_request_write(int serverSocket, int PID, int page, int offset, int size, void* buffer);
 
 // retorna tamano del frame. si hubo error retorna -1
