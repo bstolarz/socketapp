@@ -63,10 +63,7 @@ t_cpu* cpu_find(int socket){
 		return cpu->socket==socket;
 	}
 
-	pthread_mutex_lock(&(queueCPUs->mutex));
-	t_cpu* cpu = list_find(queueCPUs->list, (void*)_buscarProgramaSocketInCPUs);
-	pthread_mutex_unlock(&(queueCPUs->mutex));
-	return cpu;
+	return list_find(queueCPUs->list, (void*)_buscarProgramaSocketInCPUs);
 }
 
 void cpu_process_new(int socket){
@@ -85,24 +82,11 @@ void cpu_process_new(int socket){
 	//TODO send quantum
 }
 
-void cpu_process_finished_quantum(int socket){
-	t_cpu* cpu = cpu_find(socket);
-	cpu_recv_pcb(cpu);
-	//TODO mover a lista correspondiente el programa
-	cpu->program = planificar();
-	cpu_send_pcb(cpu);
+void cpu_interruption(t_cpu * cpu){
+	//TODO
 }
-int find_variable(char* varFromCPU){
-	int _is_the_variable(t_sharedVar* var){
-		return strcmp(varFromCPU,var->nombre);
-	}
-	return (int)list_find(configKernel->shared_vars,(void*)_is_the_variable);
 
-}
-void cpu_send_sharedVariableValue(int socket, char* var){
-	int valueToSend=find_variable(var);
-	//Faltan los semaforos para la variable var
-	socket_send_int(socket,valueToSend);
-
+void cpu_burst(t_cpu* cpu){
+	//TODO
 }
 

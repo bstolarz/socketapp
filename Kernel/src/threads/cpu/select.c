@@ -20,6 +20,7 @@
 
 #include "../../commons/declarations.h"
 #include "functions.h"
+#include "handler.h"
 
 void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 	if (nbytes == 0) {
@@ -35,14 +36,51 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	if(strcmp(package, "NewCPU") == 0){
 		log_info(logKernel,"New CPU connected on socket %d\n",socket);
 		cpu_process_new(socket);
-	}else if(strcmp(package, "FinishedQuantum") == 0){
-		cpu_process_finished_quantum(socket);
-	}else if (strcmp(package, "ValueOfSharedVariable")==0){
-		char* sharedVariable=string_new();
-		if (socket_recv_string(socket,&sharedVariable)>0){
-			cpu_send_sharedVariableValue(socket, sharedVariable);
-		}
-
+	}else if(strcmp(package, "interruption") == 0){
+		t_cpu* cpu = cpu_find(socket);
+		cpu_interruption(cpu);
+	}else if(strcmp(package, "burst") == 0){
+		t_cpu* cpu = cpu_find(socket);
+		cpu_burst(cpu);
+	}else if (strcmp(package, "getSharedVariable")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_get_shared_variable(cpu);
+	}else if (strcmp(package, "setSharedVariable")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_set_shared_variable(cpu);
+	}else if (strcmp(package, "finish")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_finish(cpu);
+	}else if (strcmp(package, "wait")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_wait(cpu);
+	}else if (strcmp(package, "signal")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_signal(cpu);
+	}else if (strcmp(package, "reservar")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_reservar(cpu);
+	}else if (strcmp(package, "liberar")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_liberar(cpu);
+	}else if (strcmp(package, "abrir")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_abrir(cpu);
+	}else if (strcmp(package, "borrar")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_borrar(cpu);
+	}else if (strcmp(package, "cerrar")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_cerrar(cpu);
+	}else if (strcmp(package, "moverCursor")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_mover_cursor(cpu);
+	}else if (strcmp(package, "escribir")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_escribir(cpu);
+	}else if (strcmp(package, "leer")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_leer(cpu);
 	}else{
 		log_info(logKernel, "Error, mensaje no identificado: %s", package);
 		printf("Error, mensaje no identificado: %s\n", package);
