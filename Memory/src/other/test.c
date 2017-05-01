@@ -69,7 +69,7 @@ void test_cpu_connection()
 {
 	//Levanto el archivo  del programa
 	char* code = 0;
-	FILE *f = fopen("../programas-ejemplo/facil.ansisop", "rb");
+	FILE *f = fopen("../../programas-ejemplo/facil.ansisop", "rb");
 	int fileSize;
 
 	if (f)

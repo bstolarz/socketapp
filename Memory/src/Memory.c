@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
 	ERROR_MEMORY = -5;
 
 	memory_init();
-	//test_cpu_connection();
+	test_cpu_connection();
 
 	// server and console loop
 	pthread_t serverThread;
