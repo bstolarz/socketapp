@@ -42,9 +42,9 @@ typedef struct{
 
 typedef struct{
 	t_dictionary* vars;
-	t_dictionary* args;
+	t_position* args;
 	int retPos;
-	t_var* retVar;
+	t_position* retVar;
 	int pos;
 }t_indiceDelStack;
 

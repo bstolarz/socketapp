@@ -19,8 +19,8 @@
 #include "../../libSockets/send.h"
 
 #include "../../commons/declarations.h"
+#include "../../functions/program.h"
 
-#include "functions.h"
 
 void select_program_socket_connection_lost(fd_set* master, int socket, int nbytes){
 	program_interrup(socket, -6, 0);

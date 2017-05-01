@@ -55,10 +55,13 @@ int memory_request_write(int serverSocket, int PID, int page, int offset, int si
         (socket_send_int(serverSocket, PID) > 0) &&
         (socket_send_int(serverSocket, page) > 0) &&
         (socket_send_int(serverSocket, offset) > 0) &&
-        (socket_send_int(serverSocket, size) > 0) &&
         (socket_send(serverSocket, buffer, size) == size))
     {
-        return size;
+    	int writeResult;
+    	int recvResult = socket_recv_int(serverSocket, &writeResult);
+
+    	if (recvResult == -1) return -1;
+    	return writeResult;
     }
     
     return -1;
