@@ -71,13 +71,11 @@ void init(char* configPath)
 t_pcb* recv_pcb()
 {
 	char* message;
-	printf("esperando mensaje PCB...");
 	socket_recv_string(serverKernel, &message);
-	printf("obtuve mensaje PCb");
 
 	if (string_equals_ignore_case("PCB", message))
 	{
-		t_serialized serializedPcb;
+		t_dataBlob serializedPcb;
 		int recvSize = socket_recv(serverKernel, (void*)&serializedPcb.data, 1);
 
 		if (recvSize == -1)

@@ -25,7 +25,7 @@ void cpu_send_pcb(t_cpu* cpu){
 	socket_send_string(cpu->socket,"PCB");
 	log_info(logKernel,"Envio la PCB del programa con PID: %d\n",cpu->program->pcb->pid);
 
-	t_serialized serializedPcb = pcb_serialize(cpu->program->pcb);
+	t_dataBlob serializedPcb = pcb_serialize(cpu->program->pcb);
 	int sentSize = socket_send(cpu->socket, serializedPcb.data, serializedPcb.size);
 
 	if (sentSize == -1)

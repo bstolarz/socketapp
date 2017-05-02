@@ -49,7 +49,8 @@ typedef struct{
 	int cantPagsCodigo;
 	int indiceDeCodigoCant;
 	t_intructions * indiceDeCodigo;
-	t_dictionary * indiceDeEtiquetas;
+	int indiceDeEtiquetasCant;
+	char * indiceDeEtiquetas;
 	t_list * indiceDeStack;
 	t_dictionary * processFileTable;
 	int stackPosition;
