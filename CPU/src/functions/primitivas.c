@@ -230,3 +230,67 @@ void AnSISOP_finalizar (void){
 		list_remove_and_destroy_element(pcb->indiceDeStack,ult,(void*)vars_destroyer);
 	}
 }
+
+
+
+//Dummies, algunas voy a ver de llenarlas estos dias
+t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
+	printf("Hola, soy AnSISOP_obtenerValorCompartida\n");
+	return NULL;
+}
+
+t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	printf("Hola, soy AnSISOP_asignarValorCompartida\n");
+		return NULL;
+}
+
+void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
+	printf("Hola, soy AnSISOP_llamarSinRetorno\n");
+}
+
+void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+	printf("Hola, soy AnSISOP_llamarConRetorno\n");
+}
+
+void AnSISOP_retornar(t_valor_variable retorno){
+	printf("Hola, soy AnSISOP_retornar\n");
+}
+
+void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
+	printf("Hola, soy AnSISOP_imprimirValor\n");
+}
+
+void AnSISOP_imprimirLiteral(char* texto){
+	printf("Hola, soy AnSISOP_imprimirLiteral\n");
+}
+
+void AnSISOP_entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
+	printf("Hola, soy AnSISOP_entradaSalida\n");
+}
+
+void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
+	printf("Hola, soy AnSISOP_wait\n");
+}
+
+void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
+	printf("Hola, soy AnSISOP_signal\n");
+}
+
+t_puntero AnSISOP_alocar(t_valor_variable espacio){
+	printf("Hola, soy AnSISOP_alocar y estoy re loco\n");
+	return NULL;
+}
+
+void AnSISOP_liberar(t_puntero puntero){
+	printf("Hola, soy AnSISOP_liberar, vengo a liberarte de la esclavitud\n");
+}
+
+
+
+
+
+
+
+
+
+
