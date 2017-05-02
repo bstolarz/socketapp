@@ -19,12 +19,6 @@ typedef struct{
 	char* puerto_memory;
 }t_cpu;
 
-
-typedef struct{
-	int offset_inicio;
-	int offset_fin;
-}t_indiceDeCodigo;
-
 typedef struct{
 
 }t_indiceDeEtiquetas;
@@ -53,13 +47,14 @@ typedef struct{
 	int pid;
 	int pc;
 	int cantPagsCodigo;
-	t_metadata_program* metadata;
-	t_indiceDeCodigo * indiceDeCodigo;
+	int indiceDeCodigoCant;
+	t_intructions * indiceDeCodigo;
 	t_dictionary * indiceDeEtiquetas;
-	t_list * indiceDeStack; // cambiar por diccionario t_dictionary vars;
+	t_list * indiceDeStack;
 	t_dictionary * processFileTable;
-	int exitCode;
 	int stackPosition;
+	int maxStackPosition;
+	int exitCode;
 }t_pcb;
 
 

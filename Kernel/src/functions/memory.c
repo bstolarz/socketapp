@@ -114,14 +114,6 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 		return -20;
 	}
 
-	//Envio el tamaño del buffer //TODO esto no es necesario - hablar con ignacio
-	if(socket_send_int(memoryServer.socket, size)<=0){
-		printf("Se perdio la conexion con la memoria\n");
-		log_warning(logKernel, "Se perdio la conexion con la memoria");
-		pthread_mutex_unlock(&memoryServer.mutex);
-		return -20;
-	}
-
 	//Envio el buffer
 	if(socket_send(memoryServer.socket, buffer, size)<=0){
 		printf("Se perdio la conexion con la memoria\n");
@@ -130,16 +122,16 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 		return -20;
 	}
 
-	//Obtengo respuesta //TODO deberia devolverme algun valor de respuesta - hablra con ignacio
-	/*int respuesta =0;
+	//Obtengo respuesta
+	int respuesta =0;
 	if(socket_recv_int(memoryServer.socket, &respuesta)<=0){
 		printf("Se perdio la conexion con la memoria\n");
 		log_warning(logKernel, "Se perdio la conexion con la memoria");
 		pthread_mutex_unlock(&memoryServer.mutex);
 		return -20;
-	}*/
+	}
 
 	pthread_mutex_unlock(&memoryServer.mutex);
-	return 0; //Deberia devolver "respuesta"
+	return respuesta;
 }
 

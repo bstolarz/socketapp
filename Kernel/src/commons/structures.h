@@ -52,8 +52,9 @@ typedef struct{
 	char * indiceDeEtiquetas;
 	t_indiceDelStack * indiceDeStack;
 	t_dictionary * processFileTable;
-	int exitCode;
 	int stackPosition;
+	int maxStackPosition;
+	int exitCode;
 }t_pcb;
 
 typedef struct{

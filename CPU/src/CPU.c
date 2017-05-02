@@ -19,201 +19,80 @@
 #include "libSockets/recv.h"
 #include "libSockets/server.h"
 #include "functions/memory_requests.h"
-#include <parser/metadata_program.h>
 #include <parser/parser.h>
 #include "functions/primitivas.h"
+#include "functions/serialization.h"
+
 int serverKernel=0;
 int serverMemory=0;
 
-void pcb_memory_connection()
+t_log* logCreate()
 {
-	pcb = malloc(sizeof(t_pcb));
-
-	// esto viene del kernel. hardcodeo aca para probar loop de programa
-	pcb->pid = 0;
-	pcb->pc = 0;
-	pcb->stackPosition = 0;
-	pcb->indiceDeStack = list_create();
-
-
-	char* code = 0;
-	FILE *f = fopen("../programas-ejemplo/facil.ansisop", "rb");
-	int fileSize;
-
-	if (f)
-	{
-	  fseek (f, 0, SEEK_END);
-	  fileSize = ftell (f);
-
-	  fseek (f, 0, SEEK_SET);
-	  code = malloc(fileSize);
-
-	  if (code){
-		fread (code, 1, fileSize, f);
-	  }
-	  fclose (f);
-
-	  printf("codigo leido: %s\n", code);
-	}else{
-		printf("lei mal el archivo!");
-		exit(EXIT_FAILURE);
-	}
-
-
-	pcb->metadata = metadata_desde_literal(code);
-	pcb->cantPagsCodigo = fileSize / pageSize;
-
-	free(code);
-}
-
-void test_memory_connection()
-{
-	pcb_memory_connection();
-
-	int i;
-	t_intructions* instructionsBeginSize = pcb->metadata->instrucciones_serializado;
-
-	for (i = 0; i != pcb->metadata->instrucciones_size; ++i)
-	{
-		printf("instruccion %d: empieza en %d y termina en %d\n", i, instructionsBeginSize[i].start, instructionsBeginSize[i].offset);
-		int codePage = instructionsBeginSize[i].start / pageSize;
-		int codeOffset = instructionsBeginSize[i].start % pageSize;
-		int size = instructionsBeginSize[i].offset;
-		void* data = memory_request_read(serverMemory, 0, codePage, codeOffset, size);
-
-		if (data == NULL) printf("no pude obtener instruccion\n");
-		else printf("instruccion %d desde memoria: %s\n", i, (char*)data);
-		analizadorLinea(data,funciones, kernel);
-	}
-
-	metadata_destruir(pcb->metadata);
-	exit(EXIT_SUCCESS);
-}
-
-// ejecutar instrucciones del programa
-void programLoop()
-{
-	// mientras no termino el programa ni hubo instrucciones
-	// instructionCycle();
-}
-
-void instructionCycle()
-{
-	// buscar en memoria la instruccion
-	// parsear / ejecutar
-	// inc pc
-}
-
-int recv_pcb(int socketServer,t_pcb* pcb){
-
-	if (socket_recv_int(socketServer,&(pcb->pid))>0){
-		log_info(logCPU,"Recibo el PID del programa: %d\n",pcb->pid);
-	}else{
-		log_info(logCPU,"Error recibiendo PID del programa\n");
-		return -1;
-	}
-	if (socket_recv_int(socketServer,&(pcb->pc))>0){
-		log_info(logCPU,"Recibo el Program Counter del programa con valor: %d\n",pcb->pc);
-	}else{
-		log_info(logCPU,"Error recibiendo el Program Counter\n");
-		return -1;
-	}
-	if (socket_recv_int(socketServer,&(pcb->cantPagsCodigo))>0){
-		log_info(logCPU,"Recibo la cantidad de paginas de codigo del programa: %d\n",pcb->cantPagsCodigo);
-	}else{
-		log_info(logCPU,"Error al recibir la cantidad de codigo de paginas\n");
-		return -1;
-	}
-	if (socket_recv_int(socketServer,&(pcb->indiceDeCodigo->offset_inicio))>0){
-		log_info(logCPU,"Se recibe el offset de inicio del indice de codigo con valor: %d\n",pcb->indiceDeCodigo->offset_inicio);
-		return -1;
-	}else{
-		log_info(logCPU,"Error recibiendo el offset de inicio del indice de codigo\n");
-		return -1;
-	}
-	if (socket_recv_int(socketServer,&(pcb->indiceDeCodigo->offset_fin))>0){
-		log_info(logCPU,"Se recibe el offset de fin del indice de codigo con valor: %d\n",pcb->indiceDeCodigo->offset_fin);
-	}else{
-		log_info(logCPU,"Error recibiendo el offset de fin del indice de codigo\n");
-		return -1;
-	}
-	if (socket_recv_int(socketServer,&(pcb->stackPosition))>0){
-		log_info(logCPU,"Se recibe correctamente el stack position: %d\n",pcb->stackPosition);
-	}else{
-		log_info(logCPU,"Error recibiendo el stack position\n");
-	}
-	return 1;
-}
-
-t_log* logCreate(){
 	char pid[10];
-		snprintf(pid, 10,"%d",(int)getpid());
+	snprintf(pid, 10,"%d",(int)getpid());
 
-		char* path = string_new();
-		string_append(&path, "logCPU");
-		string_append(&path, pid);
+	char* path = string_new();
+	string_append(&path, "logCPU");
+	string_append(&path, pid);
 
-		remove(path);
+	remove(path);
 
-		t_log* logs = log_create(path, "CPU", false, LOG_LEVEL_DEBUG);
+	t_log* logs = log_create(path, "CPU", false, LOG_LEVEL_DEBUG);
 
-		if (logs == NULL) {
-			printf("[SISTEMA] - No se pudo generar el archivo de logueo.\n");
+	if (logs == NULL) {
+		printf("[SISTEMA] - No se pudo generar el archivo de logueo.\n");
+		return NULL;
+	};
+
+
+	log_info(logs, "Archivo de logueo inicializado.");
+
+	return logs;
+}
+
+void init(char* configPath)
+{
+	configCPU = malloc(sizeof(t_cpu));
+	config_read(configPath);
+	config_print();
+
+	logCPU = logCreate();
+
+	funciones = (AnSISOP_funciones*) malloc(sizeof(AnSISOP_funciones));
+	funciones->AnSISOP_asignar=AnSISOP_asignar;
+	funciones->AnSISOP_definirVariable=AnSISOP_definirVariable;
+	funciones->AnSISOP_dereferenciar=AnSISOP_dereferenciar;
+	funciones->AnSISOP_obtenerPosicionVariable=AnSISOP_obtenerPosicionVariable;
+	funciones->AnSISOP_finalizar=AnSISOP_finalizar;
+
+	kernel = (AnSISOP_kernel*) malloc(sizeof(AnSISOP_kernel));
+}
+
+t_pcb* recv_pcb()
+{
+	char* message;
+	printf("esperando mensaje PCB...");
+	socket_recv_string(serverKernel, &message);
+	printf("obtuve mensaje PCb");
+
+	if (string_equals_ignore_case("PCB", message))
+	{
+		t_serialized serializedPcb;
+		int recvSize = socket_recv(serverKernel, (void*)&serializedPcb.data, 1);
+
+		if (recvSize == -1)
+		{
+			log_error(logCPU, "[PCB recv] obtuve size -1");
 			return NULL;
-		};
-
-
-		log_info(logs, "Archivo de logueo inicializado.");
-
-		return logs;
-}
-
-void incrementarPC(t_pcb* pcb){
-	pcb->pc++;
-}
-
-void kernel_lost_conection(fd_set* master, int socket, int nbytes){
-	//program_interrup(socket, -6, 0);
-	FD_CLR(socket, master);
-}
-
-int solicitarProximaSentenciaAEjecutarAMemoria(t_pcb* pcb){
-	//Envio el comando read a Memoria
-	if (socket_send_string(serverMemory,"read")>0){
-		log_info(logCPU,"Se envia correctamente el comando read a Memoria\n");
-	}else{
-		log_info(logCPU,"Error enviando el comando read a Memoria\n");
-	}
-	//Envio el PID
-	if (socket_send_int(serverMemory,pcb->pid)>0){
-		log_info(logCPU,"Envio del PID del programa a Memoria\n");
-	}else{
-		log_info(logCPU,"Error enviando el PID del programa a Memoria\n");
-		return -1;
+		}
+		else
+		{
+			serializedPcb.size = recvSize;
+			return pcb_deserialize(serializedPcb);
+		}
 	}
 
-	div_t values;
-	int offsetToMemory;
-	values=div(pcb->indiceDeCodigo->offset_inicio,pageSize);
-	int page=values.quot;
-
-	//Envio el numero de pagina
-	if (socket_send_int(serverMemory,page)>0){
-		log_info(logCPU,"Se envia el numero de pagina: %d\n",page);
-	}else{
-		log_info(logCPU,"Error enviando el numero de pagina %d al Memoria\n",page);
-		return -1;
-	}
-	offsetToMemory=(pcb->indiceDeCodigo->offset_inicio)-(page*pageSize);
-
-	//Envio el offset
-	if (socket_send_int(serverMemory,offsetToMemory)>0){
-		log_info(logCPU,"Envio el offset a Memoria: %d\n",offsetToMemory);
-	}else{
-		log_info(logCPU,"Error enviando el offset a Memoria\n");
-		return -1;
-	}
-	return 1;
+	return NULL;
 }
 
 void connect_to_memory()
@@ -234,48 +113,64 @@ void connect_to_memory()
 	}
 }
 
+// ejecutar instrucciones del programa
+
+void instructionCycle(t_intructions* currentInstruction)
+{
+	printf("empieza en %d y tien length %d\n",
+			currentInstruction->start, currentInstruction->offset);
+
+	// fetch
+	int codePage = currentInstruction->start / pageSize;
+	int codeOffset = currentInstruction->start % pageSize;
+	int size = currentInstruction->offset;
+	void* data = memory_request_read(serverMemory, pcb->pid, codePage, codeOffset, size);
+
+	if (data == NULL) printf("no pude obtener instruccion\n");
+	else printf("instruccion desde memoria: %s\n", (char*)data);
+
+	// exec
+	// analizadorLinea(data, funciones, kernel);
+}
+
+void programLoop()
+{
+	int i;
+
+	for (i = 0; i != pcb->indiceDeCodigoCant; ++i)
+	{
+		printf("instruccion %d:\n", i);
+		instructionCycle(pcb->indiceDeCodigo + i);
+		++pcb->pc;
+		// check interrupts?
+	}
+}
+
 int main(int arg, char* argv[]) {
 	if(arg!=2){
 		printf("Path missing! %d\n", arg);
 		return 1;
 	}
 
-	configCPU=malloc(sizeof(t_cpu));
-	config_read(argv[1]);
-	config_print();
-	logCPU=logCreate();
-	funciones=(AnSISOP_funciones*)malloc(sizeof(AnSISOP_funciones));
-	kernel=(AnSISOP_kernel*)malloc(sizeof(AnSISOP_kernel));
-	funciones->AnSISOP_asignar=AnSISOP_asignar;
-	funciones->AnSISOP_definirVariable=AnSISOP_definirVariable;
-	funciones->AnSISOP_dereferenciar=AnSISOP_dereferenciar;
-	funciones->AnSISOP_obtenerPosicionVariable=AnSISOP_obtenerPosicionVariable;
-	funciones->AnSISOP_finalizar=AnSISOP_finalizar;
-	//Me conenecto al Kernel
-	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
-	socket_send_string(serverKernel, "NewCPU");
+	init(argv[1]);
+
 
 	connect_to_memory();
-	test_memory_connection();
+	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 
-/*
-	if(serverKernel){
-		pcb=(t_pcb*)malloc(sizeof(t_pcb));
-		recv_pcb(serverKernel,pcb);
-		incrementarPC(pcb);
-		if(solicitarProximaSentenciaAEjecutarAMemoria(pcb)){
-			void* buffer;
-			socket_recv(serverKernel,&buffer,pcb->indiceDeCodigo->offset_fin);
-			analizadorLinea((char*)buffer,funciones,kernel);
-			//actualiza los valores del programa en la memoria
+	if (serverKernel)
+	{
+		socket_send_string(serverKernel, "NewCPU");
+		pcb = recv_pcb(serverKernel);
 
-			incrementarPC(pcb);
-			//notifico al Kernel que terminé de ejecutar
-			socket_send_string(serverKernel,"FinishedQuantum");
-		}
+		if (pcb == NULL) return EXIT_FAILURE;
+
+		programLoop();
+
 	}
-*/
 
 	return EXIT_SUCCESS;
 }
+
+
 

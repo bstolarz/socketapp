@@ -110,6 +110,9 @@ int program_to_ready(t_program* program){
 		program->pcb->cantPagsCodigo++;
 	}
 
+	// ya que aca tengo a mano el frameSize, seteo el max offset del stack
+	program->pcb->maxStackPosition = configKernel->stack_size * frameSize;
+
 	//Calculo cantidad de paginas a solicitar
 	int paginasTotales = program->pcb->cantPagsCodigo + configKernel->stack_size;
 
@@ -121,7 +124,7 @@ int program_to_ready(t_program* program){
 
 	//Escribo en memoria
 	int respuestaWrite;
-	if((respuestaWrite = memory_write(program, 0, 0, program->code, program->codeSize)) != 0){
+	if((respuestaWrite = memory_write(program, 0, 0, program->code, program->codeSize)) != program->codeSize){
 		return respuestaWrite;
 	}
 
