@@ -226,6 +226,7 @@ t_pcb* pcb_deserialize(t_dataBlob serializedPcb)
 	offset += codeIndexSize;
 
 	// etiquetas
+	pcb->indiceDeEtiquetas = malloc(pcb->indiceDeEtiquetasCant);
 	memcpy(pcb->indiceDeEtiquetas, serializedPcb.data + offset, pcb->indiceDeEtiquetasCant);
 	offset += pcb->indiceDeEtiquetasCant;
 
