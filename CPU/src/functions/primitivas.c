@@ -237,13 +237,6 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 		return NULL;
 }
 
-void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
-	printf("Hola, soy AnSISOP_llamarSinRetorno\n");
-}
-
-void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
-	printf("Hola, soy AnSISOP_llamarConRetorno\n");
-}
 
 void AnSISOP_retornar(t_valor_variable retorno){
 	printf("Hola, soy AnSISOP_retornar\n");
@@ -255,10 +248,6 @@ void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 
 void AnSISOP_imprimirLiteral(char* texto){
 	printf("Hola, soy AnSISOP_imprimirLiteral\n");
-}
-
-void AnSISOP_entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
-	printf("Hola, soy AnSISOP_entradaSalida\n");
 }
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){

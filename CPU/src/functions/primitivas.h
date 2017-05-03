@@ -10,11 +10,6 @@
 //#include "sintax.h"
 #include <parser/metadata_program.h>
 #include <parser/parser.h>
-#include <parser/metadata_program.h>
-#include "../libSockets/client.h"
-#include "../libSockets/send.h"
-#include "../libSockets/recv.h"
-#include "../libSockets/server.h"
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable);
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable);
@@ -28,10 +23,11 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta);
 void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar);
 void AnSISOP_retornar(t_valor_variable retorno);
+
+
+// kernel
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar);
 void AnSISOP_imprimirLiteral(char* texto);
-void AnSISOP_entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
-
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo);
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo);
