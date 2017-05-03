@@ -225,7 +225,7 @@ void AnSISOP_finalizar (void)
 }
 
 
-
+//----------------------------------------------------------------------------------------------
 //Dummies, algunas voy a ver de llenarlas estos dias
 t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 	log_info(logCPU, "Voy a obtener el valor de variable Compartida: %s.", variable);
@@ -263,11 +263,17 @@ void AnSISOP_retornar(t_valor_variable retorno){
 }
 
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
-	printf("Hola, soy AnSISOP_imprimirValor\n");
+	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
+
+	socket_send_string(serverKernel, "IMPVAR");
+	socket_send_int(serverKernel, valor_mostrar);
 }
 
 void AnSISOP_imprimirLiteral(char* texto){
-	printf("Hola, soy AnSISOP_imprimirLiteral\n");
+	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
+
+	socket_send_string(serverKernel, "IMPLIT");
+	socket_send_string(serverKernel, texto);
 }
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
@@ -275,16 +281,29 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 }
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
-	printf("Hola, soy AnSISOP_signal\n");
+	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
+
+	socket_send_string(serverKernel, "SIGNAL");
+	socket_send_string(serverKernel, identificador_semaforo);
 }
 
 t_puntero AnSISOP_alocar(t_valor_variable espacio){
-	printf("Hola, soy AnSISOP_alocar y estoy re loco\n");
-	return NULL;
+	log_info(logCPU, "Se llamo a la funcion alocar, para un espacio de: %d", espacio);
+
+	//Si este puntero es local entonces despues como le hago free en AnSISOP_liberar?
+	t_puntero puntero = malloc(sizeof(t_valor_variable));
+	socket_send_string(serverKernel, "ALOCAR");
+	socket_send_int(serverKernel, espacio);
+
+	return puntero;
 }
 
 void AnSISOP_liberar(t_puntero puntero){
-	printf("Hola, soy AnSISOP_liberar, vengo a liberarte de la esclavitud\n");
+	log_info(logCPU, "Se va a liberar el puntero: %d", puntero);
+
+	//aca haria el free del puntero al que le hice malloc en AnSISOP_alocar?
+	socket_send_string(serverKernel, "LIBERAR");
+	socket_send_int(serverKernel, puntero);
 }
 
 
