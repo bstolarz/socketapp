@@ -23,3 +23,13 @@ void config_print(){
 	printf("IP_MEMORY: %s\n", configCPU->ip_memory);
 	printf("PUERTO_MEMORY: %s\n", configCPU->puerto_memory);
 }
+
+void config_free()
+{
+	free(configCPU->ip_kernel);
+	free(configCPU->puerto_kernel);
+	free(configCPU->ip_memory);
+	free(configCPU->puerto_memory);
+
+	configCPU = NULL;
+}

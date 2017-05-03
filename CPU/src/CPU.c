@@ -71,25 +71,31 @@ void init(char* configPath)
 t_pcb* recv_pcb()
 {
 	char* message;
+
+	log_debug(logCPU, "[recv PCB] esperando ...");
 	socket_recv_string(serverKernel, &message);
 
 	if (string_equals_ignore_case("PCB", message))
 	{
+		log_debug(logCPU, "[recv PCB] llego mensaje PCB ...");
+
 		t_dataBlob serializedPcb;
 		int recvSize = socket_recv(serverKernel, (void*)&serializedPcb.data, 1);
 
 		if (recvSize == -1)
 		{
-			log_error(logCPU, "[PCB recv] obtuve size -1");
+			log_error(logCPU, "[PCB recv] obtuve size del pcb = -1");
 			return NULL;
 		}
 		else
 		{
+			log_debug(logCPU, "[recv PCB] llego bien el PCB");
 			serializedPcb.size = recvSize;
 			return pcb_deserialize(serializedPcb);
 		}
 	}
 
+	log_error(logCPU, "[PCB recv] nunca llego el mensaje PCB");
 	return NULL;
 }
 
@@ -113,7 +119,7 @@ void connect_to_memory()
 
 // ejecutar instrucciones del programa
 
-void instructionCycle(t_intructions* currentInstruction)
+int instructionCycle(t_intructions* currentInstruction)
 {
 	printf("empieza en %d y tien length %d\n",
 			currentInstruction->start, currentInstruction->offset);
@@ -124,21 +130,28 @@ void instructionCycle(t_intructions* currentInstruction)
 	int size = currentInstruction->offset;
 	void* data = memory_request_read(serverMemory, pcb->pid, codePage, codeOffset, size);
 
-	if (data == NULL) printf("no pude obtener instruccion\n");
-	else printf("instruccion desde memoria: %s\n", (char*)data);
+	if (data == NULL)
+	{
+		log_error(logCPU, "[fetch instruccion desde memoria] memoria no me mando datos para instruccion page: %d / offset: %d / size : %d\n", codePage, codeOffset, size);
+		return -1;
+	}
+
+	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: %s\n", (char*)data);
 
 	// exec
 	// analizadorLinea(data, funciones, kernel);
+
+	return 0;
 }
 
 void programLoop()
 {
 	int i;
+	int instructionResult = 0;
 
-	for (i = 0; i != pcb->indiceDeCodigoCant; ++i)
+	for (i = 0; i != pcb->indiceDeCodigoCant && instructionResult == 0; ++i)
 	{
-		printf("instruccion %d:\n", i);
-		instructionCycle(pcb->indiceDeCodigo + i);
+		instructionResult = instructionCycle(pcb->indiceDeCodigo + i);
 		++pcb->pc;
 		// check interrupts?
 	}

@@ -1,8 +1,9 @@
 #include <commons/string.h>
 #include <commons/collections/dictionary.h>
-#include <parser/metadata_program.h>
+#include <commons/collections/list.h>
 #include <stdbool.h>
 #include "serialization.h"
+#include "stack.h"
 
 
 t_dataBlob intPtrSerializer(void* intPtrVoid)
@@ -232,6 +233,10 @@ t_pcb* pcb_deserialize(t_dataBlob serializedPcb)
 	offset += pcb->indiceDeEtiquetasCant;
 
 	// stack ...
+	// esto es temporal, para que ya le venga inicializado a las primitivas
+	// cuando round robin este mas cerca, lo hago
+	pcb->indiceDeStack = list_create();
+	list_add(pcb->indiceDeStack, stack_context_create());
 
 	return pcb;
 }
