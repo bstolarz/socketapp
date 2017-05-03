@@ -228,18 +228,38 @@ void AnSISOP_finalizar (void)
 
 //Dummies, algunas voy a ver de llenarlas estos dias
 t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
-	printf("Hola, soy AnSISOP_obtenerValorCompartida\n");
-	return NULL;
+	log_info(logCPU, "Voy a obtener el valor de variable Compartida: %s.", variable);
+	printf("Le pido al kernel el valor (copia) de la variable compartida.");
+
+	int valorVariable;
+	socket_recv_int(serverKernel, &valorVariable);
+	log_info(logCPU, "El valor de la variable compartida %s es %d.", variable, valorVariable);
+
+	return valorVariable;
 }
 
 t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
-	printf("Hola, soy AnSISOP_asignarValorCompartida\n");
-		return NULL;
+	log_info(logCPU, "Voy a asignar el valor %d a la variable compartida %s.", valor, variable);
+
+	//hacer malloc de la variable compartida (es una estructura?)
+	//asignarle a la variable compartida el nombre y el valor
+
+	//Mandarsela al kernel para que la asigne
+	return valor;
 }
 
 
 void AnSISOP_retornar(t_valor_variable retorno){
-	printf("Hola, soy AnSISOP_retornar\n");
+	log_info(logCPU, "Se invoco a la funcion AnSISOP_retornar.");
+
+	t_indiceDelStack* currentContext = stack_context_current();
+
+	pcb->pc = currentContext->retPos;
+	stack_context_pop();
+
+	//Calculo la direccion de retorno en base al retVar del contexto
+	t_puntero direccion = (currentContext->retVar.page * size) + currentContext->retVar.off;
+	AnSISOP_asignar(direccion, retorno);
 }
 
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
