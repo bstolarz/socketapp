@@ -29,6 +29,8 @@ int main(int argc, char* argv[]){
 
 	memory_init();
 
+	//test_cpu_connection();
+
 	// server and console loop
 	pthread_t serverThread;
 	pthread_create(&serverThread, NULL, &start_server, NULL);

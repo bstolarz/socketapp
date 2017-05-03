@@ -1,13 +1,9 @@
-#include <netdb.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
@@ -17,11 +13,11 @@
 #include "libSockets/client.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
-#include "libSockets/server.h"
 #include "functions/memory_requests.h"
 #include <parser/parser.h>
 #include "functions/primitivas.h"
 #include "functions/serialization.h"
+#include "others/tests.h"
 
 int serverKernel=0;
 int serverMemory=0;
@@ -139,7 +135,7 @@ int instructionCycle(t_intructions* currentInstruction)
 	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: %s\n", (char*)data);
 
 	// exec
-	// analizadorLinea(data, funciones, kernel);
+	analizadorLinea(data, funciones, kernel);
 
 	return 0;
 }
@@ -167,6 +163,14 @@ int main(int arg, char* argv[]) {
 
 
 	connect_to_memory();
+
+	// para testear primitivas
+	/*
+	pcb_to_test_primitives();
+	programLoop();
+	return 0;
+	*/
+
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 
 	if (serverKernel)

@@ -28,7 +28,7 @@ typedef struct{
 
 typedef struct{
 	t_dictionary* vars;
-	t_position* args[10];
+	t_position args[10]; // pueden haber de 0 a 9 args. por valor para no necesitar allocar y dellocar
 	int retPos;
 	t_position retVar;
 	int pos;
@@ -43,7 +43,7 @@ typedef struct{
 	t_intructions * indiceDeCodigo;
 	int indiceDeEtiquetasCant;
 	char * indiceDeEtiquetas;
-	t_list * indiceDeStack;
+	t_list * indiceDeStack; // pila hecha con lista
 	t_dictionary * processFileTable;
 	int stackPosition;
 	int maxStackPosition;
