@@ -209,8 +209,8 @@ void AnSISOP_retornar(t_valor_variable retorno){
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
 
-	if(socket_send_string(serverKernel, "IMPVAR")){
-		if(socket_send_int(serverKernel, valor_mostrar)){
+	if(socket_send_string(serverKernel, "IMPVAR")<=0){
+		if(socket_send_int(serverKernel, valor_mostrar)<=0){
 
 		}
 		else{
@@ -227,8 +227,8 @@ void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 void AnSISOP_imprimirLiteral(char* texto){
 	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
 
-	if(socket_send_string(serverKernel, "IMPLIT")){
-		if(socket_send_string(serverKernel, texto)){
+	if(socket_send_string(serverKernel, "IMPLIT")<=0){
+		if(socket_send_string(serverKernel, texto)<=0){
 
 		}
 		else{
@@ -248,8 +248,8 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
 
-	if(socket_send_string(serverKernel, "SIGNAL")){
-		if(socket_send_string(serverKernel, identificador_semaforo)){
+	if(socket_send_string(serverKernel, "SIGNAL")<=0){
+		if(socket_send_string(serverKernel, identificador_semaforo)<=0){
 
 		}
 		else{
@@ -268,8 +268,8 @@ t_puntero AnSISOP_alocar(t_valor_variable espacio){
 	//Si este puntero es local entonces despues como le hago free en AnSISOP_liberar?
 	t_puntero puntero = malloc(sizeof(t_valor_variable));
 
-	if(socket_send_string(serverKernel, "ALOCAR")){
-		if(socket_send_int(serverKernel, espacio)){
+	if(socket_send_string(serverKernel, "ALOCAR")<=0){
+		if(socket_send_int(serverKernel, espacio)<=0){
 
 		}
 		else{
@@ -289,8 +289,8 @@ void AnSISOP_liberar(t_puntero puntero){
 
 	//aca haria el free del puntero al que le hice malloc en AnSISOP_alocar?
 
-	if(socket_send_string(serverKernel, "LIBERAR")){
-		if(socket_send_int(serverKernel, puntero)){
+	if(socket_send_string(serverKernel, "LIBERAR")<=0){
+		if(socket_send_int(serverKernel, puntero)<=0){
 
 		}
 		else{
