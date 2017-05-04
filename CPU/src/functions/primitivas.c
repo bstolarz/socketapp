@@ -202,22 +202,43 @@ void AnSISOP_retornar(t_valor_variable retorno){
 	stack_context_pop();
 
 	//Calculo la direccion de retorno en base al retVar del contexto
-	t_puntero direccion = (currentContext->retVar.page * size) + currentContext->retVar.off;
+	t_puntero direccion = (currentContext->retVar.page * VAR_SIZE) + currentContext->retVar.off;
 	AnSISOP_asignar(direccion, retorno);
 }
 
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
 
-	socket_send_string(serverKernel, "IMPVAR");
-	socket_send_int(serverKernel, valor_mostrar);
+	if(socket_send_string(serverKernel, "IMPVAR")){
+		if(socket_send_int(serverKernel, valor_mostrar)){
+
+		}
+		else{
+			log_info(logCPU, "No se pudo enviar el valor para que el kernel lo imprima.");
+		}
+	}
+	else{
+		log_info(logCPU, "No se pudo enviar la directiva de imprimir valor al kernel.");
+	}
+
+
 }
 
 void AnSISOP_imprimirLiteral(char* texto){
 	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
 
-	socket_send_string(serverKernel, "IMPLIT");
-	socket_send_string(serverKernel, texto);
+	if(socket_send_string(serverKernel, "IMPLIT")){
+		if(socket_send_string(serverKernel, texto)){
+
+		}
+		else{
+			log_info(logCPU, "No se pudo enviar la cadena literal para que el kernel la imprima.");
+		}
+	}
+	else{
+		log_info(logCPU, "No se pudo enviar la directiva de imprimir literal al kernel.");
+	}
+
 }
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
@@ -227,8 +248,18 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
 
-	socket_send_string(serverKernel, "SIGNAL");
-	socket_send_string(serverKernel, identificador_semaforo);
+	if(socket_send_string(serverKernel, "SIGNAL")){
+		if(socket_send_string(serverKernel, identificador_semaforo)){
+
+		}
+		else{
+			log_info(logCPU, "No se pudo enviar el identificador del semaforo para que el kernel le haga signal.");
+		}
+	}
+	else{
+		log_info(logCPU, "No se pudo enviar la directiva de SIGNAL al kernel.");
+	}
+
 }
 
 t_puntero AnSISOP_alocar(t_valor_variable espacio){
@@ -236,8 +267,19 @@ t_puntero AnSISOP_alocar(t_valor_variable espacio){
 
 	//Si este puntero es local entonces despues como le hago free en AnSISOP_liberar?
 	t_puntero puntero = malloc(sizeof(t_valor_variable));
-	socket_send_string(serverKernel, "ALOCAR");
-	socket_send_int(serverKernel, espacio);
+
+	if(socket_send_string(serverKernel, "ALOCAR")){
+		if(socket_send_int(serverKernel, espacio)){
+
+		}
+		else{
+			log_info(logCPU, "No se pudo enviar el espacio para que el kernel lo aloque.");
+		}
+	}
+	else{
+		log_info(logCPU, "No se pudo enviar la directiva de alocar al kernel.");
+	}
+
 
 	return puntero;
 }
@@ -246,8 +288,19 @@ void AnSISOP_liberar(t_puntero puntero){
 	log_info(logCPU, "Se va a liberar el puntero: %d", puntero);
 
 	//aca haria el free del puntero al que le hice malloc en AnSISOP_alocar?
-	socket_send_string(serverKernel, "LIBERAR");
-	socket_send_int(serverKernel, puntero);
+
+	if(socket_send_string(serverKernel, "LIBERAR")){
+		if(socket_send_int(serverKernel, puntero)){
+
+		}
+		else{
+			log_info(logCPU, "No se pudo enviar el puntero para que el kernel lo libere.");
+		}
+	}
+	else{
+		log_info(logCPU, "No se pudo enviar la directiva de liberar al kernel.");
+	}
+
 }
 
 
