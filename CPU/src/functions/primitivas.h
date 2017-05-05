@@ -33,5 +33,11 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo);
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo);
 t_puntero AnSISOP_alocar(t_valor_variable espacio);
 void AnSISOP_liberar(t_puntero puntero);
-
+t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas flags);
+void AnSISOP_borrar (t_descriptor_archivo direccion);
+void AnSISOP_borrar (t_descriptor_archivo direccion);
+void AnSISOP_cerrar (t_descriptor_archivo descriptor_archivo);
+void AnSISOP_moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion);
+void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio);
+void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio);
 #endif /* FUNCTIONS_PRIMITIVAS_H_ */
