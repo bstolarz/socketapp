@@ -224,8 +224,8 @@ void AnSISOP_retornar(t_valor_variable retorno){
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
 
-	if(socket_send_string(serverKernel, "IMPVAR")<=0){
-		if(socket_send_int(serverKernel, valor_mostrar)<=0){
+	if(socket_send_string(serverKernel, "IMPVAR")>0){
+		if(socket_send_int(serverKernel, valor_mostrar)>0){
 
 		}
 		else{
@@ -242,8 +242,8 @@ void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 void AnSISOP_imprimirLiteral(char* texto){
 	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
 
-	if(socket_send_string(serverKernel, "IMPLIT")<=0){
-		if(socket_send_string(serverKernel, texto)<=0){
+	if(socket_send_string(serverKernel, "IMPLIT")>0){
+		if(socket_send_string(serverKernel, texto)>0){
 
 		}
 		else{
@@ -272,13 +272,25 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 	}else{
 		log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el WAIT al semaforo %s\n", identificador_semaforo);
 	}
+	free(answerFromKernel);
 }
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
+	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
 	if (socket_send_string(serverKernel,"signal")>0){
 		log_info(logCPU, "Le solicito al Kernel hacer Signal");
 	}else{
 		log_info(logCPU,"Error solicitandole al Kernel que haga Signal");
+	}
+
+	if(socket_send_string(serverKernel, "SIGNAL")>0){
+		if(socket_send_string(serverKernel, identificador_semaforo)>0){
+
+		}
+		else{
+			log_info(logCPU, "No se pudo enviar el identificador del semaforo para que el kernel le haga signal.");
+		}
+
 	}
 	if (socket_send_string(serverKernel, identificador_semaforo)>0){
 		log_info(logCPU, "Le envio al Kernel el semaforo al que quiero que le haga Signal: %s\n",identificador_semaforo);
@@ -289,6 +301,7 @@ void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 
 t_puntero AnSISOP_alocar(t_valor_variable espacio){
 	log_info(logCPU, "Se llamo a la funcion alocar, para un espacio de: %d", espacio);
+
 	if (socket_send_string(serverKernel, "alocar")>0){
 		log_info(logCPU,"Le informo al Kernel que quiero alocar\n");
 	}else{
@@ -316,10 +329,8 @@ void AnSISOP_liberar(t_puntero puntero){
 	}else{
 		log_info(logCPU, "Error enviando al kernel el puntero que quiero liberar: %d\n", puntero);
 	}
-
 }
 t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas flags){
-
 	//Envio orden: abrir
 	if (socket_send_string(serverKernel,"abrir")>0){
 		log_info(logCPU,"Informo al Kernel que el programa %d quiere abrir un archivo\n", pcb->pid);
