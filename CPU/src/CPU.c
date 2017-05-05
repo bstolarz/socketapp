@@ -172,16 +172,17 @@ int main(int arg, char* argv[]) {
 	*/
 
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
-
-	if (serverKernel)
+	socket_send_string(serverKernel, "NewCPU");
+	while(1)
 	{
-		socket_send_string(serverKernel, "NewCPU");
+
 		pcb = recv_pcb(serverKernel);
 
-		if (pcb == NULL) return EXIT_FAILURE;
-
+		if (pcb == NULL){
+			return EXIT_FAILURE;
+		}else{
 		programLoop();
-
+		}
 	}
 
 	return EXIT_SUCCESS;
