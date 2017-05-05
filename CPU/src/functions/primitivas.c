@@ -162,9 +162,7 @@ void AnSISOP_finalizar (void)
 
 	if (programCompleted) // termino el main
 	{
-		printf("avisar a kernel el fin o marcar un bool, etc");
 		pcb->exitCode = 0;
-		// on_program_completed();
 	}
 }
 

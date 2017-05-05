@@ -42,7 +42,7 @@ void* memory_request_read(int serverSocket, int PID, int page, int offset, int s
     {
         void* data;
         
-        if (socket_recv(serverSocket, &data, size) == size)
+        if (socket_recv(serverSocket, &data, 1) == size)
             return data;
     }
 

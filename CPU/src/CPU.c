@@ -115,7 +115,7 @@ void connect_to_memory()
 
 // ejecutar instrucciones del programa
 
-int instructionCycle(t_intructions* currentInstruction)
+void instructionCycle(t_intructions* currentInstruction)
 {
 	printf("empieza en %d y tien length %d\n",
 			currentInstruction->start, currentInstruction->offset);
@@ -129,25 +129,44 @@ int instructionCycle(t_intructions* currentInstruction)
 	if (data == NULL)
 	{
 		log_error(logCPU, "[fetch instruccion desde memoria] memoria no me mando datos para instruccion page: %d / offset: %d / size : %d\n", codePage, codeOffset, size);
-		return -1;
+		pcb->exitCode = -5;// TODO: reemplazar con ERROR_MEMORY o el correspondiente;
+		return;
+	}
+	// hay que procesar un poquito la instruccion
+	// porque si termina en '\n' (no termina en '\0') el string que le pase al parser va a tener fruta al final
+	// char* instructionStr = (char*) malloc(size + 1);
+	// memcpy(instructionStr, data, size);
+	char* instructionStr = (char*) data;
+
+	// pongo algo que lo frene al final para que el analizador no se confunda
+	if (isblank(instructionStr[size - 1]) ||
+		instructionStr[size - 1] == '\n')
+	{
+		instructionStr[size - 1] = '\0';
+	}
+	else
+	{
+		log_debug(logCPU, "realocando porque habia un caracter que no era fin de linea al final de la instruccion (%c)", instructionStr[size - 1]);
+		instructionStr = realloc(instructionStr, size + 1);
+		instructionStr[size] = '\0';
 	}
 
-	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: %s\n", (char*)data);
+	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]\n", instructionStr);
 
 	// exec
-	analizadorLinea(data, funciones, kernel);
+	analizadorLinea(instructionStr, funciones, kernel);
 
-	return 0;
+	// liberar recursos
+	free(instructionStr);
 }
 
 void programLoop()
 {
 	int i;
-	int instructionResult = 0;
 
-	for (i = 0; i != pcb->indiceDeCodigoCant && instructionResult == 0; ++i)
+	for (i = 0; i != pcb->indiceDeCodigoCant && pcb->exitCode == 0; ++i)
 	{
-		instructionResult = instructionCycle(pcb->indiceDeCodigo + i);
+		instructionCycle(pcb->indiceDeCodigo + i);
 		++pcb->pc;
 		// check interrupts?
 	}
