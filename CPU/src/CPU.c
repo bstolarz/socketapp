@@ -82,7 +82,7 @@ int main(int arg, char* argv[]) {
 			continuoEjecucion = cycle_still_burst();
 		}
 
-		send_pcb(pcb);
+		cycle_send_pcv(pcb);
 	}
 
 	return EXIT_SUCCESS;

@@ -75,3 +75,7 @@ void cpu_still_burst(t_cpu* cpu){
 	}
 }
 
+void cpu_end_burst(t_cpu* cpu){
+	//TODO
+}
+

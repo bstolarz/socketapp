@@ -17,5 +17,6 @@
 int cycle_interruption_handler();
 int cycle_still_burst();
 char * cycle_fetch(t_intructions* currentInstruction);
+void cycle_send_pcv(t_pcb* pcb);
 
 #endif /* FUNCTIONS_INSTRUCTION_CYCLE_H_ */

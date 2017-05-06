@@ -44,6 +44,9 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	}else if(strcmp(package, "still_burst") == 0){
 		t_cpu* cpu = cpu_find(socket);
 		cpu_still_burst(cpu);
+	}else if(strcmp(package, "end_burst") == 0){
+		t_cpu* cpu = cpu_find(socket);
+		cpu_end_burst(cpu);
 	}else if (strcmp(package, "getSharedVariable")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_get_shared_variable(cpu);

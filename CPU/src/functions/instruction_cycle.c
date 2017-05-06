@@ -11,6 +11,7 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 #include "memory.h"
+#include "pcb.h"
 
 int cycle_interruption_handler(){
 	int response=0;
@@ -65,4 +66,10 @@ char * cycle_fetch(t_intructions* currentInstruction){
 	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]", instructionStr);
 
 	return instructionStr;
+}
+
+void cycle_send_pcv(t_pcb* pcb){
+	if(socket_send_string(serverKernel, "end_burst")<=0){
+		send_pcb(pcb);
+	}
 }
