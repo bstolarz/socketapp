@@ -44,5 +44,7 @@ void* socket_thread_requests(void* args){
 	free(request->command);
 	free(request);
 
+	//TODO falta borrar de la lista de threadsList
+
 	return NULL;
 }
