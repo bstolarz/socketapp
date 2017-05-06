@@ -28,14 +28,41 @@ void cpu_send_pcb(t_cpu* cpu){
 	t_dataBlob serializedPcb = pcb_serialize(cpu->program->pcb);
 	int sentSize = socket_send(cpu->socket, serializedPcb.data, serializedPcb.size);
 
-	if (sentSize == -1)
+	if (sentSize == -1){
 		log_error(logKernel, "no pude mandar el pcb del proceso: %d\n",cpu->program->pcb->pid);
+	}
 
 	free(serializedPcb.data);
 }
 
-void cpu_recv_pcb(t_cpu* cpu){
-	//TODO
+t_pcb* cpu_recv_pcb(t_cpu* cpu){
+	char* message;
+
+	log_debug(logKernel, "[recv PCB] esperando ...");
+	socket_recv_string(cpu->socket, &message);
+
+	if (string_equals_ignore_case("PCB", message))
+	{
+		log_debug(logKernel, "[recv PCB] llego mensaje PCB ...");
+
+		t_dataBlob serializedPcb;
+		int recvSize = socket_recv(cpu->socket, (void*)&serializedPcb.data, 1);
+
+		if (recvSize == -1)
+		{
+			log_error(logKernel, "[PCB recv] obtuve size del pcb = -1");
+			return NULL;
+		}
+		else
+		{
+			log_debug(logKernel, "[recv PCB] llego bien el PCB");
+			serializedPcb.size = recvSize;
+			return pcb_deserialize(serializedPcb);
+		}
+	}
+
+	log_error(logKernel, "[PCB recv] nunca llego el mensaje PCB");
+	return NULL;
 }
 
 t_cpu* cpu_find(int socket){
