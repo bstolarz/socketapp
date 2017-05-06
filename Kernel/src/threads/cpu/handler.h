@@ -26,6 +26,7 @@ void handle_cpu_set_shared_variable(t_cpu* cpu);
 void handle_cpu_finish(t_cpu* cpu);
 void handle_cpu_wait(t_cpu* cpu);
 void handle_cpu_signal(t_cpu* cpu);
+void handle_cpu_allocar(t_cpu* cpu);
 void handle_cpu_reservar(t_cpu* cpu);
 void handle_cpu_liberar(t_cpu* cpu);
 void handle_cpu_abrir(t_cpu* cpu);
