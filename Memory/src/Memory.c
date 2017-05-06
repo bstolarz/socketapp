@@ -8,7 +8,6 @@
 #include "threads/select.h"
 #include <commons/log.h>
 #include "other/debug_console.h"
-#include "other/test.h"
 #include "pthread.h"
 
 int main(int argc, char* argv[]){
@@ -24,6 +23,10 @@ int main(int argc, char* argv[]){
 	logMemory = log_create_file();
 	log_config();
 
+	threadsList = malloc(sizeof(t_queue));
+	threadsList->list = list_create();
+	pthread_mutex_init(&(threadsList->mutex),NULL);
+
 	ERROR_NO_RESOURCES_FOR_PROCCESS = -1;
 	ERROR_MEMORY = -5;
 
@@ -34,6 +37,7 @@ int main(int argc, char* argv[]){
 	// server and console loop
 	pthread_t serverThread;
 	pthread_create(&serverThread, NULL, &start_server, NULL);
+
 	debug_console();
 
 	pthread_join(serverThread, NULL);

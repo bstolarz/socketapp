@@ -3,10 +3,10 @@
 
 typedef void (*request_handler)(int);
 
-void handle_init(int clientSocket);
-void handle_end(int clientSocket);
-void handle_read(int clientSocket);
-void handle_write(int clientSocket);
-void handle_frame_size(int clientSocket);
+int handle_init(int clientSocket);
+int handle_end(int clientSocket);
+int handle_read(int clientSocket);
+int handle_write(int clientSocket);
+int handle_frame_size(int clientSocket);
 
 #endif

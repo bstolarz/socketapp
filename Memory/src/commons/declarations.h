@@ -26,4 +26,6 @@ t_log* logMemory;
 int ERROR_NO_RESOURCES_FOR_PROCCESS;
 int ERROR_MEMORY;
 
+t_queue * threadsList;
+
 #endif /* COMMONS_DECLARATIONS_H_ */

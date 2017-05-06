@@ -1,9 +1,5 @@
-/*
- * Structures.h
- *
- *  Created on: 1/4/2017
- *      Author: utnso
- */
+#include <pthread.h>
+#include <commons/collections/list.h>
 
 #ifndef COMMONS_STRUCTURES_H_
 #define COMMONS_STRUCTURES_H_
@@ -26,6 +22,17 @@ typedef struct {
 	int responseDelay;
 
 } t_memory;
+
+typedef struct{
+	int socket;
+	char* command;
+	int nbytes;
+}t_socket_thread_arg;
+
+typedef struct{
+	pthread_mutex_t mutex;
+	t_list * list;
+}t_queue;
 
 
 #endif /* COMMONS_STRUCTURES_H_ */
