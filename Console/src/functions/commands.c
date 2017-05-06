@@ -21,7 +21,7 @@
 #include "../threads/program.h"
 
 void command_start(){
-	printf("[SISTEMA] - Ingrese el path al archivo:\n");
+	printf("[SISTEMA] - Ingrese el path al archivo o el accesos directo al mismo:\n");
 
 	size_t cantidad = 200;
 	char* path = malloc(sizeof(char)*cantidad);
@@ -30,8 +30,24 @@ void command_start(){
 	path[cantLeida-1]='\0';
 
 	t_program * program = malloc(sizeof(t_program));
-	program->pathProgram = string_duplicate(path);
+	program->pathProgram = string_new();
 	program->pid = 0;
+
+	if(strcmp(path, "facil")==0){
+		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/facil.ansisop");
+	}else if(strcmp(path, "for")==0){
+		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/for.ansisop");
+	}else if(strcmp(path, "productor")==0){
+		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/productor.ansisop");
+	}else if(strcmp(path, "stackoverflow")==0){
+		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/stackoverflow.ansisop");
+	}else if(strcmp(path, "completo")==0){
+		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/completo.ansisop");
+	}else if(strcmp(path, "consumidor")==0){
+		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/consumidor.ansisop");
+	}else{
+		string_append(&program->pathProgram, path);
+	}
 	
 	program->stats = malloc(sizeof(t_statistics));
 	program->stats->stringInicioEjecucion = temporal_get_string_time();
