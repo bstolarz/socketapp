@@ -63,10 +63,15 @@ void cpu_process_new(int socket){
 }
 
 void cpu_interruption(t_cpu * cpu){
-	//TODO
+	if(socket_send_int(cpu->socket, cpu->program->interruptionCode)<=0){
+		exit(EXIT_FAILURE);
+	}
 }
 
-void cpu_burst(t_cpu* cpu){
-	//TODO
+void cpu_still_burst(t_cpu* cpu){
+	int burst = 1;
+	if(socket_send_int(cpu->socket, burst)<=0){
+		exit(EXIT_FAILURE);
+	}
 }
 

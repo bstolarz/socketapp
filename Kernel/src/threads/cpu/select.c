@@ -33,6 +33,7 @@ void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 }
 
 void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
+	printf("%s\n", package);
 	if(strcmp(package, "NewCPU") == 0){
 		log_info(logKernel,"New CPU connected on socket %d\n",socket);
 		printf("New CPU connected on socket %d\n",socket);
@@ -40,9 +41,9 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	}else if(strcmp(package, "interruption") == 0){
 		t_cpu* cpu = cpu_find(socket);
 		cpu_interruption(cpu);
-	}else if(strcmp(package, "burst") == 0){
+	}else if(strcmp(package, "still_burst") == 0){
 		t_cpu* cpu = cpu_find(socket);
-		cpu_burst(cpu);
+		cpu_still_burst(cpu);
 	}else if (strcmp(package, "getSharedVariable")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_get_shared_variable(cpu);

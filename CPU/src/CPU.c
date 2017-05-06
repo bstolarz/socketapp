@@ -19,6 +19,7 @@
 #include "functions/log.h"
 #include "functions/memory.h"
 #include "functions/ansisop.h"
+#include "functions/instruction_cycle.h"
 #include "others/tests.h"
 
 t_pcb* recv_pcb()
@@ -99,18 +100,6 @@ void instructionCycle(t_intructions* currentInstruction)
 	free(instructionStr);
 }
 
-void programLoop()
-{
-	int i;
-
-	for (i = 0; i != pcb->indiceDeCodigoCant && pcb->exitCode == 0; ++i)
-	{
-		instructionCycle(pcb->indiceDeCodigo + i);
-		++pcb->pc;
-		// check interrupts?
-	}
-}
-
 int main(int arg, char* argv[]) {
 	if(arg!=2){
 		printf("Path missing! %d\n", arg);
@@ -139,15 +128,31 @@ int main(int arg, char* argv[]) {
 
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");
-	while(1)
-	{
-		pcb = recv_pcb(serverKernel);
 
-		if (pcb == NULL){
+	int interruption=0;
+
+	while(1){
+		if ((pcb = recv_pcb(serverKernel)) == NULL){
 			return EXIT_FAILURE;
-		}else{
-			programLoop();
 		}
+
+		int continuoEjecucion = 1;
+		while(continuoEjecucion && pcb->exitCode == 0){
+			instructionCycle(pcb->indiceDeCodigo + pcb->pc);
+			++pcb->pc;
+
+			//Checkeo interrupciones
+			if((interruption=cycle_interruption_handler())<0){
+				continuoEjecucion = 0;
+				pcb->exitCode = interruption;
+
+			}
+
+			//Consulto al kernel si continuo ejecutando - respondera segun planificacion
+			continuoEjecucion = cycle_still_burst();
+		}
+
+		//TODO devolver el pcb
 	}
 
 	return EXIT_SUCCESS;
