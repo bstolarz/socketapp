@@ -33,6 +33,7 @@ void program_process_new(fd_set* master, int socket){
 	program->pcb->processFileTable=dictionary_create();
 	program->pcb->stackPosition=0;
 	program->pcb->cantPagsCodigo=0;
+	program->pcb->exitCode = 1;
 
 	if(socket_send_int(program->socket, program->pcb->pid)<=0){
 		log_info(logKernel,"No se pudo conectar con el programa %i para informarle su PID\n", program->pcb->pid);

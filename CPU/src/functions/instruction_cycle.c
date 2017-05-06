@@ -49,7 +49,7 @@ char * cycle_fetch(t_intructions* currentInstruction){
 	char* instructionStr = memory_read(pcb->pid, codePage, codeOffset, size);
 
 	if (instructionStr == NULL){
-		log_error(logCPU, "[fetch instruccion desde memoria] memoria no me mando datos para instruccion page: %d / offset: %d / size : %d\n", codePage, codeOffset, size);
+		log_error(logCPU, "[fetch instruccion desde memoria] memoria no me mando datos para instruccion page: %d / offset: %d / size : %d", codePage, codeOffset, size);
 		pcb->exitCode = -5; //TODO: reemplazar con ERROR_MEMORY o el correspondiente;
 		return "";
 	}
@@ -62,7 +62,7 @@ char * cycle_fetch(t_intructions* currentInstruction){
 		instructionStr[size] = '\0';
 	}
 
-	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]\n", instructionStr);
+	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]", instructionStr);
 
 	return instructionStr;
 }

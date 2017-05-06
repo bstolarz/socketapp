@@ -62,7 +62,7 @@ int main(int arg, char* argv[]) {
 		}
 
 		int continuoEjecucion = 1;
-		while(continuoEjecucion && pcb->exitCode == 0){
+		while(continuoEjecucion && pcb->exitCode == 1){
 			//Fetch
 			char* instruccion = cycle_fetch(pcb->indiceDeCodigo + pcb->pc);
 
