@@ -7,20 +7,27 @@
 
 #include "structures.h"
 #include <commons/log.h>
-#ifndef COMMONS_DECLARATIONS_H_
-#define COMMONS_DECLARATIONS_H_
 #include <parser/metadata_program.h>
 #include <parser/parser.h>
 #include <parser/metadata_program.h>
 
+#ifndef COMMONS_DECLARATIONS_H_
+#define COMMONS_DECLARATIONS_H_
+
+
 t_cpu* configCPU;
 t_log* logCPU;
+
 pthread_t pthreadMemory;
 pthread_t pthreadKernel;
-AnSISOP_funciones* funciones;
-AnSISOP_kernel* kernel;
+
+AnSISOP_funciones* ansisop_funciones;
+AnSISOP_kernel* ansisop_funciones_kernel;
+
 t_pcb* pcb;
 int pageSize;
-int serverMemory;
+
 int serverKernel;
+int serverMemory;
+
 #endif /* COMMONS_DECLARATIONS_H_ */

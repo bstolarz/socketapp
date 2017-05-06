@@ -18,13 +18,13 @@
 #include <commons/string.h>
 #include <commons/string.h>
 #include <commons/error.h>
-#include "memory_requests.h"
 #include "stack.h"
 #include <parser/parser.h>
 #include "../libSockets/client.h"
 #include "../libSockets/recv.h"
 #include "../libSockets/send.h"
 #include "../libSockets/server.h"
+#include "memory.h"
 int VAR_SIZE = sizeof(t_valor_variable);
 
 bool is_argument(t_nombre_variable identificador_variable)
@@ -78,7 +78,7 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	t_position pos = puntero_to_position(direccion_variable);
 	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d\n", direccion_variable, pos.page, pos.off);
 
-	void* readResult = memory_request_read(serverMemory, pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
+	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
 
@@ -89,7 +89,7 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d\n", pos.page, pos.off, valor);
 
-	int writeResult = memory_request_write(serverMemory, pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
+	int writeResult = memory_write(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
 
 	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
 }

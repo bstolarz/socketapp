@@ -13,56 +13,13 @@
 #include "libSockets/client.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
-#include "functions/memory_requests.h"
 #include <parser/parser.h>
 #include "functions/primitivas.h"
 #include "functions/serialization.h"
+#include "functions/log.h"
+#include "functions/memory.h"
+#include "functions/ansisop.h"
 #include "others/tests.h"
-
-int serverKernel=0;
-int serverMemory=0;
-
-t_log* logCreate()
-{
-	char pid[10];
-	snprintf(pid, 10,"%d",(int)getpid());
-
-	char* path = string_new();
-	string_append(&path, "logCPU");
-	string_append(&path, pid);
-
-	remove(path);
-
-	t_log* logs = log_create(path, "CPU", false, LOG_LEVEL_DEBUG);
-
-	if (logs == NULL) {
-		printf("[SISTEMA] - No se pudo generar el archivo de logueo.\n");
-		return NULL;
-	};
-
-
-	log_info(logs, "Archivo de logueo inicializado.");
-
-	return logs;
-}
-
-void init(char* configPath)
-{
-	configCPU = malloc(sizeof(t_cpu));
-	config_read(configPath);
-	config_print();
-
-	logCPU = logCreate();
-
-	funciones = (AnSISOP_funciones*) malloc(sizeof(AnSISOP_funciones));
-	funciones->AnSISOP_asignar=AnSISOP_asignar;
-	funciones->AnSISOP_definirVariable=AnSISOP_definirVariable;
-	funciones->AnSISOP_dereferenciar=AnSISOP_dereferenciar;
-	funciones->AnSISOP_obtenerPosicionVariable=AnSISOP_obtenerPosicionVariable;
-	funciones->AnSISOP_finalizar=AnSISOP_finalizar;
-
-	kernel = (AnSISOP_kernel*) malloc(sizeof(AnSISOP_kernel));
-}
 
 t_pcb* recv_pcb()
 {
@@ -95,24 +52,6 @@ t_pcb* recv_pcb()
 	return NULL;
 }
 
-void connect_to_memory()
-{
-	socket_client_create(&serverMemory, configCPU->ip_memory, configCPU->puerto_memory);
-
-	// obtener tamanio de pagina
-	pageSize = memory_request_frame_size(serverMemory);
-
-	if (pageSize > 0)
-	{
-		log_info(logCPU,"[page_size] se obtuvo pageSize = %d\n", pageSize);
-	}
-	else
-	{
-		log_error(logCPU, "[page_size] no se mando bien. exit program\n");
-		exit(EXIT_FAILURE);
-	}
-}
-
 // ejecutar instrucciones del programa
 
 void instructionCycle(t_intructions* currentInstruction)
@@ -124,7 +63,7 @@ void instructionCycle(t_intructions* currentInstruction)
 	int codePage = currentInstruction->start / pageSize;
 	int codeOffset = currentInstruction->start % pageSize;
 	int size = currentInstruction->offset;
-	void* data = memory_request_read(serverMemory, pcb->pid, codePage, codeOffset, size);
+	void* data = memory_read(pcb->pid, codePage, codeOffset, size);
 
 	if (data == NULL)
 	{
@@ -154,7 +93,7 @@ void instructionCycle(t_intructions* currentInstruction)
 	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]\n", instructionStr);
 
 	// exec
-	analizadorLinea(instructionStr, funciones, kernel);
+	analizadorLinea(instructionStr, ansisop_funciones, ansisop_funciones_kernel);
 
 	// liberar recursos
 	free(instructionStr);
@@ -178,12 +117,20 @@ int main(int arg, char* argv[]) {
 		return 1;
 	}
 
-	init(argv[1]);
+	//Inicializo
+	configCPU = malloc(sizeof(t_cpu));
+	config_read(argv[1]);
 
+	logCPU = log_create_file();
+	log_config();
 
-	connect_to_memory();
+	//Me conecto a memoria
+	memory_connect();
 
-	// para testear primitivas
+	//Inicio las estructuras de
+	ansisop_init();
+
+	//Codigo temporal para testear primitivas
 	/*
 	pcb_to_test_primitives();
 	programLoop();
@@ -194,13 +141,12 @@ int main(int arg, char* argv[]) {
 	socket_send_string(serverKernel, "NewCPU");
 	while(1)
 	{
-
 		pcb = recv_pcb(serverKernel);
 
 		if (pcb == NULL){
 			return EXIT_FAILURE;
 		}else{
-		programLoop();
+			programLoop();
 		}
 	}
 

@@ -17,13 +17,6 @@ void config_read(char* path){
 	config_destroy(config);
 }
 
-void config_print(){
-	printf("IP_KERNEL: %s\n", configCPU->ip_kernel);
-	printf("PUERTO_KERNEL: %s\n", configCPU->puerto_kernel);
-	printf("IP_MEMORY: %s\n", configCPU->ip_memory);
-	printf("PUERTO_MEMORY: %s\n", configCPU->puerto_memory);
-}
-
 void config_free()
 {
 	free(configCPU->ip_kernel);
