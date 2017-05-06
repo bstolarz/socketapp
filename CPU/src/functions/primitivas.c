@@ -222,7 +222,7 @@ void AnSISOP_retornar(t_valor_variable retorno){
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
 
-	if(socket_send_string(serverKernel, "IMPVAR")>0){
+	if(socket_send_string(serverKernel, "imprimir_valor")>0){
 		if(socket_send_int(serverKernel, valor_mostrar)>0){
 
 		}
@@ -240,7 +240,7 @@ void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 void AnSISOP_imprimirLiteral(char* texto){
 	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
 
-	if(socket_send_string(serverKernel, "IMPLIT")>0){
+	if(socket_send_string(serverKernel, "imprimir_literal")>0){
 		if(socket_send_string(serverKernel, texto)>0){
 
 		}

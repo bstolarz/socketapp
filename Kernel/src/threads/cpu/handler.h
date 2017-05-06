@@ -35,5 +35,7 @@ void handle_cpu_cerrar(t_cpu* cpu);
 void handle_cpu_mover_cursor(t_cpu* cpu);
 void handle_cpu_escribir(t_cpu* cpu);
 void handle_cpu_leer(t_cpu* cpu);
+void handle_cpu_imprimir_valor(t_cpu* cpu);
+void handle_cpu_imprimir_literal(t_cpu* cpu);
 
 #endif /* THREADS_CPU_HANDLER_H_ */
