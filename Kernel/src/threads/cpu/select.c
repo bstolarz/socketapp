@@ -70,7 +70,7 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 		handle_cpu_signal(cpu);
 	}else if (strcmp(package, "alocar")==0){
 		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_allocar(cpu);
+		handle_cpu_alocar(cpu);
 	}else if (strcmp(package, "liberar")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_liberar(cpu);

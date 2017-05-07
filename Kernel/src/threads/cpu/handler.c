@@ -115,11 +115,7 @@ void handle_cpu_signal(t_cpu* cpu){
 	//TODO
 }
 
-void handle_cpu_allocar(t_cpu* cpu){
-	//TODO
-}
-
-void handle_cpu_reservar(t_cpu* cpu){
+void handle_cpu_alocar(t_cpu* cpu){
 	//TODO
 }
 
