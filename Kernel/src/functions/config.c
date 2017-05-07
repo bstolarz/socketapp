@@ -23,8 +23,9 @@ void config_read_semaforos(t_config* config){
 	configKernel->semaforos=list_create();
 	while(*s!=NULL && *vs!= NULL){
 		t_semaforo* sem = malloc(sizeof(t_semaforo));
-		sem->id=string_duplicate(*s);
-		sem->initialValue=atoi(*vs);
+		sem->nombre=string_duplicate(*s);
+		sem->value=atoi(*vs);
+		pthread_mutex_init(&sem->mutex, NULL);
 
 		list_add(configKernel->semaforos, s);
 
@@ -41,6 +42,8 @@ void config_read_shared_vars(t_config* config){
 	while(*vc!=NULL){
 		t_sharedVar* sv=malloc(sizeof(t_sharedVar));
 		sv->nombre=string_duplicate(*vc);
+		sv->value = 0;
+		pthread_mutex_init(&sv->mutex, NULL);
 
 		list_add(configKernel->shared_vars,sv);
 
