@@ -30,7 +30,7 @@ typedef struct{
 	t_dictionary* vars;
 	t_position args[10]; // pueden haber de 0 a 9 args. por valor para no necesitar allocar y dellocar
 	int retPos;
-	t_position retVar;
+	t_position* retVar;
 	int pos;
 } t_indiceDelStack;
 

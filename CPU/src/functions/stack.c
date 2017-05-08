@@ -4,14 +4,14 @@
 
 t_indiceDelStack* stack_context_create()
 {
-	t_indiceDelStack* nivelStack = malloc(sizeof(t_indiceDelStack));
-
+	t_indiceDelStack* nivelStack = (t_indiceDelStack*) malloc(sizeof(t_indiceDelStack));
+	t_position* position= (t_position*) malloc(sizeof(t_position));
 	nivelStack->vars = dictionary_create();
 	nivelStack->retPos = 0;
-	nivelStack->retVar.off = 0;
-	nivelStack->retVar.page = 0;
-	nivelStack->retVar.size = 0;
-
+	position->page=0;
+	position->off=0;
+	position->size=0;
+	nivelStack->retVar=position;
 	return nivelStack;
 }
 

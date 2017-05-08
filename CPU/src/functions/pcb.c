@@ -44,6 +44,7 @@ t_pcb* recv_pcb(){
 		{
 			log_debug(logCPU, "[recv PCB] llego bien el PCB");
 			serializedPcb.size = recvSize;
+
 			return pcb_deserialize(serializedPcb);
 		}
 	}
