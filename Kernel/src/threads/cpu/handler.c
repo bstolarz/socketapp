@@ -35,6 +35,14 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 	//Verifico que exista
 	if(sv == NULL){
 		log_info(logKernel,"La shared variable '%s' que solicito %d no existe.\n", sv->nombre, cpu->socket);
+		if(socket_send_string(cpu->socket, "Failure")<=0){
+			log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+		}
+		return;
+	}
+
+	if(socket_send_string(cpu->socket, "Success")<=0){
+		log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
 		return;
 	}
 
@@ -71,6 +79,9 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	//Verifico que exista
 	if(sv == NULL){
 		log_info(logKernel,"La shared variable '%s' que solicito %d no existe.\n", sv->nombre, cpu->socket);
+		if(socket_send_string(cpu->socket, "Failure")<=0){
+			log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+		}
 		return;
 	}
 
@@ -78,6 +89,10 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	pthread_mutex_lock(&sv->mutex);
 	sv->value = value;
 	pthread_mutex_unlock(&sv->mutex);
+
+	if(socket_send_string(cpu->socket, "Success")<=0){
+		log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+	}
 }
 
 void handle_cpu_imprimir_valor(t_cpu* cpu){
@@ -100,11 +115,7 @@ void handle_cpu_signal(t_cpu* cpu){
 	//TODO
 }
 
-void handle_cpu_allocar(t_cpu* cpu){
-	//TODO
-}
-
-void handle_cpu_reservar(t_cpu* cpu){
+void handle_cpu_alocar(t_cpu* cpu){
 	//TODO
 }
 
