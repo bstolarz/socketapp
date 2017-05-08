@@ -41,10 +41,10 @@ bool is_argument(t_nombre_variable identificador_variable)
 }
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
-	printf("%c\n", identificador_variable);
-	pos++;
+	printf("[definirVariable]: %c\n", identificador_variable);
 	t_indiceDelStack* ind=(t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
 	if (identificador_variable >= '0' && identificador_variable <= '9'){
+		pos++;
 		//ES UNA VARIABLE DE UNA FUNCION-----> uso ARGS
 		positionInArgs++;
 		if(off+VAR_SIZE>pageSize){
@@ -75,7 +75,8 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 		//ind->vars=pos;
 		//logueo haber guardado bien los datos
 		t_position* p=(t_position*)dictionary_get(ind->vars,string_from_format("%c",identificador_variable));
-		printf("VARS: Identificador variable: %c, pagina: %d, off: %d, size: %d",identificador_variable,p->page, p->off, p->size);
+		log_info(logCPU,"VARS: Identificador variable: %c, pagina: %d, off: %d, size: %d",identificador_variable,p->page, p->off, p->size);
+		printf("VARS: Identificador variable: %c, pagina: %d, off: %d, size: %d\n",identificador_variable,p->page, p->off, p->size);
 		//Guardo la entrada en el  indice de stack
 		off+=size;
 		printf("Position: %d\n",position->page*pageSize+position->off);
@@ -102,15 +103,18 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
+	printf("[obtenerPosicionVariable]: %c\n", identificador_variable);
 	log_debug(logCPU, "[obtenerPosicionVariable] identificador = %c\n", identificador_variable);
 	if (identificador_variable >= '0' && identificador_variable <= '9'){
 			//ES UNA VARIABLE DE UNA FUNCION
 		t_indiceDelStack* i=(t_indiceDelStack*)list_get(pcb->indiceDeStack,list_size(pcb->indiceDeStack)-1);
+		printf("La variable - de fx- %c esta en %d\n",identificador_variable, i->args[atoi(string_from_format("%c",identificador_variable))].page*pageSize+i->args[atoi(string_from_format("%c",identificador_variable))].off);
 		return i->args[atoi(string_from_format("%c",identificador_variable))].page*pageSize+i->args[atoi(string_from_format("%c",identificador_variable))].off;
 	}else{
 		//Es una variable local
 		t_indiceDelStack* i=(t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
 		t_position* p=dictionary_get(i->vars,string_from_format("%c",identificador_variable));
+		printf("la variable local %c esta en %d\n", identificador_variable, p->page*pageSize+p->off);
 		return p->page*pageSize+p->off;
 	}
 
@@ -134,6 +138,7 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 }
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
+	printf("[dereferenciar]: %d\n", direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
 
 	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d\n", direccion_variable, pos.page, pos.off);
@@ -141,11 +146,12 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
-
+	printf("El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
 	return *((int*)readResult);
 }
 
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
+	printf("[asignar]: %d en la direccion %d\n", valor, direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d\n", pos.page, pos.off, valor);
 
@@ -219,6 +225,7 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 // deberá finalizar la ejecución del programa.
 void AnSISOP_finalizar (void)
 {
+	printf("[finalizar]\n");
 	//vuelvo el PC a la posicion de retorno de la primitiva
 	t_indiceDelStack* currentStackContext = stack_context_current();
 
@@ -229,8 +236,12 @@ void AnSISOP_finalizar (void)
 
 	if (list_is_empty(pcb->indiceDeStack)) // termino el main
 	{
+		printf("----------FIN DE PROGRAMA ANSISOP---------");
 		pcb->exitCode = 0;
-	}
+	}else{
+		printf("quedan cosas\n");
+		}
+
 }
 
 
