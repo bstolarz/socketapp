@@ -26,6 +26,14 @@
 #include "../libSockets/server.h"
 #include "memory.h"
 int VAR_SIZE = sizeof(t_valor_variable);
+int off=0;
+int currentPage=0;
+int size=4;
+//Inicializo positionInArgs en -1 para que al crear una nueva entrada en el indice de stack ya quede en 0 desde el principio
+int positionInArgs=-1;
+//Inicializo pos en -1 para que al crear una nueva entrada en el indice de stack ya quede en 0 desde el principio
+int pos=-1;
+
 
 bool is_argument(t_nombre_variable identificador_variable)
 {
@@ -33,8 +41,47 @@ bool is_argument(t_nombre_variable identificador_variable)
 }
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
+	printf("[definirVariable]: %c\n", identificador_variable);
+	t_indiceDelStack* ind=(t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
+	if (identificador_variable >= '0' && identificador_variable <= '9'){
+		pos++;
+		//ES UNA VARIABLE DE UNA FUNCION-----> uso ARGS
+		positionInArgs++;
+		if(off+VAR_SIZE>pageSize){
+			currentPage++;
+			off=0;
+		}
+		ind->args[positionInArgs].page=currentPage;
+		ind->args[positionInArgs].off=off;
+		//Agrego ARGS al indice de stack
+		log_info(logCPU,"Defino la variable de funcion %c. Se guarda en 'vars' con: pagina: %d, offset: %d y size: %d\n",identificador_variable, ind->args[positionInArgs].page, ind->args[positionInArgs].off, VAR_SIZE);
+		list_add_in_index(pcb->indiceDeStack,pos,ind);
+		t_position* indGuardado=(t_position*)list_get(pcb->indiceDeStack,pos);
+		log_info(logCPU, "Creo entrada en el indice de stack. Guardo en la posición %d\n: \nPagina %d\nOffset %d\nSize %d\n", pos,indGuardado->page, indGuardado->off, VAR_SIZE);
+		return ind->args[positionInArgs].page*pageSize+ind->args[positionInArgs].off;
+	}else{
+		//Alloco memoria para almacenar una variable LOCAL--------> uso VARS
+		t_position* position=(t_position*)malloc(sizeof(t_position));
+		if(off+VAR_SIZE>pageSize){
+			currentPage++;
+			off=0;
+		}
+		//Como es variable local, le asigno pagina, offset y size
+		position->page=currentPage;
+		position->off=off;
+		position->size=VAR_SIZE;
 
-	// Guardo el offset dond está esta variable/arg
+		dictionary_put(ind->vars,string_from_format("%c",identificador_variable),position);
+		//ind->vars=pos;
+		//logueo haber guardado bien los datos
+		t_position* p=(t_position*)dictionary_get(ind->vars,string_from_format("%c",identificador_variable));
+		log_info(logCPU,"VARS: Identificador variable: %c, pagina: %d, off: %d, size: %d",identificador_variable,p->page, p->off, p->size);
+		printf("VARS: Identificador variable: %c, pagina: %d, off: %d, size: %d\n",identificador_variable,p->page, p->off, p->size);
+		//Guardo la entrada en el  indice de stack
+		off+=size;
+		printf("Position: %d\n",position->page*pageSize+position->off);
+		return position->page*pageSize+position->off;
+		/*// Guardo el offset dond está esta variable/arg
 	int varStackPosition = pcb->stackPosition;
 
 	if (is_argument(identificador_variable))
@@ -50,15 +97,30 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 	// TODO: check stack overflow?
 	pcb->stackPosition += VAR_SIZE;
 
- 	return varStackPosition; // retorno donde empezaba la var que puse en stack
+ 	return varStackPosition; // retorno donde empezaba la var que puse en stack*/
+}
 }
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
+	printf("[obtenerPosicionVariable]: %c\n", identificador_variable);
 	log_debug(logCPU, "[obtenerPosicionVariable] identificador = %c\n", identificador_variable);
+	if (identificador_variable >= '0' && identificador_variable <= '9'){
+			//ES UNA VARIABLE DE UNA FUNCION
+		t_indiceDelStack* i=(t_indiceDelStack*)list_get(pcb->indiceDeStack,list_size(pcb->indiceDeStack)-1);
+		printf("La variable - de fx- %c esta en %d\n",identificador_variable, i->args[atoi(string_from_format("%c",identificador_variable))].page*pageSize+i->args[atoi(string_from_format("%c",identificador_variable))].off);
+		return i->args[atoi(string_from_format("%c",identificador_variable))].page*pageSize+i->args[atoi(string_from_format("%c",identificador_variable))].off;
+	}else{
+		//Es una variable local
+		t_indiceDelStack* i=(t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
+		t_position* p=dictionary_get(i->vars,string_from_format("%c",identificador_variable));
+		printf("la variable local %c esta en %d\n", identificador_variable, p->page*pageSize+p->off);
+		return p->page*pageSize+p->off;
+	}
 
-	t_position* varPos;
+//	t_position* varPos;
 
+/*
 	if (is_argument(identificador_variable))
 	{
 		varPos = stack_get_arg(identificador_variable);
@@ -72,20 +134,24 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 		log_error(logCPU, "[obtenerPosicionVariable] no encontre %c\n", identificador_variable);
 
 	return position_to_puntero(varPos);
+*/
 }
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
+	printf("[dereferenciar]: %d\n", direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
+
 	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d\n", direccion_variable, pos.page, pos.off);
 
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
-
+	printf("El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
 	return *((int*)readResult);
 }
 
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
+	printf("[asignar]: %d en la direccion %d\n", valor, direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d\n", pos.page, pos.off, valor);
 
@@ -116,9 +182,11 @@ void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
 // Los parámetros serán definidos luego de esta instrucción de la misma manera que una variable local,
 // con identificadores numéricos empezando por el 0.
 void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
-	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack.\n");
+	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack.");
 
-	t_indiceDelStack* ind = stack_context_create();
+
+	t_indiceDelStack* ind = (t_indiceDelStack*)malloc(sizeof(t_indiceDelStack));
+
 	ind->retPos=pcb->pc;
 	list_add(pcb->indiceDeStack, ind);
 
@@ -132,16 +200,21 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 
 	// llamar sin retorno?
-	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack.\n");
+	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack.");
 
-	t_indiceDelStack* ind = stack_context_create();
+	t_indiceDelStack* ind = (t_indiceDelStack*)malloc(sizeof(t_indiceDelStack));
 
 	ind->retPos=pcb->pc; // guardar instruccion de retorno
-	ind->retVar = puntero_to_position(donde_retornar); // guardar variable donde poner retorno
+	t_position pos;
+	div_t values = div(donde_retornar, pageSize);
+	pos.page = values.quot;
+	pos.off = values.rem;
+
+	ind->retVar->page=pos.page; // guardar variable donde poner retorno
+	ind->retVar->off=pos.off;
+	ind->retVar->size=size;
 
 	list_add(pcb->indiceDeStack, ind);
-
-	// irallabel?
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
 }
@@ -152,6 +225,7 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 // deberá finalizar la ejecución del programa.
 void AnSISOP_finalizar (void)
 {
+	printf("[finalizar]\n");
 	//vuelvo el PC a la posicion de retorno de la primitiva
 	t_indiceDelStack* currentStackContext = stack_context_current();
 
@@ -160,12 +234,14 @@ void AnSISOP_finalizar (void)
 	// saco del stack el contexto actual
 	stack_pop();
 
-	bool programCompleted = list_is_empty(pcb->indiceDeStack);
-
-	if (programCompleted) // termino el main
+	if (list_is_empty(pcb->indiceDeStack)) // termino el main
 	{
+		printf("----------FIN DE PROGRAMA ANSISOP---------");
 		pcb->exitCode = 0;
-	}
+	}else{
+		printf("quedan cosas\n");
+		}
+
 }
 
 
@@ -215,14 +291,14 @@ void AnSISOP_retornar(t_valor_variable retorno){
 //	stack_context_pop();
 
 	//Calculo la direccion de retorno en base al retVar del contexto
-	t_puntero direccion = (currentContext->retVar.page * VAR_SIZE) + currentContext->retVar.off;
+	t_puntero direccion = (currentContext->retVar->page * size) + currentContext->retVar->off;
 	AnSISOP_asignar(direccion, retorno);
 }
 
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
 
-	if(socket_send_string(serverKernel, "imprimir_valor")>0){
+	if(socket_send_string(serverKernel, "imprimirValor")>0){
 		if(socket_send_int(serverKernel, valor_mostrar)>0){
 
 		}
@@ -240,7 +316,7 @@ void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 void AnSISOP_imprimirLiteral(char* texto){
 	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
 
-	if(socket_send_string(serverKernel, "imprimir_literal")>0){
+	if(socket_send_string(serverKernel, "imprimirLiteral")>0){
 		if(socket_send_string(serverKernel, texto)>0){
 
 		}

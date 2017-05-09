@@ -44,6 +44,7 @@ t_pcb* recv_pcb(){
 		{
 			log_debug(logCPU, "[recv PCB] llego bien el PCB");
 			serializedPcb.size = recvSize;
+
 			return pcb_deserialize(serializedPcb);
 		}
 	}
@@ -53,6 +54,16 @@ t_pcb* recv_pcb(){
 }
 
 void send_pcb(t_pcb* pcb){
-	//TODO
+	log_info(logCPU,"socket is: %d\n",serverKernel);
+	socket_send_string(serverKernel,"PCB");
+	log_info(logCPU,"Envio la PCB del programa con PID: %d\n",pcb->pid);
 
+	t_dataBlob serializedPcb = pcb_serialize(pcb);
+	int sentSize = socket_send(serverKernel, serializedPcb.data, serializedPcb.size);
+
+	if (sentSize == -1){
+		log_error(logCPU, "no pude mandar el pcb del proceso: %d\n",pcb->pid);
+	}
+
+	free(serializedPcb.data);
 }

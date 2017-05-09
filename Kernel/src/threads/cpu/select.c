@@ -50,10 +50,13 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	}else if (strcmp(package, "getSharedVariable")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_get_shared_variable(cpu);
-	}else if (strcmp(package, "imprimir_valor")==0){
+	}else if (strcmp(package, "setSharedVariable")==0){
+		t_cpu* cpu = cpu_find(socket);
+		handle_cpu_set_shared_variable(cpu);
+	}else if (strcmp(package, "imprimirValor")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_imprimir_valor(cpu);
-	}else if (strcmp(package, "imprimir_literal")==0){
+	}else if (strcmp(package, "imprimirLiteral")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_imprimir_literal(cpu);
 	}else if (strcmp(package, "finish")==0){
@@ -67,7 +70,7 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 		handle_cpu_signal(cpu);
 	}else if (strcmp(package, "alocar")==0){
 		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_allocar(cpu);
+		handle_cpu_alocar(cpu);
 	}else if (strcmp(package, "liberar")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_liberar(cpu);

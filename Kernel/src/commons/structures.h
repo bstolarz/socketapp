@@ -30,12 +30,15 @@ typedef struct{
 }t_kernel;
 
 typedef struct{
-	char* id;
-	int initialValue;
+	char* nombre;
+	int value;
+	pthread_mutex_t mutex;
 }t_semaforo;
 
 typedef struct{
 	char* nombre;
+	int value;
+	pthread_mutex_t mutex;
 }t_sharedVar;
 
 typedef struct{
