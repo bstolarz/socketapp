@@ -54,18 +54,17 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion){
 
 	if(string_equals_ignore_case(unMensajeDeOperacion, "VALIDAR")){
 		socket_recv_string(serverSocket, &path);
-		char* respuesta = validar(path);
+		int resultado = validar(path);
 
-		//Le devuelvo al Kernel un mensaje de SI o NO en base a si existe el path que me mando
-		socket_send_string(serverSocket, respuesta);
+		socket_send_int(serverSocket, resultado);
 	}
 	else if(string_equals_ignore_case(unMensajeDeOperacion, "CREAR")){
 		socket_recv_string(serverSocket, &path);
-		crear(path);
+		int resultado = crear(path);
 	}
 	else if(string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")){
 		socket_recv_string(serverSocket, &path);
-		borrar(path);
+		int resultado = borrar(path);
 	}
 	else if(string_equals_ignore_case(unMensajeDeOperacion, "OBTENERDATOS")){
 		socket_recv_string(serverSocket, &path);
@@ -84,7 +83,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion){
 		socket_recv_int(serverSocket, &size);
 
 		//Recibir buffer, con recv_string? recv_int? socket_recv?
-		guardarDatos(path, offset, size, buffer);
+		int resultado = guardarDatos(path, offset, size, buffer);
 	}
 
 
