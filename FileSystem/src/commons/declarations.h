@@ -9,5 +9,6 @@
 #define COMMONS_DECLARATIONS_H_
 
 t_fileSystem* configFileSystem;
+int serverSocket;
 
 #endif /* COMMONS_DECLARATIONS_H_ */

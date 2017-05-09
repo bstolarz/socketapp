@@ -19,7 +19,7 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
-	int serverSocket=0;
+	serverSocket = 0;
 	socket_server_create(&serverSocket, "127.0.0.1", configFileSystem->puerto);
 
 	if(serverSocket<=0){
@@ -44,4 +44,50 @@ int main(int arg, char* argv[]) {
 
 
 	return EXIT_SUCCESS;
+}
+
+//Falta hacer las condiciones de que si el path no se encontro para obtener y guardar, que retorne un error de archivo no encontrado
+void hacerLoQueCorresponda(char* unMensajeDeOperacion){
+	char* path = "";
+	off_t offset;
+	size_t size;
+
+	if(string_equals_ignore_case(unMensajeDeOperacion, "VALIDAR")){
+		socket_recv_string(serverSocket, &path);
+		char* respuesta = validar(path);
+
+		//Le devuelvo al Kernel un mensaje de SI o NO en base a si existe el path que me mando
+		socket_send_string(serverSocket, respuesta);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "CREAR")){
+		socket_recv_string(serverSocket, &path);
+		crear(path);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")){
+		socket_recv_string(serverSocket, &path);
+		borrar(path);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "OBTENERDATOS")){
+		socket_recv_string(serverSocket, &path);
+		socket_recv_int(serverSocket, &offset);
+		socket_recv_int(serverSocket, &size);
+		size_t cantidadBytes = obtenerDatos(path, offset, size);
+
+		//Le devuelvo al Kernel la cantidad de bytes definidos por el size
+		socket_send_int(serverSocket, cantidadBytes);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "GUARDARDATOS")){
+		void* buffer;
+
+		socket_recv_string(serverSocket, &path);
+		socket_recv_int(serverSocket, &offset);
+		socket_recv_int(serverSocket, &size);
+
+		//Recibir buffer, con recv_string? recv_int? socket_recv?
+		guardarDatos(path, offset, size, buffer);
+	}
+
+
+
+	free(path);
 }
