@@ -7,21 +7,21 @@
 
 //Implementacion de operaciones, por ahora son dummies
 int validar(char* path){
-	return NULL;
+	return 0;
 }
 
 int crear(char* path){
-	return NULL;
+	return 0;
 }
 
 int borrar(char* path){
-	return NULL;
+	return 0;
 }
 
 size_t obtenerDatos(char* path, off_t offset, size_t size){
-	return NULL;
+	return 0;
 }
 
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer){
-	return NULL;
+	return 0;
 }
