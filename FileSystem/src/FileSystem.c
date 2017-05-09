@@ -20,7 +20,8 @@ int main(int arg, char* argv[]) {
 	config_print();
 
 	int serverSocket=0;
-	socket_client_create(&serverSocket, "127.0.0.1", "6667");
+	socket_server_create(&serverSocket, "127.0.0.1", configFileSystem->puerto);
+
 	if(serverSocket<=0){
 		printf("No se pudo conectar con el server\n");
 		close(serverSocket);
@@ -28,16 +29,11 @@ int main(int arg, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if(socket_send_string(serverSocket, "FSY")<=0){
-		printf("No se pudo enviar el mensaje\n");
-		close(serverSocket);
-		config_free();
-		return EXIT_FAILURE;
-	}
-	char* mensaje = "";
+
+	char* mensajeDeOperacion = "";
 	while(1){
-		if(socket_recv_string(serverSocket, &mensaje)>0){
-			printf("%s\n", mensaje);
+		if(socket_recv_string(serverSocket, &mensajeDeOperacion)>0){
+			hacerLoQueCorresponda(mensajeDeOperacion);
 		}else{
 			printf("No se pudo recibir el mensaje\n");
 			close(serverSocket);

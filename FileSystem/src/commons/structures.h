@@ -11,7 +11,6 @@
 typedef struct{
 	char* puerto;
 	char* punto_montaje;
-
 }t_fileSystem;
 
 #endif /* COMMONS_STRUCTURES_H_ */
