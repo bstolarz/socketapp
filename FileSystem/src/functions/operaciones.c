@@ -18,7 +18,7 @@ int borrar(char* path){
 	return 0;
 }
 
-size_t obtenerDatos(char* path, off_t offset, size_t size){
+int obtenerDatos(char* path, off_t offset, size_t size){
 	return 0;
 }
 
