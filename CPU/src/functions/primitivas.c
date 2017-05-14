@@ -25,7 +25,7 @@
 #include "../libSockets/send.h"
 #include "../libSockets/server.h"
 #include "memory.h"
-int VAR_SIZE = sizeof(t_valor_variable);
+t_puntero VAR_SIZE = sizeof(t_valor_variable);
 
 bool is_argument(t_nombre_variable identificador_variable)
 {
@@ -35,7 +35,7 @@ bool is_argument(t_nombre_variable identificador_variable)
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 
 	// Guardo el offset dond está esta variable/arg
-	int varStackPosition = pcb->stackPosition;
+	t_puntero varStackPosition = pcb->stackPosition;
 
 	if (is_argument(identificador_variable))
 	{
@@ -55,7 +55,7 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
-	log_debug(logCPU, "[obtenerPosicionVariable] identificador = %c\n", identificador_variable);
+	log_debug(logCPU, "[obtenerPosicionVariable] identificador = %c", identificador_variable);
 
 	t_position* varPos;
 
@@ -69,25 +69,25 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 	}
 
 	if (varPos == NULL)
-		log_error(logCPU, "[obtenerPosicionVariable] no encontre %c\n", identificador_variable);
+		log_error(logCPU, "[obtenerPosicionVariable] no encontre %c", identificador_variable);
 
 	return position_to_puntero(varPos);
 }
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	t_position pos = puntero_to_position(direccion_variable);
-	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d\n", direccion_variable, pos.page, pos.off);
+	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d", direccion_variable, pos.page, pos.off);
 
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
 
-	return *((int*)readResult);
+	return *((t_valor_variable*)readResult);
 }
 
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	t_position pos = puntero_to_position(direccion_variable);
-	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d\n", pos.page, pos.off, valor);
+	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d", pos.page, pos.off, valor);
 
 	int writeResult = memory_write(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
 
@@ -215,8 +215,7 @@ void AnSISOP_retornar(t_valor_variable retorno){
 //	stack_context_pop();
 
 	//Calculo la direccion de retorno en base al retVar del contexto
-	t_puntero direccion = (currentContext->retVar.page * VAR_SIZE) + currentContext->retVar.off;
-	AnSISOP_asignar(direccion, retorno);
+	AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
 }
 
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){

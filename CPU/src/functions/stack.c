@@ -7,10 +7,11 @@ t_indiceDelStack* stack_context_create()
 	t_indiceDelStack* nivelStack = malloc(sizeof(t_indiceDelStack));
 
 	nivelStack->vars = dictionary_create();
-	nivelStack->retPos = 0;
-	nivelStack->retVar.off = 0;
-	nivelStack->retVar.page = 0;
-	nivelStack->retVar.size = 0;
+	nivelStack->retVar.off = -1;
+	nivelStack->retVar.page = -1;
+	nivelStack->retVar.size = -1;
+
+	// sirve inicializar en -1 cada entrada de args?
 
 	return nivelStack;
 }
@@ -19,9 +20,7 @@ void stack_context_destroy(void* stackContextVoid)
 {
 	t_indiceDelStack* stackContext = (t_indiceDelStack*) stackContextVoid;
 
-	dictionary_destroy(stackContext->vars);
-	// TODO: destruir lo que falta
-
+	dictionary_destroy_and_destroy_elements(stackContext->vars, &free);
 	free(stackContext);
 }
 
