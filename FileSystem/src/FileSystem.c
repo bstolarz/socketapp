@@ -2,12 +2,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include "commons/structures.h"
 #include "commons/declarations.h"
 #include "functions/config.h"
+#include "functions/operaciones.h"
 #include "libSockets/client.h"
+#include "libSockets/server.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
+
+
+void hacerLoQueCorresponda(char* mensajeDeOperacion);
 
 int main(int arg, char* argv[]) {
 	if(arg!=2){
@@ -19,8 +25,9 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
-	int serverSocket=0;
-	socket_client_create(&serverSocket, "127.0.0.1", "6667");
+	serverSocket = 0;
+	socket_server_create(&serverSocket, configFileSystem->puerto);
+
 	if(serverSocket<=0){
 		printf("No se pudo conectar con el server\n");
 		close(serverSocket);
@@ -28,16 +35,11 @@ int main(int arg, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if(socket_send_string(serverSocket, "FSY")<=0){
-		printf("No se pudo enviar el mensaje\n");
-		close(serverSocket);
-		config_free();
-		return EXIT_FAILURE;
-	}
-	char* mensaje = "";
+
+	char* mensajeDeOperacion = "";
 	while(1){
-		if(socket_recv_string(serverSocket, &mensaje)>0){
-			printf("%s\n", mensaje);
+		if(socket_recv_string(serverSocket, &mensajeDeOperacion)>0){
+			hacerLoQueCorresponda(mensajeDeOperacion);
 		}else{
 			printf("No se pudo recibir el mensaje\n");
 			close(serverSocket);
@@ -48,4 +50,48 @@ int main(int arg, char* argv[]) {
 
 
 	return EXIT_SUCCESS;
+}
+
+//Falta hacer las condiciones de que si el path no se encontro para obtener y guardar, que retorne un error de archivo no encontrado
+void hacerLoQueCorresponda(char* unMensajeDeOperacion){
+	char* path = "";
+	int offset;
+	int size;
+	int resultado;
+
+	if(string_equals_ignore_case(unMensajeDeOperacion, "VALIDAR")){
+		socket_recv_string(serverSocket, &path);
+		resultado = validar(path);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "CREAR")){
+		socket_recv_string(serverSocket, &path);
+		resultado = crear(path);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")){
+		socket_recv_string(serverSocket, &path);
+		resultado = borrar(path);
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "OBTENERDATOS")){
+		socket_recv_string(serverSocket, &path);
+		socket_recv_int(serverSocket, &offset);
+		socket_recv_int(serverSocket, &size);
+		resultado = obtenerDatos(path, (off_t)offset, (size_t)size);
+
+	}
+	else if(string_equals_ignore_case(unMensajeDeOperacion, "GUARDARDATOS")){
+		void* buffer;
+
+		socket_recv_string(serverSocket, &path);
+		socket_recv_int(serverSocket, &offset);
+		socket_recv_int(serverSocket, &size);
+
+		//Recibir buffer es con socket_recv_string?
+
+		resultado = guardarDatos(path, (off_t)offset, (size_t)size, buffer);
+	}
+
+	socket_send_int(serverSocket, resultado);
+
+
+	free(path);
 }

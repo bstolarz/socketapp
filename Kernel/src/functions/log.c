@@ -37,7 +37,7 @@ void log_config(){
 	log_info(logKernel,"STACK SIZE: %d", configKernel->stack_size);
 
 	void _printSemaforo(t_semaforo* semaforo){
-		log_info(logKernel, "Semaforo: %s, Valor: %i", semaforo->id, semaforo->initialValue);
+		log_info(logKernel, "Semaforo: %s, Valor: %i", semaforo->nombre, semaforo->value);
 	}
 	list_iterate(configKernel->semaforos, (void*)_printSemaforo);
 

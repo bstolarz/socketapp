@@ -25,17 +25,17 @@
 #include "../libSockets/send.h"
 #include "../libSockets/server.h"
 #include "memory.h"
+
 t_puntero VAR_SIZE = sizeof(t_valor_variable);
 
 bool is_argument(t_nombre_variable identificador_variable)
 {
-	return isdigit(identificador_variable);
+	return identificador_variable >= '0' && identificador_variable <= '9';
 }
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
-
 	// Guardo el offset dond está esta variable/arg
-	t_puntero varStackPosition = pcb->stackPosition;
+	int varStackPosition = pcb->stackPosition;
 
 	if (is_argument(identificador_variable))
 	{
@@ -50,7 +50,7 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 	// TODO: check stack overflow?
 	pcb->stackPosition += VAR_SIZE;
 
- 	return varStackPosition; // retorno donde empezaba la var que puse en stack
+ 	return varStackPosition; // retorno donde empezaba la var que puse en stack*/
 }
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
@@ -75,17 +75,21 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 }
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
+	printf("[dereferenciar]: %d\n", direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
+
 	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d", direccion_variable, pos.page, pos.off);
 
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
+	printf("El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
 
 	return *((t_valor_variable*)readResult);
 }
 
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
+	printf("[asignar]: %d en la direccion %d\n", valor, direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d", pos.page, pos.off, valor);
 
@@ -93,18 +97,6 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 
 	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
 }
-
-// alcanza con devolver lo que te manda el kernel
-/*t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
-	int* value=(int*)malloc(sizeof(int));
-	if (socket_send_string(serverKernel, "ValueOfSharedVariable")>0){
-		if (socket_send_string(serverKernel,variable)>0){
-
-			socket_recv_int(serverKernel,value);
-		}
-	}
-	return value;
-}*/
 
 // Cambia la linea de ejecucion a la correspondiente de la etiqueta buscada
 void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
@@ -116,10 +108,12 @@ void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
 // Los parámetros serán definidos luego de esta instrucción de la misma manera que una variable local,
 // con identificadores numéricos empezando por el 0.
 void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
-	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack.\n");
+	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack.");
+
 
 	t_indiceDelStack* ind = stack_context_create();
-	ind->retPos=pcb->pc;
+
+	ind->retPos = pcb->pc;
 	list_add(pcb->indiceDeStack, ind);
 
 	// irallabel?
@@ -132,18 +126,37 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 
 	// llamar sin retorno?
-	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack.\n");
+	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack.");
 
 	t_indiceDelStack* ind = stack_context_create();
 
 	ind->retPos=pcb->pc; // guardar instruccion de retorno
-	ind->retVar = puntero_to_position(donde_retornar); // guardar variable donde poner retorno
+	
+	t_position returnToPos = puntero_to_position(donde_retornar);
+	ind->retVar = malloc(sizeof(t_puntero));
+	ind->retVar->page = returnToPos.page; // guardar variable donde poner retorno
+	ind->retVar->off = returnToPos.off;
+	ind->retVar->size = VAR_SIZE;
 
 	list_add(pcb->indiceDeStack, ind);
 
-	// irallabel?
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
+}
+
+void AnSISOP_retornar(t_valor_variable retorno){
+	log_info(logCPU, "Se invoco a la funcion AnSISOP_retornar.");
+
+	t_indiceDelStack* currentContext = stack_context_current();
+
+	pcb->pc = currentContext->retPos;
+
+	if (currentContext->retVar != NULL)
+	{
+		AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
+	}
+	
+	//stack_context_pop();
 }
 
 //Cambia el Contexto de Ejecución Actual para volver al Contexto anterior al que se está ejecutando,
@@ -152,6 +165,7 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 // deberá finalizar la ejecución del programa.
 void AnSISOP_finalizar (void)
 {
+	printf("[finalizar]\n");
 	//vuelvo el PC a la posicion de retorno de la primitiva
 	t_indiceDelStack* currentStackContext = stack_context_current();
 
@@ -160,12 +174,14 @@ void AnSISOP_finalizar (void)
 	// saco del stack el contexto actual
 	stack_pop();
 
-	bool programCompleted = list_is_empty(pcb->indiceDeStack);
-
-	if (programCompleted) // termino el main
+	if (list_is_empty(pcb->indiceDeStack)) // termino el main
 	{
+		printf("----------FIN DE PROGRAMA ANSISOP---------");
 		pcb->exitCode = 0;
-	}
+	}else{
+		printf("quedan cosas\n");
+		}
+
 }
 
 
@@ -205,23 +221,10 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 	return valorAsignado;
 }
 
-
-void AnSISOP_retornar(t_valor_variable retorno){
-	log_info(logCPU, "Se invoco a la funcion AnSISOP_retornar.");
-
-	t_indiceDelStack* currentContext = stack_context_current();
-
-	pcb->pc = currentContext->retPos;
-//	stack_context_pop();
-
-	//Calculo la direccion de retorno en base al retVar del contexto
-	AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
-}
-
 void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
 
-	if(socket_send_string(serverKernel, "imprimir_valor")>0){
+	if(socket_send_string(serverKernel, "imprimirValor")>0){
 		if(socket_send_int(serverKernel, valor_mostrar)>0){
 
 		}
@@ -239,7 +242,7 @@ void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
 void AnSISOP_imprimirLiteral(char* texto){
 	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
 
-	if(socket_send_string(serverKernel, "imprimir_literal")>0){
+	if(socket_send_string(serverKernel, "imprimirLiteral")>0){
 		if(socket_send_string(serverKernel, texto)>0){
 
 		}

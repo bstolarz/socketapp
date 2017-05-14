@@ -65,6 +65,10 @@ t_pcb* cpu_recv_pcb(t_cpu* cpu){
 	return NULL;
 }
 
+void cpu_destroy_pcb(t_cpu* cpu){
+	//TODO
+}
+
 t_cpu* cpu_find(int socket){
 	bool _buscarProgramaSocketInCPUs(t_cpu* cpu){
 		return cpu->socket==socket;

@@ -4,15 +4,12 @@
 
 t_indiceDelStack* stack_context_create()
 {
-	t_indiceDelStack* nivelStack = malloc(sizeof(t_indiceDelStack));
-
+	t_indiceDelStack* nivelStack = (t_indiceDelStack*) malloc(sizeof(t_indiceDelStack));
+	
 	nivelStack->vars = dictionary_create();
-	nivelStack->retVar.off = -1;
-	nivelStack->retVar.page = -1;
-	nivelStack->retVar.size = -1;
-
-	// sirve inicializar en -1 cada entrada de args?
-
+	nivelStack->retPos = -1;
+	nivelStack->retVar = NULL;
+	
 	return nivelStack;
 }
 
