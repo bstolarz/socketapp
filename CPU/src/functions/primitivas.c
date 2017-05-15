@@ -145,7 +145,7 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 }
 
 void AnSISOP_retornar(t_valor_variable retorno){
-	log_info(logCPU, "Se invoco a la funcion AnSISOP_retornar.");
+	log_info(logCPU, "[retornar] con valor %d.", retorno);
 
 	t_indiceDelStack* currentContext = stack_context_current();
 
@@ -155,8 +155,6 @@ void AnSISOP_retornar(t_valor_variable retorno){
 	{
 		AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
 	}
-	
-	//stack_context_pop();
 }
 
 //Cambia el Contexto de Ejecución Actual para volver al Contexto anterior al que se está ejecutando,
@@ -165,7 +163,6 @@ void AnSISOP_retornar(t_valor_variable retorno){
 // deberá finalizar la ejecución del programa.
 void AnSISOP_finalizar (void)
 {
-	printf("[finalizar]\n");
 	//vuelvo el PC a la posicion de retorno de la primitiva
 	t_indiceDelStack* currentStackContext = stack_context_current();
 
@@ -176,11 +173,11 @@ void AnSISOP_finalizar (void)
 
 	if (list_is_empty(pcb->indiceDeStack)) // termino el main
 	{
-		printf("----------FIN DE PROGRAMA ANSISOP---------");
+		log_info(logCPU, "[finalizar] fin programa.");
 		pcb->exitCode = 0;
 	}else{
-		printf("quedan cosas\n");
-		}
+		log_info(logCPU, "[finalizar] termina funcion.");
+	}
 
 }
 

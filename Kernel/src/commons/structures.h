@@ -42,21 +42,32 @@ typedef struct{
 }t_sharedVar;
 
 typedef struct{
+	int page;
+	int off;
+	int size;
+} t_position;
 
-}t_indiceDelStack;
+
+typedef struct{
+	t_dictionary* vars;
+	t_position args[10]; // pueden haber de 0 a 9 args. por valor para no necesitar allocar y dellocar
+	int retPos;
+	t_position* retVar;
+} t_indiceDelStack;
+
 
 typedef struct{
 	int pid;
-	int pc;
-	int cantPagsCodigo;
-	int indiceDeCodigoCant;
+	size_t pc;
+	size_t cantPagsCodigo;
+	size_t indiceDeCodigoCant;
 	t_intructions * indiceDeCodigo;
-	int indiceDeEtiquetasCant;
+	size_t indiceDeEtiquetasCant;
 	char * indiceDeEtiquetas;
-	t_indiceDelStack * indiceDeStack;
+	t_list * indiceDeStack; // pila hecha con lista
 	t_dictionary * processFileTable;
-	int stackPosition;
-	int maxStackPosition;
+	size_t stackPosition;
+	size_t maxStackPosition;
 	int exitCode;
 }t_pcb;
 

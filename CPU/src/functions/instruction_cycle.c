@@ -69,7 +69,11 @@ char * cycle_fetch(t_intructions* currentInstruction){
 }
 
 void cycle_send_pcv(t_pcb* pcb){
-	if(socket_send_string(serverKernel, "end_burst")<=0){
+	if(socket_send_string(serverKernel, "end_burst") != -1){
 		send_pcb(pcb);
+	}
+	else
+	{
+		log_error(logCPU, "[cycle_send_pcb] no pude enviar mensaje end_burst");
 	}
 }

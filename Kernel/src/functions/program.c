@@ -60,6 +60,19 @@ void program_process_new(fd_set* master, int socket){
 	program->pcb->indiceDeEtiquetasCant = metadata->etiquetas_size;
 	program->pcb->indiceDeEtiquetas = metadata->etiquetas;
 
+	// crear el stack
+	t_list* stack = list_create();
+
+	// crear el contexto del main del programa
+	t_indiceDelStack* mainContext = malloc(sizeof(t_indiceDelStack));
+	mainContext->vars = dictionary_create();
+	mainContext->retPos = -1;
+	mainContext->retVar = NULL;
+
+	list_add(stack, mainContext);
+
+	program->pcb->indiceDeStack = stack;
+
 	//CODIGO IMPRIMIR EL INDICE DE ETIQUETAS
 	/*int i;
 	for(i=0; i<metadata->etiquetas_size; i++){
