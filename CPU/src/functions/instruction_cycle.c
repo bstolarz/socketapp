@@ -58,12 +58,12 @@ char * cycle_fetch(t_intructions* currentInstruction){
 	if (isblank(instructionStr[size - 1]) || instructionStr[size - 1] == '\n') {
 		instructionStr[size - 1] = '\0';
 	} else {
-		log_debug(logCPU, "realocando porque habia un caracter que no era fin de linea al final de la instruccion (%c)", instructionStr[size - 1]);
+		log_debug(logCPU, "realocando porque habia un caracter que no era fin de linea al final de la instruccion (%c)\n", instructionStr[size - 1]);
 		instructionStr = realloc(instructionStr, size + 1);
 		instructionStr[size] = '\0';
 	}
 
-	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]", instructionStr);
+	log_debug(logCPU, "[fetch instruccion desde memoria] instruccion: [%s]\n", instructionStr);
 
 	return instructionStr;
 }

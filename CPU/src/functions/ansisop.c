@@ -18,7 +18,7 @@ void ansisop_init(){
 	ansisop_funciones->AnSISOP_dereferenciar=AnSISOP_dereferenciar;
 	ansisop_funciones->AnSISOP_obtenerPosicionVariable=AnSISOP_obtenerPosicionVariable;
 	ansisop_funciones->AnSISOP_finalizar=AnSISOP_finalizar;
-	ansisop_funciones->AnSISOP_irAlLabel=AnSISOP_finalizar;
+	ansisop_funciones->AnSISOP_irAlLabel=AnSISOP_irAlLabel;
 
 
 	ansisop_funciones_kernel = (AnSISOP_kernel*) malloc(sizeof(AnSISOP_kernel));

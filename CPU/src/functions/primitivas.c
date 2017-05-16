@@ -83,7 +83,7 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
-	printf("El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
+	log_debug(logCPU, "El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
 
 	return *((t_valor_variable*)readResult);
 }
