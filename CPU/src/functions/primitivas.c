@@ -100,6 +100,7 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 
 // Cambia la linea de ejecucion a la correspondiente de la etiqueta buscada
 void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
+	log_debug(logCPU, "[irAlLabel] %s", etiqueta);
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
 }
 

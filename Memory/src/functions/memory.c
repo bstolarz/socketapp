@@ -152,14 +152,14 @@ int memory_write(int PID, int page, int offset, int size, void* buffer)
 	{
 		int currentPageSize = (size < configMemory->frameSize - offset) ? size : (configMemory->frameSize - offset);
 		size -= currentPageSize;
-		wroteSize += currentPageSize;
 
 		char* frame = frame_lookup(PID, page);
 
 		if (frame == NULL) return ERROR_MEMORY;
 
-		memcpy(frame + offset, buffer, currentPageSize);
+		memcpy(frame + offset, buffer + wroteSize, currentPageSize);
 
+		wroteSize += currentPageSize;
 		offset = 0;
 		++page;
 	}
