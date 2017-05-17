@@ -69,7 +69,7 @@ int main(int arg, char* argv[]) {
 			//Exec
 			analizadorLinea(instruccion, ansisop_funciones, ansisop_funciones_kernel);
 
-			++pcb->pc;
+			++pcb->pc; // TODO: mover arriba de analizar linea
 
 			//Checkeo interrupciones
 			if((interruption=cycle_interruption_handler())<0){
