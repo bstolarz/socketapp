@@ -66,10 +66,12 @@ int main(int arg, char* argv[]) {
 			//Fetch
 			char* instruccion = cycle_fetch(pcb->indiceDeCodigo + pcb->pc);
 
+			++pcb->pc;
+
 			//Exec
 			analizadorLinea(instruccion, ansisop_funciones, ansisop_funciones_kernel);
 
-			++pcb->pc;
+
 
 			//Checkeo interrupciones
 			if((interruption=cycle_interruption_handler())<0){
