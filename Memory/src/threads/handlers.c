@@ -9,27 +9,28 @@
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
-#include "../functions/memory.h"
 #include "handlers.h"
+#include "../functions/memory.h"
+#include "../functions/ram.h"
 
 int handle_init(int clientSocket)
 {
 	//Recivo PID
 	int PID;
 	if(socket_recv_int(clientSocket, &PID) <= 0){
-		log_error(logMemory, "[init] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[init] request: problema recviendo PID (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Recivo page count
 	int pageCount;
 	if(socket_recv_int(clientSocket, &pageCount) <= 0){
-		log_error(logMemory, "[init] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[init] request: problema recviendo pageCount (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Proceso la peticion
-	int success = program_init(PID, pageCount);
+	int success = ram_program_init(PID, pageCount);
 
 	//Envio el resultado
 	int nBytes = socket_send_int(clientSocket, success);
@@ -44,7 +45,7 @@ int handle_end(int clientSocket){
 	//Recivo PID
 	int PID;
 	if(socket_recv_int(clientSocket, &PID) <= 0){
-		log_error(logMemory, "[end] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[end] request: problema reciviendo PID (socket %d)", clientSocket);
 		return -1;
 	}
 
@@ -66,28 +67,28 @@ int handle_read(int clientSocket)
 	//Recivo PID
 	int PID;
 	if(socket_recv_int(clientSocket, &PID) <= 0){
-		log_error(logMemory, "[end] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[end] request: problema reciviendo PID (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Recivo Page
 	int page;
 	if(socket_recv_int(clientSocket, &page) <= 0){
-		log_error(logMemory, "[read] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[read] request: problema reciviendo page (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Recivo offset
 	int offset;
 	if(socket_recv_int(clientSocket, &offset) <= 0){
-		log_error(logMemory, "[read] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[read] request: problema reciviendo offset (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Recivo size
 	int size;
 	if(socket_recv_int(clientSocket, &size) <= 0){
-		log_error(logMemory, "[read] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[read] request: problema reciviendo size (socket %d)", clientSocket);
 		return -1;
 	}
 
@@ -119,21 +120,21 @@ int handle_write(int clientSocket)
 	//Recivo PID
 	int PID;
 	if(socket_recv_int(clientSocket, &PID) <= 0){
-		log_error(logMemory, "[write] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[write] request: problema reciviendo PID (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Recivo page
 	int page;
 	if(socket_recv_int(clientSocket, &page) <= 0){
-		log_error(logMemory, "[write] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[write] request: problema reciviendo page (socket %d)", clientSocket);
 		return -1;
 	}
 
 	//Recivo page
 	int offset;
 	if(socket_recv_int(clientSocket, &offset) <= 0){
-		log_error(logMemory, "[write] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[write] request: problema reciviendo offset (socket %d)", clientSocket);
 		return -1;
 	}
 
@@ -141,7 +142,7 @@ int handle_write(int clientSocket)
 	void* buffer;
 	int size;
 	if((size = socket_recv(clientSocket, &buffer, 1)) <= 0){
-		log_error(logMemory, "[write] request: problema reciviendo datos (socket %d)", clientSocket);
+		log_error(logMemory, "[write] request: problema reciviendo buffer (socket %d)", clientSocket);
 		return -1;
 	}
 

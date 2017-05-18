@@ -21,6 +21,9 @@ int proccessPageCount;
 char* proccessPages; // la memoria RAM donde guardar y buscar datos
 					 // es char* para que se pueda sumar de a 1 byte
 
+t_cache_entry* cache; // cacheEntryCount entries
+char* cacheContent; // cacheEntryCount * frameSize block
+
 t_log* logMemory;
 
 int ERROR_NO_RESOURCES_FOR_PROCCESS;

@@ -4,14 +4,14 @@
 #include <pthread.h>
 #include <math.h>
 
-#include "memory.h"
 #include "../commons/declarations.h"
 #include "../commons/structures.h"
+#include "ram.h"
 #include "utils.h"
 
 pthread_mutex_t freeFrameMutex = PTHREAD_MUTEX_INITIALIZER;
 
-int memory_init()
+int ram_init()
 {
 	pageTable = malloc(configMemory->frameCount * configMemory->frameSize);
 	freeFramesEntries = (t_pageTableEntry**)(pageTable + configMemory->frameCount);
@@ -39,7 +39,7 @@ int memory_init()
 
 
 // Operaciones de Memoria (pag 26)
-int program_init(int PID, int pageCount)
+int ram_program_init(int PID, int pageCount)
 {
 	// puede que el kernel mande pedidos de iniciar proceso al mismo tiempo
 	// lockeo aca para que no traten de usar los mismos frames vacios los 2 procesos
@@ -70,7 +70,7 @@ int program_init(int PID, int pageCount)
     return 0;
 }
 
-void program_end(int PID)
+void ram_program_end(int PID)
 {
 	int i;
 	int pageCount = 0;
@@ -99,7 +99,7 @@ void program_end(int PID)
 }
 
 // returna una pagina o nulo
-char* frame_lookup(int PID, int page)
+char* ram_frame_lookup(int PID, int page)
 {
     // TODO: hash function
     int i;
@@ -108,43 +108,12 @@ char* frame_lookup(int PID, int page)
         if (pageTable[i].PID == PID && pageTable[i].page == page)
             return get_frame(i); // casteo a puntero de char para que sume de 1 byte
     																		// que sume de 1 byte al puntero
-    log_error(logMemory, "no encontro frame para proceso [%d] pag %d", PID, page);
+    log_error(logMemory, "[frame_lookup] no encontr frame para proceso [%d] pag %d", PID, page);
     return NULL;
 }
 
 // no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
-void* memory_read(int PID, int page, int offset, int size)
-{
-	char* buffer = malloc(sizeof(char) * size);
-	char* bufferStart = buffer;
-
-	// voy copiando en buffer cada pedazo de pagina
-	// puede pasar que me pidan una instruccion que empieza en pag 1 y siga en pag 2
-	while (size > 0)
-	{
-		int currentPageSize = (size < (configMemory->frameSize - offset)) ? size : (configMemory->frameSize - offset);
-		size -= currentPageSize;
-
-		char* frame = frame_lookup(PID, page);
-
-		if (frame == NULL)
-		{
-			free(buffer);
-			return NULL;
-		}
-
-		memcpy(bufferStart, frame + offset, currentPageSize);
-
-		bufferStart = bufferStart + currentPageSize;
-		offset = 0;
-		++page;
-	}
-
-    return buffer;
-}
-
-// no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
-int memory_write(int PID, int page, int offset, int size, void* buffer)
+int ram_write(int PID, int page, int offset, int size, void* buffer)
 {
 	int wroteSize = 0;
 
@@ -153,7 +122,7 @@ int memory_write(int PID, int page, int offset, int size, void* buffer)
 		int currentPageSize = (size < configMemory->frameSize - offset) ? size : (configMemory->frameSize - offset);
 		size -= currentPageSize;
 
-		char* frame = frame_lookup(PID, page);
+		char* frame = ram_frame_lookup(PID, page);
 
 		if (frame == NULL) return ERROR_MEMORY;
 
