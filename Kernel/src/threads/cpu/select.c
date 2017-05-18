@@ -59,9 +59,6 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	}else if (strcmp(package, "imprimirLiteral")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_imprimir_literal(cpu);
-	}else if (strcmp(package, "finish")==0){
-		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_finish(cpu);
 	}else if (strcmp(package, "wait")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_wait(cpu);

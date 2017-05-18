@@ -25,6 +25,8 @@ void program_process_new(fd_set* master, int socket){
 	t_program * program = malloc(sizeof(t_program));
 	program->socket = socket;
 	program->interruptionCode = 0;
+	program->waiting=0;
+	program->waitingReason = string_new();
 
 	program->pcb = malloc(sizeof(t_pcb));
 
@@ -146,7 +148,7 @@ int program_to_ready(t_program* program){
 }
 
 void program_finish(t_program* program){
-	pthread_mutex_lock(&(queueFinishedpPrograms->mutex));
+	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
 
 	//TODO
 	/*
@@ -157,8 +159,9 @@ void program_finish(t_program* program){
 	 * 		Dejar el programa finalizado.
 	 */
 
-	list_add(queueFinishedpPrograms->list, program);
-	pthread_mutex_unlock(&(queueFinishedpPrograms->mutex));
+	close(program->socket);
+	list_add(queueFinishedPrograms->list, program);
+	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 }
 
 void program_interrup(int socket, int interruptionCode, int overrideInterruption){
@@ -188,6 +191,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		//TODO enviar interrupcion al cpu para que este lo devuelva con el error y se procese la muerte con la funcion 'program_finish'
 	}
 
+
 	//Reviso la cola de nuevos
 	if(programaEncontrado == 0){
 		pthread_mutex_lock(&(queueNewPrograms->mutex));
@@ -200,6 +204,20 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 			program_finish(program);
 		}
 		pthread_mutex_unlock(&(queueNewPrograms->mutex));
+	}
+
+	//Reviso la cola de listos
+	if(programaEncontrado == 0){
+		pthread_mutex_lock(&(queueBlockedPrograms->mutex));
+		t_program* program = list_remove_by_condition(queueBlockedPrograms->list, (void*)_buscarProgramaSocket);
+		if(program != NULL){
+			log_info(logKernel, "El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i.", program->pcb->pid, interruptionCode);
+			printf("El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
+			programaEncontrado = 1;
+			program->pcb->exitCode = interruptionCode;
+			program_finish(program);
+		}
+		pthread_mutex_unlock(&(queueBlockedPrograms->mutex));
 	}
 
 	//Reviso la cola de listos

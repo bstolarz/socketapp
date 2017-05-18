@@ -77,6 +77,8 @@ typedef struct{
 	int interruptionCode;
 	int codeSize;
 	void* code;
+	int waiting;
+	char* waitingReason;
 }t_program;
 
 typedef struct{

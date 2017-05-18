@@ -23,7 +23,6 @@
 
 void handle_cpu_get_shared_variable(t_cpu* cpu);
 void handle_cpu_set_shared_variable(t_cpu* cpu);
-void handle_cpu_finish(t_cpu* cpu);
 void handle_cpu_wait(t_cpu* cpu);
 void handle_cpu_signal(t_cpu* cpu);
 void handle_cpu_alocar(t_cpu* cpu);

@@ -18,6 +18,7 @@
 
 #include "../../functions/dispatcher.h"
 #include "../../functions/serialization.h"
+#include "../../functions/program.h"
 
 
 void cpu_send_pcb(t_cpu* cpu){
@@ -101,12 +102,43 @@ void cpu_interruption(t_cpu * cpu){
 
 void cpu_still_burst(t_cpu* cpu){
 	int burst = 1;
+	if(cpu->program->waiting == 1){
+		burst = 0;
+	}
+
 	if(socket_send_int(cpu->socket, burst)<=0){
 		exit(EXIT_FAILURE);
 	}
 }
 
 void cpu_end_burst(t_cpu* cpu){
-	//TODO
+	t_program* program = cpu->program;
+	program->pcb = cpu_recv_pcb(cpu);
+
+	int termino = 0;
+	if(socket_recv_int(cpu->socket, &termino)<=0){
+		//TODO Eliminar cpu de la lista de cpus
+		exit(EXIT_FAILURE);
+	}
+
+	if(termino == 1){
+		program_finish(program);
+	}else{
+		if(program->waiting == 1){
+			pthread_mutex_lock(&queueBlockedPrograms->mutex);
+			list_add(queueBlockedPrograms->list, program);
+			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+		}else{
+			pthread_mutex_lock(&queueReadyPrograms->mutex);
+			list_add(queueReadyPrograms->list, program);
+			pthread_mutex_unlock(&queueReadyPrograms->mutex);
+		}
+
+	}
+
+	cpu->program = planificar();
+	if(cpu->program != NULL){
+		cpu_send_pcb(cpu);
+	}
 }
 

@@ -41,7 +41,7 @@ int cycle_still_burst(){
 }
 
 char * cycle_fetch(t_intructions* currentInstruction){
-	printf("empieza en %d y tien length %d\n", currentInstruction->start, currentInstruction->offset);
+	printf("empieza en %d y tiene length %d\n", currentInstruction->start, currentInstruction->offset);
 
 	int codePage = currentInstruction->start / pageSize;
 	int codeOffset = currentInstruction->start % pageSize;
@@ -71,6 +71,13 @@ char * cycle_fetch(t_intructions* currentInstruction){
 void cycle_send_pcv(t_pcb* pcb){
 	if(socket_send_string(serverKernel, "end_burst") != -1){
 		send_pcb(pcb);
+
+		int finish = 1;
+		if(pcb->exitCode == 1){
+			finish = 0;
+		}
+
+		socket_send_int(serverKernel, finish);
 	}
 	else
 	{

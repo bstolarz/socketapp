@@ -27,7 +27,7 @@ void config_read_semaforos(t_config* config){
 		sem->value=atoi(*vs);
 		pthread_mutex_init(&sem->mutex, NULL);
 
-		list_add(configKernel->semaforos, s);
+		list_add(configKernel->semaforos, sem);
 
 		s++;
 		vs++;

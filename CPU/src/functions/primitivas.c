@@ -61,16 +61,18 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 
 	if (is_argument(identificador_variable))
 	{
+		log_info(logCPU, "ARG");
 		varPos = stack_get_arg(identificador_variable);
 	}
 	else
 	{
+		log_info(logCPU, "VAR");
 		varPos = stack_get_var(identificador_variable);
 	}
 
-	if (varPos == NULL)
+	if (varPos == NULL){
 		log_error(logCPU, "[obtenerPosicionVariable] no encontre %c", identificador_variable);
-
+	}
 	return position_to_puntero(varPos);
 }
 
@@ -112,10 +114,10 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 
 
 	t_indiceDelStack* ind = stack_context_create();
-
-	ind->retPos = pcb->pc;
 	list_add(pcb->indiceDeStack, ind);
 	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack (%d contextos).\n", list_size(pcb->indiceDeStack));
+
+	ind->retPos = pcb->pc;
 
 	// irallabel?
 	// mandarlo a ejecutar la funcion
@@ -126,18 +128,23 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 //	 * Modifica las estructuras correspondientes para mostrar un nuevo contexto vacío.
 void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	// llamar sin retorno?
+	log_info(logCPU, "[llamarConRetorno] Recibo por parametro: %s y %d", etiqueta, donde_retornar);
+	log_info(logCPU, "Es necesario volver al PC: %d", pcb->pc);
+
 	t_indiceDelStack* ind = stack_context_create();
+	list_add(pcb->indiceDeStack, ind);
 
 	ind->retPos=pcb->pc; // guardar instruccion de retorno
+	log_info(logCPU, "Se debe retornar a: %d",ind->retPos);
 	
 	t_position returnToPos = puntero_to_position(donde_retornar);
-	ind->retVar = malloc(sizeof(t_position));
+
+	ind->retVar = (t_position*)malloc(sizeof(t_position));
 	ind->retVar->page = returnToPos.page; // guardar variable donde poner retorno
 	ind->retVar->off = returnToPos.off;
 	ind->retVar->size = VAR_SIZE;
 
-	list_add(pcb->indiceDeStack, ind);
-
+	log_info(logCPU,"Se agrega en retVar: %d|%d|%d",ind->retVar->page, ind->retVar->off, ind->retVar->size);
 	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack (%d contextos).", list_size(pcb->indiceDeStack));
 
 	// mandarlo a ejecutar la funcion

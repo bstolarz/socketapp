@@ -22,7 +22,8 @@ t_log* logKernel;
 
 t_queue* queueNewPrograms;
 t_queue* queueReadyPrograms;
-t_queue* queueFinishedpPrograms;
+t_queue* queueBlockedPrograms;
+t_queue* queueFinishedPrograms;
 
 t_queue* queueCPUs;
 
