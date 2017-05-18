@@ -17,7 +17,6 @@
 #include "functions/log.h"
 
 int main(int argc, char* argv[]) {
-
 	if(argc!=2){
 		printf("Missing config path\n");
 		return -1;
@@ -45,16 +44,20 @@ int main(int argc, char* argv[]) {
 	queueReadyPrograms->list = list_create();
 	pthread_mutex_init(&(queueReadyPrograms->mutex),NULL);
 
+	//Inicio lista bloqueados
+	queueBlockedPrograms = malloc(sizeof(t_queue));
+	queueBlockedPrograms->list = list_create();
+	pthread_mutex_init(&(queueBlockedPrograms->mutex),NULL);
+
 	//Inicio lista terminados
-	queueFinishedpPrograms = malloc(sizeof(t_queue));
-	queueFinishedpPrograms->list = list_create();
-	pthread_mutex_init(&(queueFinishedpPrograms->mutex),NULL);
+	queueFinishedPrograms = malloc(sizeof(t_queue));
+	queueFinishedPrograms->list = list_create();
+	pthread_mutex_init(&(queueFinishedPrograms->mutex),NULL);
 
 	//Inicio lista cpus
 	queueCPUs = malloc(sizeof(t_queue));
 	queueCPUs->list = list_create();
 	pthread_mutex_init(&(queueCPUs->mutex),NULL);
-
 
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);

@@ -103,10 +103,6 @@ void handle_cpu_imprimir_literal(t_cpu* cpu){
 	//TODO
 }
 
-void handle_cpu_finish(t_cpu* cpu){
-	//TODO
-}
-
 void handle_cpu_wait(t_cpu* cpu){
 	//TODO
 }
