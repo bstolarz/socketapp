@@ -21,6 +21,8 @@ void ansisop_init(){
 	ansisop_funciones->AnSISOP_irAlLabel=AnSISOP_irAlLabel;
 	ansisop_funciones->AnSISOP_llamarConRetorno=AnSISOP_llamarConRetorno;
 	ansisop_funciones->AnSISOP_retornar=AnSISOP_retornar;
+	ansisop_funciones->AnSISOP_llamarSinRetorno=AnSISOP_llamarSinRetorno;
+
 	ansisop_funciones_kernel = (AnSISOP_kernel*) malloc(sizeof(AnSISOP_kernel));
 	ansisop_funciones_kernel->AnSISOP_wait=AnSISOP_wait;
 	ansisop_funciones_kernel->AnSISOP_signal=AnSISOP_signal;

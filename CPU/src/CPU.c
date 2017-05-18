@@ -71,8 +71,6 @@ int main(int arg, char* argv[]) {
 			//Exec
 			analizadorLinea(instruccion, ansisop_funciones, ansisop_funciones_kernel);
 
-
-
 			//Checkeo interrupciones
 			if((interruption=cycle_interruption_handler())<0){
 				continuoEjecucion = 0;

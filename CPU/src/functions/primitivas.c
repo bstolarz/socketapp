@@ -102,7 +102,7 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 
 // Cambia la linea de ejecucion a la correspondiente de la etiqueta buscada
 void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
-	log_debug(logCPU, "[irAlLabel] %s", etiqueta);
+	log_debug(logCPU, "[irAlLabel] %s\n", etiqueta);
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
 }
 
@@ -111,13 +111,13 @@ void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
 // Los parámetros serán definidos luego de esta instrucción de la misma manera que una variable local,
 // con identificadores numéricos empezando por el 0.
 void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
-	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack.");
 
 
 	t_indiceDelStack* ind = stack_context_create();
+	list_add(pcb->indiceDeStack, ind);
+	log_info(logCPU, "[llamarSinRetorno] Agrego nuevo contexto al indice de stack (%d contextos).\n", list_size(pcb->indiceDeStack));
 
 	ind->retPos = pcb->pc;
-	list_add(pcb->indiceDeStack, ind);
 
 	// irallabel?
 	// mandarlo a ejecutar la funcion
@@ -127,24 +127,25 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 //Preserva el contexto de ejecución actual para poder retornar luego al mismo, junto con la posicion de la variable entregada por donde_retornar.
 //	 * Modifica las estructuras correspondientes para mostrar un nuevo contexto vacío.
 void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
-
 	// llamar sin retorno?
 	log_info(logCPU, "[llamarConRetorno] Recibo por parametro: %s y %d", etiqueta, donde_retornar);
-	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack.");
+	log_info(logCPU, "Es necesario volver al PC: %d", pcb->pc);
 
 	t_indiceDelStack* ind = stack_context_create();
-	log_info(logCPU, "Es necesario volver al PC: %d", pcb->pc);
+	list_add(pcb->indiceDeStack, ind);
+
 	ind->retPos=pcb->pc; // guardar instruccion de retorno
 	log_info(logCPU, "Se debe retornar a: %d",ind->retPos);
 	
 	t_position returnToPos = puntero_to_position(donde_retornar);
+
 	ind->retVar = (t_position*)malloc(sizeof(t_position));
 	ind->retVar->page = returnToPos.page; // guardar variable donde poner retorno
 	ind->retVar->off = returnToPos.off;
 	ind->retVar->size = VAR_SIZE;
 
 	log_info(logCPU,"Se agrega en retVar: %d|%d|%d",ind->retVar->page, ind->retVar->off, ind->retVar->size);
-	list_add(pcb->indiceDeStack, ind);
+	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack (%d contextos).", list_size(pcb->indiceDeStack));
 
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
@@ -155,7 +156,7 @@ void AnSISOP_retornar(t_valor_variable retorno){
 
 	t_indiceDelStack* currentContext = stack_context_current();
 
-	pcb->pc = currentContext->retPos;
+	pcb->pc = currentContext->retPos; // este no es necesario, ya se hace en finalizar
 
 	if (currentContext->retVar != NULL)
 	{
@@ -179,10 +180,10 @@ void AnSISOP_finalizar (void)
 
 	if (list_is_empty(pcb->indiceDeStack)) // termino el main
 	{
-		log_info(logCPU, "[finalizar] fin programa.");
+		log_info(logCPU, "[finalizar] fin programa.\n");
 		pcb->exitCode = 0;
 	}else{
-		log_info(logCPU, "[finalizar] termina funcion.");
+		log_info(logCPU, "[finalizar] termina funcion. pc: %d. quedan %d contextos\n", pcb->pc, list_size(pcb->indiceDeStack));
 	}
 
 }

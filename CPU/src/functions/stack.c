@@ -38,17 +38,14 @@ t_indiceDelStack* stack_context_current()
 
 void stack_pop()
 {
-	int argsSize;
-	int i=0;
 	t_indiceDelStack* indiceToDelete=list_get(pcb->indiceDeStack,list_size(pcb->indiceDeStack) - 1);
-	//Acumulo en argsSize las entradas usadas para los argumentos de la funcion
-	while(indiceToDelete->args[i].page!=0 && indiceToDelete->args[i].off!=0){
-		argsSize++;
-		i++;
-	}
+	
 	int varsUsed=dictionary_size(indiceToDelete->vars);
 	//Reduzco el stackPosition en la cantidad de argumentos y de variables locales multiplicadas por su tamanio
-	pcb->stackPosition-=(argsSize + varsUsed) * sizeof(t_size);
+	log_info(logCPU, "[stack_pop] stackPos estaba en %d", pcb->stackPosition);
+	pcb->stackPosition-=(varsUsed + indiceToDelete->argCount) * sizeof(t_valor_variable);
+	log_info(logCPU, "y paso a %d\n", pcb->stackPosition);
+
 	list_remove_and_destroy_element(pcb->indiceDeStack, list_size(pcb->indiceDeStack) - 1, stack_context_destroy);
 }
 
@@ -58,6 +55,7 @@ void stack_add_arg(t_nombre_variable identificador_variable)
 
 	int index = identificador_variable - '0';
 	currentContext->args[index] = puntero_to_position(pcb->stackPosition);
+	++(currentContext->argCount);
 
 	log_info(logCPU,"[definirVar] arg {%c} en (pag: %d, offset: %d y size: %d)\n",
 			identificador_variable,
