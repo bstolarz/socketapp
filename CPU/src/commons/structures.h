@@ -31,6 +31,7 @@ typedef struct{
 	t_position args[10]; // pueden haber de 0 a 9 args. por valor para no necesitar allocar y dellocar
 	int retPos;
 	t_position* retVar;
+	int argCount;
 } t_indiceDelStack;
 
 
