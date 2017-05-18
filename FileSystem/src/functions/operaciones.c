@@ -22,13 +22,13 @@ int crear(char* path){
 }
 
 int borrar(char* path){
-	return 0;
+	return -ENOENT;
 }
 
 int obtenerDatos(char* path, off_t offset, size_t size){
-	return 0;
+	return -ENOENT;
 }
 
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer){
-	return 0;
+	return -ENOENT;
 }
