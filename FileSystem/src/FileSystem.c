@@ -85,7 +85,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion){
 		socket_recv_int(serverSocket, &offset);
 		socket_recv_int(serverSocket, &size);
 
-		//Recibir buffer es con socket_recv_string?
+		socket_recv(serverSocket, &buffer, 1);
 
 		resultado = guardarDatos(path, (off_t)offset, (size_t)size, buffer);
 	}

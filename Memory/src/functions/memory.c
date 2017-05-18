@@ -36,7 +36,7 @@ void* memory_read(int PID, int page, int offset, int size)
 		char* currentPageData;
 
 		// esta en cache?
-		t_cache_entry* cacheEntry = cache_search(PID, page);
+		t_cache_entry* cacheEntry = NULL;//= cache_search(PID, page);
 
 		if (cacheEntry) // cache hit
 		{
@@ -58,7 +58,7 @@ void* memory_read(int PID, int page, int offset, int size)
 			else
 			{
 				// cachear
-				cache_cache_contents(PID, page, currentPageData);
+				// cache_cache_contents(PID, page, currentPageData);
 			}
 		}
 
@@ -72,7 +72,7 @@ void* memory_read(int PID, int page, int offset, int size)
 	if (cacheMiss)
 	{
 		log_info(logMemory, "[memory_read] cache miss page: %d, offset: %d, size: %d\nsleeping %d\n", page, offset, size, configMemory->responseDelay);
-		usleep(configMemory->responseDelay /* in ms */ * 1000);
+		//usleep(configMemory->responseDelay /* in ms */ * 1000);
 	}
 
 	return buffer;
