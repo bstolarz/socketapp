@@ -18,6 +18,7 @@
 
 #include "../../functions/dispatcher.h"
 #include "../../functions/serialization.h"
+#include "../../functions/program.h"
 
 
 void cpu_send_pcb(t_cpu* cpu){
@@ -101,6 +102,10 @@ void cpu_interruption(t_cpu * cpu){
 
 void cpu_still_burst(t_cpu* cpu){
 	int burst = 1;
+	if(cpu->program->waiting == 1){
+		burst = 0;
+	}
+
 	if(socket_send_int(cpu->socket, burst)<=0){
 		exit(EXIT_FAILURE);
 	}

@@ -104,11 +104,76 @@ void handle_cpu_imprimir_literal(t_cpu* cpu){
 }
 
 void handle_cpu_wait(t_cpu* cpu){
-	//TODO
+	//Obtengo el nombre de la shared variable
+	char* semaforo=string_new();
+	if (socket_recv_string(cpu->socket,&semaforo)<=0){
+		log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
+		return;
+	}
+
+	//Busco la shared variable
+	int _es_el_semaforo(t_semaforo* var){
+		return strcmp(semaforo,var->nombre);
+	}
+	t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
+
+	//Verifico que exista
+	if(sem == NULL){
+		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
+		if(socket_send_string(cpu->socket, "Failure")<=0){
+			log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+		}
+		return;
+	}
+
+	//Envio el valor de la shared variable
+	pthread_mutex_lock(&sem->mutex);
+
+	int resp;
+	if(sem->value > 0){
+		sem->value = sem->value -1;
+		resp = 1;
+	}else{
+		resp = 0;
+		cpu->program->waiting = 1;
+		cpu->program->waitingReason = string_duplicate(semaforo);
+	}
+
+	if(socket_send_int(cpu->socket, resp)<=0){
+		log_info(logKernel,"Ocurrio un error al enviarle el valor del semaforo '%s' a %d\n", sem->nombre, cpu->socket);
+	}
+	pthread_mutex_unlock(&sem->mutex);
 }
 
 void handle_cpu_signal(t_cpu* cpu){
-	//TODO
+	//Obtengo el nombre de la shared variable
+		char* semaforo=string_new();
+		if (socket_recv_string(cpu->socket,&semaforo)<=0){
+			log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
+			return;
+		}
+
+		//Busco la shared variable
+		int _es_el_semaforo(t_semaforo* var){
+			return strcmp(semaforo,var->nombre);
+		}
+		t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
+
+		//Verifico que exista
+		if(sem == NULL){
+			log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
+			if(socket_send_string(cpu->socket, "Failure")<=0){
+				log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+			}
+			return;
+		}
+
+		//Envio el valor de la shared variable
+		pthread_mutex_lock(&sem->mutex);
+		sem->value = sem->value + 1;
+		pthread_mutex_unlock(&sem->mutex);
+
+		//TODO avisarle a los bloqueados que se levanto este semaforo
 }
 
 void handle_cpu_alocar(t_cpu* cpu){
