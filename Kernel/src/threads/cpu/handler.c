@@ -110,33 +110,40 @@ void handle_cpu_wait(t_cpu* cpu){
 		log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
 		return;
 	}
-
 	//Busco la shared variable
-	int _es_el_semaforo(t_semaforo* var){
-		return strcmp(semaforo,var->nombre);
+	t_semaforo* find_semaphore_by_name(char* nom_semaforo){
+		t_semaforo* sem=NULL;
+		int i;
+		for(i=0;i!=list_size(configKernel->semaforos);i++){
+			if(string_equals_ignore_case(((t_semaforo*)list_get(configKernel->semaforos,i))->nombre,semaforo)){
+				sem=(t_semaforo*)list_get(configKernel->semaforos,i);
+			}
+			}
+		return sem;
 	}
-	t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
-
-	//Verifico que exista
+	t_semaforo* sem = find_semaphore_by_name(semaforo);
 	if(sem == NULL){
-		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
+		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", semaforo, cpu->socket);
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
 		}
 		return;
+	}else{
+		log_info(logKernel, "El semaforo %s se encontro y se hara el wait",semaforo);
 	}
-
 	//Envio el valor de la shared variable
 	pthread_mutex_lock(&sem->mutex);
 
 	int resp;
 	if(sem->value > 0){
 		sem->value = sem->value -1;
+		log_info(logKernel, "El valor actual del semaforo %s es %d",sem->nombre, sem->value);
 		resp = 1;
 	}else{
 		resp = 0;
 		cpu->program->waiting = 1;
 		cpu->program->waitingReason = string_duplicate(semaforo);
+		log_info(logKernel, "El valor actual del semaforo %s es %d",sem->nombre, sem->value);
 	}
 
 	if(socket_send_int(cpu->socket, resp)<=0){
