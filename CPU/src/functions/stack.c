@@ -9,6 +9,7 @@ t_indiceDelStack* stack_context_create()
 	nivelStack->vars = dictionary_create();
 	nivelStack->retPos = -1;
 	nivelStack->retVar = NULL;
+	nivelStack->argCount=0;
 	
 	return nivelStack;
 }
@@ -18,6 +19,13 @@ void stack_context_destroy(void* stackContextVoid)
 	t_indiceDelStack* stackContext = (t_indiceDelStack*) stackContextVoid;
 
 	dictionary_destroy_and_destroy_elements(stackContext->vars, &free);
+	free(stackContext->retVar);
+	int i;
+	for (i=0;i!=9;i++){
+	stackContext->args[i].off=0;
+	stackContext->args[i].page=0;
+	stackContext->args[i].size=0;
+	}
 	free(stackContext);
 }
 
@@ -30,6 +38,17 @@ t_indiceDelStack* stack_context_current()
 
 void stack_pop()
 {
+	int argsSize;
+	int i=0;
+	t_indiceDelStack* indiceToDelete=list_get(pcb->indiceDeStack,list_size(pcb->indiceDeStack) - 1);
+	//Acumulo en argsSize las entradas usadas para los argumentos de la funcion
+	while(indiceToDelete->args[i].page!=0 && indiceToDelete->args[i].off!=0){
+		argsSize++;
+		i++;
+	}
+	int varsUsed=dictionary_size(indiceToDelete->vars);
+	//Reduzco el stackPosition en la cantidad de argumentos y de variables locales multiplicadas por su tamanio
+	pcb->stackPosition-=(argsSize + varsUsed) * sizeof(t_size);
 	list_remove_and_destroy_element(pcb->indiceDeStack, list_size(pcb->indiceDeStack) - 1, stack_context_destroy);
 }
 
@@ -62,17 +81,39 @@ void stack_add_var(t_nombre_variable identificador_variable)
 t_position* stack_get_arg(t_nombre_variable identificador_variable)
 {
 	t_indiceDelStack* currentContext = stack_context_current();
-
+	currentContext->argCount++;
 	int index = identificador_variable - '0';
 	return &currentContext->args[index];
 }
-
+int is_local_from_function(t_nombre_variable id){
+	t_indiceDelStack* context=stack_context_current();
+	char* id_aux=string_from_format("%c",id);
+	int answer= dictionary_has_key(context->vars,id_aux);
+	free(id_aux);
+	return answer;
+}
+t_indiceDelStack* stack_get_first_context(){
+	return (t_indiceDelStack*)list_get(pcb->indiceDeStack,0);
+}
 t_position* stack_get_var(t_nombre_variable identificador_variable)
 {
-	t_indiceDelStack* currentContext = stack_context_current();
-
-	char keyStr[2] = { identificador_variable, '\0' };
-	return dictionary_get(currentContext->vars, keyStr);
+	t_position* p;
+	char* id=string_from_format("%c",identificador_variable);
+	if (is_local_from_function(identificador_variable)){
+		log_info(logCPU, "La variable es local de la funcion");
+		t_indiceDelStack* currentContext = stack_context_current();
+		//	char keyStr[2] = { identificador_variable, '\0' };
+		p= (t_position*) dictionary_get(currentContext->vars, id);
+		log_info(logCPU, "%d|%d",p->page,p->off);
+		free(id);
+	}else{
+		log_info(logCPU,"La variable pertenece al begin principal y es %c",identificador_variable);
+		t_indiceDelStack* firstContext= stack_get_first_context();
+		p= (t_position*)dictionary_get(firstContext->vars,id);
+		log_info(logCPU,"%d|%d", p->page, p->off);
+		free(id);
+	}
+	return p;
 }
 
 t_puntero position_to_puntero(t_position* memoryPos)
