@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include <commons/config.h>
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
@@ -8,7 +9,12 @@
 //Implementacion de operaciones, por ahora son dummies
 int validar(char* path){
 	int resultado = access(path, F_OK);
-	return resultado;
+	if(resultado == 0){
+		return 1;
+	}
+
+	//No encontro el archivo
+	return -ENOENT;
 }
 
 int crear(char* path){
