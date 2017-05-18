@@ -7,7 +7,8 @@
 
 //Implementacion de operaciones, por ahora son dummies
 int validar(char* path){
-	return 0;
+	int resultado = access(path, F_OK);
+	return resultado;
 }
 
 int crear(char* path){
