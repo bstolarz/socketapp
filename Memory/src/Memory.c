@@ -4,11 +4,11 @@
 #include "commons/declarations.h"
 #include "functions/config.h"
 #include "functions/log.h"
-#include "functions/memory.h"
 #include "threads/select.h"
 #include <commons/log.h>
 #include "other/debug_console.h"
 #include "pthread.h"
+#include "functions/memory.h"
 
 int main(int argc, char* argv[]){
 

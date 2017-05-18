@@ -1,122 +1,30 @@
-#include <stddef.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
-#include <math.h>
-
+#include <commons/log.h>
 #include "memory.h"
-#include "../commons/declarations.h"
+#include "ram.h"
+#include "cache.h"
 #include "../commons/structures.h"
-#include "utils.h"
+#include "../commons/declarations.h"
 
-pthread_mutex_t freeFrameMutex = PTHREAD_MUTEX_INITIALIZER;
-
-int memory_init()
+void memory_init()
 {
-	pageTable = malloc(configMemory->frameCount * configMemory->frameSize);
-	freeFramesEntries = (t_pageTableEntry**)(pageTable + configMemory->frameCount);
-
-    int i;
-    for (i = 0; i < configMemory->frameCount; ++i){
-        pageTable[i].PID = -1;
-        pageTable[i].page = 0;
-        freeFramesEntries[i] = pageTable + i;
-    }
-
-    int tableSizeInBytes = sizeof(t_pageTableEntry) * configMemory->frameCount;
-    int freeFrameArraySizeInBytes = sizeof(t_pageTableEntry*) * configMemory->frameCount;
-    int adminSizeInBytes = tableSizeInBytes + freeFrameArraySizeInBytes;
-    int adminSizeInPages = bytes_to_pages(adminSizeInBytes);
-
-    // como agrego bytes al comienzo del bloque de memoria casteo a char
-    // (para que no los tome como 4 a cada uno)
-    proccessPages = ((char*) pageTable) + (adminSizeInPages * configMemory->frameSize);
-    proccessPageCount = configMemory->frameCount - adminSizeInPages;
-    freeFrameCount = proccessPageCount;
-
-    return 0;
-}
-
-
-// Operaciones de Memoria (pag 26)
-int program_init(int PID, int pageCount)
-{
-	// puede que el kernel mande pedidos de iniciar proceso al mismo tiempo
-	// lockeo aca para que no traten de usar los mismos frames vacios los 2 procesos
-	// al tener el pool de los frames vacios el lockeo es mas corto porque solo se toman pageCount frames
-	// antes tenia que lockear toda la pageTable o cada entrada 1 por 1.
-	pthread_mutex_lock(&freeFrameMutex);
-
-	if (freeFrameCount < pageCount)
-	{
-		log_error(logMemory, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
-		pthread_mutex_unlock(&freeFrameMutex);
-		return ERROR_NO_RESOURCES_FOR_PROCCESS;
-	}
-
-	// hay frames para proceso
-	freeFrameCount -= pageCount;
-	int i;
-
-	for (i = 0; i != pageCount; ++i)
-	{
-		t_pageTableEntry* freeFrameEntry = freeFramesEntries[freeFrameCount + i];
-		freeFrameEntry->PID = PID;
-		freeFrameEntry->page = i;
-	}
-
-	pthread_mutex_unlock(&freeFrameMutex);
-
-    return 0;
+	ram_init();
+	cache_init();
 }
 
 void program_end(int PID)
 {
-	int i;
-	int pageCount = 0;
-
-	// si un proceso quiere empezar, mejor que espere que se actualizen los freeFramesEntries
-	// porque asi es mas seguro que encuentre frames para empezar
-	// por eso hago este lock
-	// serviria tambien como de sincronizacion (ademas de exclusion mutua)
-	pthread_mutex_lock(&freeFrameMutex);
-
-	// esto no va a pisar ni ser pisado por ningun otro proceso
-	for (i = 0; i != proccessPageCount; ++i)
-	{
-		if (pageTable[i].PID == PID)
-		{
-			pageTable[i].PID = -1;
-
-			freeFramesEntries[freeFrameCount + pageCount] = pageTable + i;
-			++pageCount;
-		}
-	}
-
-	freeFrameCount += pageCount;
-
-	pthread_mutex_unlock(&freeFrameMutex);
+	ram_program_end(PID);
+	cache_program_end(PID);
 }
 
-// returna una pagina o nulo
-char* frame_lookup(int PID, int page)
-{
-    // TODO: hash function
-    int i;
-
-    for (i = 0; i != proccessPageCount; ++i)
-        if (pageTable[i].PID == PID && pageTable[i].page == page)
-            return get_frame(i); // casteo a puntero de char para que sume de 1 byte
-    																		// que sume de 1 byte al puntero
-    log_error(logMemory, "no encontro frame para proceso [%d] pag %d", PID, page);
-    return NULL;
-}
-
-// no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
 void* memory_read(int PID, int page, int offset, int size)
 {
 	char* buffer = malloc(sizeof(char) * size);
 	char* bufferStart = buffer;
+	bool cacheMiss = false;
 
 	// voy copiando en buffer cada pedazo de pagina
 	// puede pasar que me pidan una instruccion que empieza en pag 1 y siga en pag 2
@@ -125,62 +33,52 @@ void* memory_read(int PID, int page, int offset, int size)
 		int currentPageSize = (size < (configMemory->frameSize - offset)) ? size : (configMemory->frameSize - offset);
 		size -= currentPageSize;
 
-		char* frame = frame_lookup(PID, page);
+		char* currentPageData;
 
-		if (frame == NULL)
+		// esta en cache?
+		t_cache_entry* cacheEntry = NULL;//= cache_search(PID, page);
+
+		if (cacheEntry) // cache hit
 		{
-			free(buffer);
-			return NULL;
+			log_info(logMemory, "[cache hit] PID: %d, page: %d", PID, page);
+			currentPageData = cacheEntry->content;
+		}
+		else // cache miss
+		{
+			cacheMiss = true;
+			currentPageData = ram_frame_lookup(PID, page);
+
+			if (currentPageData == NULL)
+			{
+				// TODO: chequear que esto este bien
+				free(buffer);
+				buffer = NULL;
+				break;
+			}
+			else
+			{
+				// cachear
+				// cache_cache_contents(PID, page, currentPageData);
+			}
 		}
 
-		memcpy(bufferStart, frame + offset, currentPageSize);
+		memcpy(bufferStart, currentPageData + offset, currentPageSize);
 
 		bufferStart = bufferStart + currentPageSize;
 		offset = 0;
 		++page;
 	}
 
-    return buffer;
-}
-
-// no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
-int memory_write(int PID, int page, int offset, int size, void* buffer)
-{
-	int wroteSize = 0;
-
-	while (size > 0)
+	if (cacheMiss)
 	{
-		int currentPageSize = (size < configMemory->frameSize - offset) ? size : (configMemory->frameSize - offset);
-		size -= currentPageSize;
-
-		char* frame = frame_lookup(PID, page);
-
-		if (frame == NULL) return ERROR_MEMORY;
-
-		memcpy(frame + offset, buffer + wroteSize, currentPageSize);
-
-		wroteSize += currentPageSize;
-		offset = 0;
-		++page;
+		log_info(logMemory, "[memory_read] cache miss page: %d, offset: %d, size: %d\nsleeping %d\n", page, offset, size, configMemory->responseDelay);
+		//usleep(configMemory->responseDelay /* in ms */ * 1000);
 	}
 
-    return wroteSize;
+	return buffer;
 }
 
-int frame_count(_Bool (*framePredicate)(t_pageTableEntry*))
+int memory_write(int PID, int page, int offset, int size, void* buffer)
 {
-    int i;
-    int count = 0;
-
-    // TODO: lockear?
-    for (i = 0; i != proccessPageCount; ++i)
-        if ((*framePredicate)(pageTable + i))
-            ++count;
-
-    return count;
-}
-
-char* get_frame(int i)
-{
-	return proccessPages + (i * configMemory->frameSize);
+	return ram_write(PID, page, offset, size, buffer);
 }

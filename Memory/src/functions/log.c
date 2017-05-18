@@ -29,6 +29,5 @@ void log_config(){
 	log_info(logMemory,"MARCO_SIZE: %i", configMemory->frameSize);
 	log_info(logMemory,"ENTRADAS_CACHE: %i", configMemory->cacheEntryCount);
 	log_info(logMemory,"CACHE_X_PROC: %i", configMemory->cachePerProccess);
-	log_info(logMemory,"REEMPLAZO_CACHE: %s", configMemory->cacheReplaceStrategy);
 	log_info(logMemory,"RETARDO_MEMORIA: %i", configMemory->responseDelay);
 }

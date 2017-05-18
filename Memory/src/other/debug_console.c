@@ -1,7 +1,6 @@
 #include "debug_console.h"
 #include "../commons/declarations.h"
 #include "../functions/frame.h"
-#include "../functions/memory.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,6 +8,7 @@
 #include <ctype.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
+#include "../functions/ram.h"
 
 void set_response_delay(int newResponseDelay)
 {

@@ -21,7 +21,9 @@ t_program* planificar(){
 
 	if(strcmp(configKernel->algoritmo, "FIFO") == 0){
 		pthread_mutex_lock(&(queueReadyPrograms->mutex));
-		program = list_remove(queueReadyPrograms->list, 0);
+		if(list_size(queueReadyPrograms->list)>0){
+			program = list_remove(queueReadyPrograms->list, 0);
+		}
 		pthread_mutex_unlock(&(queueReadyPrograms->mutex));
 	}else if(strcmp(configKernel->algoritmo, "RR") == 0)
 	{

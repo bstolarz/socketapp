@@ -35,7 +35,7 @@ void socket_select_connection_lost(fd_set* master, int socket, int byteCount)
 {
     printf("lost connection to %d socket con byte count = %d\n", socket, byteCount);
     close(socket);
-	FD_CLR(socket, master); // eliminar del conjunto maestro
+	FD_CLR(socket, master);
 }
 
 void* start_server(void* _)
