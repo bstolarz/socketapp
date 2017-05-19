@@ -262,6 +262,7 @@ void AnSISOP_imprimirLiteral(char* texto){
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 	char* answerFromKernel=string_new();
+	int resp;
 	if(socket_send_string(serverKernel,"wait")>0){
 		printf("Le solicito al kernel que se haga WAIT al semaforo %s\n", identificador_semaforo);
 		log_info(logCPU, "Le solicito al kernel que se haga WAIT al semaforo %s\n", identificador_semaforo);
@@ -276,6 +277,13 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 			log_info(logCPU, "No es posible hacer WAIT al semaforo %s porque no existe en Kernel. El programa finalizara", identificador_semaforo);
 			EXIT_FAILURE;
 		}else{
+			if(socket_recv_int(serverKernel,&resp)>0){
+					if(resp==1){
+						log_info(logCPU, "Se hizo el wait del semaforo %s", identificador_semaforo);
+					}else{
+						log_info(logCPU, "me bloquee por %s", identificador_semaforo);
+					}
+			}
 			log_info(logCPU,"PID: %d se acaba de bloquear por hacer wait al semaforo %s\n",pcb->pid, identificador_semaforo);
 		}
 	}else{
