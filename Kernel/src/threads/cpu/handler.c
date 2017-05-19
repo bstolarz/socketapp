@@ -202,7 +202,37 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
-	//TODO
+	int FD = 0;
+	//Envio al kernel el descriptor de archivo
+	if (socket_recv_int(cpu->socket,&FD)<=0){
+		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
+		return;
+	}
+
+	//Envio al kernel la informacion con su tamanio
+	char* buffer = string_new();
+	int nbytes=0;
+	if ((nbytes = socket_recv(cpu->socket, (void**)&buffer, 1))<=0){
+		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
+		return;
+	}
+
+	if(FD == DESCRIPTOR_SALIDA){
+		if(buffer[nbytes-1] == '\0'){
+			buffer = realloc(buffer, nbytes+1);
+			buffer[nbytes] = '\0';
+			nbytes = nbytes + 1;
+		}
+
+		if(socket_send_string(cpu->program->socket, "imprimir")<=0){
+			log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
+		}
+
+		if(socket_send_string(cpu->program->socket, buffer)<=0){
+			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
+		}
+	}
+
 }
 
 void handle_cpu_leer(t_cpu* cpu){
