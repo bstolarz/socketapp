@@ -53,12 +53,6 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	}else if (strcmp(package, "setSharedVariable")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_set_shared_variable(cpu);
-	}else if (strcmp(package, "imprimirValor")==0){
-		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_imprimir_valor(cpu);
-	}else if (strcmp(package, "imprimirLiteral")==0){
-		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_imprimir_literal(cpu);
 	}else if (strcmp(package, "wait")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_wait(cpu);
