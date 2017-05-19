@@ -110,40 +110,39 @@ void handle_cpu_wait(t_cpu* cpu){
 		log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
 		return;
 	}
+
 	//Busco la shared variable
-	t_semaforo* find_semaphore_by_name(char* nom_semaforo){
-		t_semaforo* sem=NULL;
-		int i;
-		for(i=0;i!=list_size(configKernel->semaforos);i++){
-			if(string_equals_ignore_case(((t_semaforo*)list_get(configKernel->semaforos,i))->nombre,semaforo)){
-				sem=(t_semaforo*)list_get(configKernel->semaforos,i);
-			}
-			}
-		return sem;
+	int _es_el_semaforo(t_semaforo* var){
+		return strcmp(semaforo,var->nombre)==0;
 	}
-	t_semaforo* sem = find_semaphore_by_name(semaforo);
+	t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
+
+	printf("sem %s %d\n", sem->nombre, sem->value);
+
+	//Verifico que exista
 	if(sem == NULL){
-		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", semaforo, cpu->socket);
+		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
 		}
 		return;
-	}else{
-		log_info(logKernel, "El semaforo %s se encontro y se hara el wait",semaforo);
 	}
+
+	if(socket_send_string(cpu->socket, "Success")<=0){
+		log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+	}
+
 	//Envio el valor de la shared variable
 	pthread_mutex_lock(&sem->mutex);
 
 	int resp;
 	if(sem->value > 0){
 		sem->value = sem->value -1;
-		log_info(logKernel, "El valor actual del semaforo %s es %d",sem->nombre, sem->value);
 		resp = 1;
 	}else{
 		resp = 0;
 		cpu->program->waiting = 1;
 		cpu->program->waitingReason = string_duplicate(semaforo);
-		log_info(logKernel, "El valor actual del semaforo %s es %d",sem->nombre, sem->value);
 	}
 
 	if(socket_send_int(cpu->socket, resp)<=0){
@@ -154,35 +153,38 @@ void handle_cpu_wait(t_cpu* cpu){
 
 void handle_cpu_signal(t_cpu* cpu){
 	//Obtengo el nombre de la shared variable
-		char* semaforo=string_new();
-		if (socket_recv_string(cpu->socket,&semaforo)<=0){
-			log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
-			return;
+	char* semaforo=string_new();
+	if (socket_recv_string(cpu->socket,&semaforo)<=0){
+		log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
+		return;
+	}
+
+	//Busco la shared variable
+	int _es_el_semaforo(t_semaforo* var){
+		return strcmp(semaforo,var->nombre);
+	}
+	t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
+
+	//Verifico que exista
+	if(sem == NULL){
+		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
+		if(socket_send_string(cpu->socket, "Failure")<=0){
+			log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
 		}
+		return;
+	}
 
-		//Busco la shared variable
-		int _es_el_semaforo(t_semaforo* var){
-			return strcmp(semaforo,var->nombre);
-		}
-		t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
+	if(socket_send_string(cpu->socket, "Success")<=0){
+		log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+	}
 
-		//Verifico que exista
-		if(sem == NULL){
-			log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
-			if(socket_send_string(cpu->socket, "Failure")<=0){
-				log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
-			}
-			return;
-		}
+	//Envio el valor de la shared variable
+	pthread_mutex_lock(&sem->mutex);
+	sem->value = sem->value + 1;
+	pthread_mutex_unlock(&sem->mutex);
 
-		//Envio el valor de la shared variable
-		pthread_mutex_lock(&sem->mutex);
-		sem->value = sem->value + 1;
-		pthread_mutex_unlock(&sem->mutex);
-
-		//TODO avisarle a los bloqueados que se levanto este semaforo
+	//TODO avisarle a los bloqueados que se levanto este semaforo
 }
-
 void handle_cpu_alocar(t_cpu* cpu){
 	//TODO
 }
