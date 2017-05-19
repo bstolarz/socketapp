@@ -12,35 +12,48 @@
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
 
-
 void hacerLoQueCorresponda(char* mensajeDeOperacion);
 
 int main(int arg, char* argv[]) {
-	if(arg!=2){
+	if (arg != 2) {
 		printf("Path missing! %d\n", arg);
 		return 1;
 	}
 
-	configFileSystem=malloc(sizeof(t_fileSystem));
+	configFileSystem = malloc(sizeof(t_fileSystem));
 	config_read(argv[1]);
 	config_print();
 
-	serverSocket = 0;
-	socket_server_create(&serverSocket, configFileSystem->puerto);
+	while (1) {
+		serverSocket = 0;
+		socket_server_create(&serverSocket, configFileSystem->puerto);
 
-	if(serverSocket<=0){
-		printf("No se pudo conectar con el server\n");
-		close(serverSocket);
-		config_free();
-		return EXIT_FAILURE;
+		if (serverSocket <= 0) {
+			printf("No se pudo conectar con el server\n");
+			close(serverSocket);
+			config_free();
+			return EXIT_FAILURE;
+		}
+
+		//Handshake
+		char* identificador = "";
+		socket_recv_string(serverSocket, &identificador);
+		if (string_equals_ignore_case(identificador, "KERNEL")) {
+			//salgo del while
+			break;
+		}
+		else{
+			//Cierro el socket y vuelvo al while (vuelvo a abrir el socket para escuchar)
+			close(serverSocket);
+			printf("Se conecto alguien que no es kernel. Fuera!");
+		}
 	}
 
-
 	char* mensajeDeOperacion = "";
-	while(1){
-		if(socket_recv_string(serverSocket, &mensajeDeOperacion)>0){
+	while (1) {
+		if (socket_recv_string(serverSocket, &mensajeDeOperacion) > 0) {
 			hacerLoQueCorresponda(mensajeDeOperacion);
-		}else{
+		} else {
 			printf("No se pudo recibir el mensaje\n");
 			close(serverSocket);
 			config_free();
@@ -48,37 +61,34 @@ int main(int arg, char* argv[]) {
 		}
 	}
 
-
 	return EXIT_SUCCESS;
 }
 
 //Falta hacer las condiciones de que si el path no se encontro para obtener y guardar, que retorne un error de archivo no encontrado
-void hacerLoQueCorresponda(char* unMensajeDeOperacion){
+void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	char* path = "";
 	int offset;
 	int size;
 	int resultado;
 
-	if(string_equals_ignore_case(unMensajeDeOperacion, "VALIDAR")){
+	if (string_equals_ignore_case(unMensajeDeOperacion, "VALIDAR")) {
 		socket_recv_string(serverSocket, &path);
 		resultado = validar(path);
-	}
-	else if(string_equals_ignore_case(unMensajeDeOperacion, "CREAR")){
+	} else if (string_equals_ignore_case(unMensajeDeOperacion, "CREAR")) {
 		socket_recv_string(serverSocket, &path);
 		resultado = crear(path);
-	}
-	else if(string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")){
+	} else if (string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")) {
 		socket_recv_string(serverSocket, &path);
 		resultado = borrar(path);
-	}
-	else if(string_equals_ignore_case(unMensajeDeOperacion, "OBTENERDATOS")){
+	} else if (string_equals_ignore_case(unMensajeDeOperacion,
+			"OBTENERDATOS")) {
 		socket_recv_string(serverSocket, &path);
 		socket_recv_int(serverSocket, &offset);
 		socket_recv_int(serverSocket, &size);
-		resultado = obtenerDatos(path, (off_t)offset, (size_t)size);
+		resultado = obtenerDatos(path, (off_t) offset, (size_t) size);
 
-	}
-	else if(string_equals_ignore_case(unMensajeDeOperacion, "GUARDARDATOS")){
+	} else if (string_equals_ignore_case(unMensajeDeOperacion,
+			"GUARDARDATOS")) {
 		void* buffer;
 
 		socket_recv_string(serverSocket, &path);
@@ -87,11 +97,10 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion){
 
 		socket_recv(serverSocket, &buffer, 1);
 
-		resultado = guardarDatos(path, (off_t)offset, (size_t)size, buffer);
+		resultado = guardarDatos(path, (off_t) offset, (size_t) size, buffer);
 	}
 
 	socket_send_int(serverSocket, resultado);
-
 
 	free(path);
 }
