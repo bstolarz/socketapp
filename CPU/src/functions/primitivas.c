@@ -225,41 +225,6 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 	return valorAsignado;
 }
 
-void AnSISOP_imprimirValor(t_valor_variable valor_mostrar){
-	log_info(logCPU, "Se solicito imprimir el valor: %d", valor_mostrar);
-
-	if(socket_send_string(serverKernel, "imprimirValor")>0){
-		if(socket_send_int(serverKernel, valor_mostrar)>0){
-
-		}
-		else{
-			log_info(logCPU, "No se pudo enviar el valor para que el kernel lo imprima.");
-		}
-	}
-	else{
-		log_info(logCPU, "No se pudo enviar la directiva de imprimir valor al kernel.");
-	}
-
-
-}
-
-void AnSISOP_imprimirLiteral(char* texto){
-	log_info(logCPU, "Se solicito imprimir la cadena literal: %s", texto);
-
-	if(socket_send_string(serverKernel, "imprimirLiteral")>0){
-		if(socket_send_string(serverKernel, texto)>0){
-
-		}
-		else{
-			log_info(logCPU, "No se pudo enviar la cadena literal para que el kernel la imprima.");
-		}
-	}
-	else{
-		log_info(logCPU, "No se pudo enviar la directiva de imprimir literal al kernel.");
-	}
-
-}
-
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 	char* answerFromKernel=string_new();
 	int resp;
@@ -281,10 +246,10 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 					if(resp==1){
 						log_info(logCPU, "Se hizo el wait del semaforo %s", identificador_semaforo);
 					}else{
-						log_info(logCPU, "me bloquee por %s", identificador_semaforo);
+						log_info(logCPU,"PID: %d se acaba de bloquear por hacer wait al semaforo %s\n",pcb->pid, identificador_semaforo);
 					}
 			}
-			log_info(logCPU,"PID: %d se acaba de bloquear por hacer wait al semaforo %s\n",pcb->pid, identificador_semaforo);
+
 		}
 	}else{
 		log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el WAIT al semaforo %s\n", identificador_semaforo);
@@ -293,27 +258,36 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 }
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
+	char* answerFromKernel=string_new();
+	int resp;
 	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
 	if (socket_send_string(serverKernel,"signal")>0){
 		log_info(logCPU, "Le solicito al Kernel hacer Signal");
 	}else{
 		log_info(logCPU,"Error solicitandole al Kernel que haga Signal");
 	}
-
-	if(socket_send_string(serverKernel, "SIGNAL")>0){
-		if(socket_send_string(serverKernel, identificador_semaforo)>0){
-
-		}
-		else{
-			log_info(logCPU, "No se pudo enviar el identificador del semaforo para que el kernel le haga signal.");
-		}
-
-	}
 	if (socket_send_string(serverKernel, identificador_semaforo)>0){
 		log_info(logCPU, "Le envio al Kernel el semaforo al que quiero que le haga Signal: %s\n",identificador_semaforo);
 	}else{
 		log_info(logCPU, "Error enviando al Kernel el semaforo al que quiero que le haga Signal: %s\n",identificador_semaforo);
 	}
+	if (socket_recv_string(serverKernel,&answerFromKernel)>0){
+			if (string_equals_ignore_case(answerFromKernel,"Failure")){
+				log_info(logCPU, "No es posible hacer SIGNAL al semaforo %s porque no existe en Kernel. El programa finalizara", identificador_semaforo);
+				EXIT_FAILURE;
+			}else{
+				if(socket_recv_int(serverKernel,&resp)>0){
+						if(resp==1){
+							log_info(logCPU, "Se hizo el wait del semaforo %s", identificador_semaforo);
+						}else{
+							log_info(logCPU,"PID: %d se acaba de bloquear por hacer wait al semaforo %s\n",pcb->pid, identificador_semaforo);
+						}
+				}
+
+			}
+		}else{
+			log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el WAIT al semaforo %s\n", identificador_semaforo);
+		}
 }
 
 t_puntero AnSISOP_alocar(t_valor_variable espacio){
@@ -429,6 +403,7 @@ void AnSISOP_moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variab
 }
 void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
 	//Informo al kernel que quiero escribir archivo
+	log_info(logCPU, "Descriptor: %d Tamanio: %d", descriptor_archivo, tamanio);
 	if (socket_send_string(serverKernel, "escribir")>0){
 		log_info(logCPU, "Informo correctamente al kernel que el programa %d quiere escribir un archivo\n", pcb->pid);
 	}else{

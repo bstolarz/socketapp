@@ -26,4 +26,5 @@ void ansisop_init(){
 	ansisop_funciones_kernel = (AnSISOP_kernel*) malloc(sizeof(AnSISOP_kernel));
 	ansisop_funciones_kernel->AnSISOP_wait=AnSISOP_wait;
 	ansisop_funciones_kernel->AnSISOP_signal=AnSISOP_signal;
+	ansisop_funciones_kernel->AnSISOP_escribir=AnSISOP_escribir;
 }
