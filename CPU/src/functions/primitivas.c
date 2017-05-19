@@ -273,8 +273,8 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 	}
 	if (socket_recv_string(serverKernel,&answerFromKernel)>0){
 		if (string_equals_ignore_case(answerFromKernel,"Failure")){
-			//FINALIZAR PROGRAMA
-			log_info(logCPU, "No es posible hacer WAIT al semaforo %s porque no existe en Kernel", identificador_semaforo);
+			log_info(logCPU, "No es posible hacer WAIT al semaforo %s porque no existe en Kernel. El programa finalizara", identificador_semaforo);
+			EXIT_FAILURE;
 		}else{
 			log_info(logCPU,"PID: %d se acaba de bloquear por hacer wait al semaforo %s\n",pcb->pid, identificador_semaforo);
 		}
