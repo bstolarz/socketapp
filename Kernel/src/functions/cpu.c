@@ -10,15 +10,15 @@
 #include <commons/string.h>
 #include <commons/log.h>
 
-#include "../../libSockets/send.h"
-#include "../../libSockets/recv.h"
+#include "../libSockets/send.h"
+#include "../libSockets/recv.h"
 
-#include "../../commons/structures.h"
-#include "../../commons/declarations.h"
+#include "../commons/structures.h"
+#include "../commons/declarations.h"
 
-#include "../../functions/dispatcher.h"
-#include "../../functions/serialization.h"
-#include "../../functions/program.h"
+#include "../planner/dispatcher.h"
+#include "../functions/serialization.h"
+#include "../functions/program.h"
 
 
 void cpu_send_pcb(t_cpu* cpu){
@@ -76,69 +76,5 @@ t_cpu* cpu_find(int socket){
 	}
 
 	return list_find(queueCPUs->list, (void*)_buscarProgramaSocketInCPUs);
-}
-
-void cpu_process_new(int socket){
-	t_cpu* cpu = malloc(sizeof(t_cpu));
-	cpu->socket = socket;
-	list_add(queueCPUs->list,cpu);
-	log_info(logKernel,"New CPU added to list\n");
-	if(list_size(queueReadyPrograms->list)>0){
-		cpu->program = planificar();
-		if(cpu->program != NULL){
-			cpu_send_pcb(cpu);
-		}
-	}else{
-		cpu->program=NULL;
-	}
-	//TODO send quantum
-}
-
-void cpu_interruption(t_cpu * cpu){
-	if(socket_send_int(cpu->socket, cpu->program->interruptionCode)<=0){
-		exit(EXIT_FAILURE);
-	}
-}
-
-void cpu_still_burst(t_cpu* cpu){
-	int burst = 1;
-	if(cpu->program->waiting == 1){
-		burst = 0;
-	}
-
-	if(socket_send_int(cpu->socket, burst)<=0){
-		exit(EXIT_FAILURE);
-	}
-}
-
-void cpu_end_burst(t_cpu* cpu){
-	t_program* program = cpu->program;
-	program->pcb = cpu_recv_pcb(cpu);
-
-	int termino = 0;
-	if(socket_recv_int(cpu->socket, &termino)<=0){
-		//TODO Eliminar cpu de la lista de cpus
-		exit(EXIT_FAILURE);
-	}
-
-	if(termino == 1){
-		program_finish(program);
-	}else{
-		if(program->waiting == 1){
-			pthread_mutex_lock(&queueBlockedPrograms->mutex);
-			list_add(queueBlockedPrograms->list, program);
-			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
-		}else{
-			pthread_mutex_lock(&queueReadyPrograms->mutex);
-			list_add(queueReadyPrograms->list, program);
-			pthread_mutex_unlock(&queueReadyPrograms->mutex);
-		}
-
-	}
-
-	cpu->program = planificar();
-	if(cpu->program != NULL){
-		cpu_send_pcb(cpu);
-	}
 }
 

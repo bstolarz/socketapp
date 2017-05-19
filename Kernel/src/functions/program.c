@@ -13,8 +13,8 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-#include "../functions/memory.h"
-#include "../functions/ltp.h"
+#include "../interface/memory.h"
+#include "../planner/ltp.h"
 
 int program_generate_id(){
 	programID++;
