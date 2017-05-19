@@ -259,7 +259,6 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 	char* answerFromKernel=string_new();
-	int resp;
 	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
 	if (socket_send_string(serverKernel,"signal")>0){
 		log_info(logCPU, "Le solicito al Kernel hacer Signal");
@@ -272,21 +271,13 @@ void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 		log_info(logCPU, "Error enviando al Kernel el semaforo al que quiero que le haga Signal: %s\n",identificador_semaforo);
 	}
 	if (socket_recv_string(serverKernel,&answerFromKernel)>0){
-			if (string_equals_ignore_case(answerFromKernel,"Failure")){
-				log_info(logCPU, "No es posible hacer SIGNAL al semaforo %s porque no existe en Kernel. El programa finalizara", identificador_semaforo);
-				EXIT_FAILURE;
+			if (string_equals_ignore_case(answerFromKernel,"Success")){
+				log_info(logCPU, "Se hizo SIGNAL al semaforo %s", identificador_semaforo);
 			}else{
-				if(socket_recv_int(serverKernel,&resp)>0){
-						if(resp==1){
-							log_info(logCPU, "Se hizo el wait del semaforo %s", identificador_semaforo);
-						}else{
-							log_info(logCPU,"PID: %d se acaba de bloquear por hacer wait al semaforo %s\n",pcb->pid, identificador_semaforo);
-						}
-				}
-
+				log_info(logCPU, "No se pudo hacer SIGNAL al semaforo %s porque no existe en Kernel",identificador_semaforo);
 			}
 		}else{
-			log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el WAIT al semaforo %s\n", identificador_semaforo);
+			log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el SIGNAL al semaforo %s\n", identificador_semaforo);
 		}
 }
 
