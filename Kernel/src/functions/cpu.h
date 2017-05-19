@@ -27,5 +27,6 @@ void cpu_send_pcb(t_cpu* cpu);
 t_pcb* cpu_recv_pcb(t_cpu* cpu);
 void cpu_destroy_pcb(t_cpu* cpu);
 t_cpu* cpu_find(int socket);
+void cpu_inactive_planner();
 
 #endif /* THREADS_CPU_FUNCTIONS_H_ */

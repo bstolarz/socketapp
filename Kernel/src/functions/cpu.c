@@ -78,3 +78,18 @@ t_cpu* cpu_find(int socket){
 	return list_find(queueCPUs->list, (void*)_buscarProgramaSocketInCPUs);
 }
 
+void cpu_inactive_planner(){
+	void _inactive_cpu_planner(t_cpu* cpu){
+		if(cpu->program == NULL){
+			cpu->program = planificar();
+			if(cpu->program != NULL){
+				cpu_send_pcb(cpu);
+			}
+		}
+	}
+
+	pthread_mutex_lock(&queueCPUs->mutex);
+
+	list_iterate(queueCPUs->list, (void*)_inactive_cpu_planner);
+	pthread_mutex_unlock(&queueCPUs->mutex);
+}
