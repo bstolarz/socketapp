@@ -96,11 +96,45 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 }
 
 void handle_cpu_imprimir_valor(t_cpu* cpu){
-	//TODO
+	//Obtengo el valor de la shared variable
+	int value = 0;
+	if (socket_recv_int(cpu->socket,&value)<=0){
+		log_info(logKernel,"No se obtuvo el valor de la shared variable de %d\n", cpu->socket);
+		return;
+	}
+
+	if (socket_send_string(cpu->program->socket,"imprimirValor")<=0){
+		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->socket);
+		return;
+	}
+
+	if (socket_send_int(cpu->program->socket,value)<=0){
+		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->socket);
+		return;
+	}
+
+	return;
 }
 
 void handle_cpu_imprimir_literal(t_cpu* cpu){
-	//TODO
+	//Obtengo el valor de la shared variable
+	char* mensaje=string_new();
+	if (socket_recv_string(cpu->socket,&mensaje)<=0){
+		log_info(logKernel,"No se obtuvo el valor de la shared variable de %d\n", cpu->socket);
+		return;
+	}
+
+	if (socket_send_string(cpu->program->socket,"imprimirLiteral")<=0){
+		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->program->socket);
+		return;
+	}
+
+	if (socket_send_string(cpu->program->socket,mensaje)<=0){
+		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->program->socket);
+		return;
+	}
+
+	return;
 }
 
 void handle_cpu_wait(t_cpu* cpu){
