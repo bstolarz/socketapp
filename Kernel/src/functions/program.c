@@ -28,6 +28,7 @@ void program_process_new(fd_set* master, int socket){
 	program->interruptionCode = 0;
 	program->waiting=0;
 	program->waitingReason = string_new();
+	program->fileDescriptors =  list_create();
 
 	program->pcb = malloc(sizeof(t_pcb));
 

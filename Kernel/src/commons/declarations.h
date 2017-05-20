@@ -30,4 +30,6 @@ t_queue* queueCPUs;
 t_socket memoryServer;
 t_socket fileSystemServer;
 
+t_secure_list* globalFileDescriptors;
+
 #endif /* COMMONS_DEFINITIONS_H_ */

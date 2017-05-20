@@ -61,6 +61,11 @@ int main(int argc, char* argv[]) {
 	queueCPUs->list = list_create();
 	pthread_mutex_init(&(queueCPUs->mutex),NULL);
 
+	//Inicio lista FD global
+	globalFileDescriptors = malloc(sizeof(t_queue));
+	globalFileDescriptors->list = list_create();
+	pthread_mutex_init(&(globalFileDescriptors->mutex),NULL);
+
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);
 
