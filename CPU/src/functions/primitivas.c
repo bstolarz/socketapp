@@ -165,11 +165,7 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 void AnSISOP_retornar(t_valor_variable retorno){
 	printf("AnSISOP_retornar\n");
 	log_info(logCPU, "[retornar] con valor %d.", retorno);
-
 	t_indiceDelStack* currentContext = stack_context_current();
-
-	pcb->pc = currentContext->retPos; // este no es necesario, ya se hace en finalizar
-
 	if (currentContext->retVar != NULL)
 	{
 		AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
