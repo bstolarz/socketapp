@@ -15,6 +15,8 @@
 #include "threads/cpu/select.h"
 #include "functions/config.h"
 #include "functions/log.h"
+#include "interface/memory.h"
+#include "interface/filesystem.h"
 
 int main(int argc, char* argv[]) {
 	if(argc!=2){
@@ -31,8 +33,8 @@ int main(int argc, char* argv[]) {
 
 	programID = 0;
 
-	pthread_mutex_init(&(memoryServer.mutex),NULL);
-	socket_client_create(&memoryServer.socket, configKernel->ip_memoria, configKernel->puerto_memoria);
+	memory_connect();
+	//filesystem_connect();
 
 	//Inicio lista nueva
 	queueNewPrograms = malloc(sizeof(t_queue));
@@ -58,6 +60,11 @@ int main(int argc, char* argv[]) {
 	queueCPUs = malloc(sizeof(t_queue));
 	queueCPUs->list = list_create();
 	pthread_mutex_init(&(queueCPUs->mutex),NULL);
+
+	//Inicio lista FD global
+	globalFileDescriptors = malloc(sizeof(t_queue));
+	globalFileDescriptors->list = list_create();
+	pthread_mutex_init(&(globalFileDescriptors->mutex),NULL);
 
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);

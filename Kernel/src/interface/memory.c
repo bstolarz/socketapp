@@ -7,11 +7,17 @@
 #include <stdbool.h>
 
 #include "../libSockets/server.h"
+#include "../libSockets/client.h"
 #include "../libSockets/recv.h"
 #include "../libSockets/send.h"
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+
+void memory_connect(){
+	pthread_mutex_init(&(memoryServer.mutex),NULL);
+	socket_client_create(&memoryServer.socket, configKernel->ip_memoria, configKernel->puerto_memoria);
+}
 
 int memory_frame_size(){
 	int frameSize = 0;

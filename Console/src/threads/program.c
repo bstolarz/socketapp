@@ -115,7 +115,6 @@ void* thread_program(void * params){
 
 
 	char* printMessage = 0;
-	int value = 0;
 	while(1){
 		if(socket_recv_string(program->socketKernel,&printMessage)<=0){
 			log_info(logConsole,"[%i] - Fallo recepcion de mensaje.", program->pid);
@@ -126,14 +125,14 @@ void* thread_program(void * params){
 		if(strcmp(printMessage, "FinEjecucion")==0){
 			//TODO Aca va a ir la info al finalizar la ejecucion.
 		}else if(strcmp(printMessage, "imprimir")==0){
-			if(socket_recv_int(program->socketKernel,&value)<=0){
-				log_info(logConsole,"[%i] - Fallo recepcion de mensaje.", program->pid);
+			if(socket_recv_string(program->socketKernel,&printMessage)<=0){
+				log_info(logConsole,"[%i] - Fallo recepcion de mensaje a imprimir.", program->pid);
 				thread_program_destroy(program, 1);
 				return params;
 			}
 
 			program->stats->cantImpresionesPantalla++;
-			printf("[%i] - %i\n", program->pid, value);
+			printf("[%i] - Imprimo: %s\n", program->pid, printMessage);
 		}else{
 			log_info(logConsole,"[%i] - No se entendio el mensaje: %s", program->pid, printMessage);
 			thread_program_destroy(program, 1);

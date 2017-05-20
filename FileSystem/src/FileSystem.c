@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include "commons/structures.h"
@@ -24,38 +25,41 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
+	serverSocket = 0;
+	socket_server_create(&serverSocket, configFileSystem->puerto);
+	int socketKernel;
 	while (1) {
-		serverSocket = 0;
-		socket_server_create(&serverSocket, configFileSystem->puerto);
+		socketKernel = socket_server_accept_connection(serverSocket);
 
-		if (serverSocket <= 0) {
+		if (socketKernel <= 0) {
 			printf("No se pudo conectar con el server\n");
-			close(serverSocket);
+			close(socketKernel);
 			config_free();
 			return EXIT_FAILURE;
 		}
 
 		//Handshake
 		char* identificador = "";
-		socket_recv_string(serverSocket, &identificador);
-		if (string_equals_ignore_case(identificador, "KERNEL")) {
-			//salgo del while
+		socket_recv_string(socketKernel, &identificador);
+		if (strcmp(identificador, "KERNEL") == 0) {
 			break;
-		}
-		else{
+		} else {
 			//Cierro el socket y vuelvo al while (vuelvo a abrir el socket para escuchar)
-			close(serverSocket);
-			printf("Se conecto alguien que no es kernel. Fuera!");
+
+			printf("Se conecto alguien que no es kernel. Te equivocaste de barrio papu!\n");
+			close(socketKernel);
 		}
+
 	}
 
 	char* mensajeDeOperacion = "";
 	while (1) {
-		if (socket_recv_string(serverSocket, &mensajeDeOperacion) > 0) {
-			hacerLoQueCorresponda(mensajeDeOperacion);
+		if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
+			printf("%s", mensajeDeOperacion);
+			//hacerLoQueCorresponda(mensajeDeOperacion);
 		} else {
-			printf("No se pudo recibir el mensaje\n");
-			close(serverSocket);
+			printf("Se desconecto el kernel.\n");
+			close(socketKernel);
 			config_free();
 			return EXIT_FAILURE;
 		}
