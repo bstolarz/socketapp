@@ -9,6 +9,8 @@
 #define COMMONS_DECLARATIONS_H_
 
 t_fileSystem* configFileSystem;
+t_metadata* configMetadata;
 int serverSocket;
+char* bitarray;
 
 #endif /* COMMONS_DECLARATIONS_H_ */
