@@ -394,6 +394,7 @@ void AnSISOP_moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variab
 }
 void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
 	//Informo al kernel que quiero escribir archivo
+	printf("escribir\n");
 	log_info(logCPU, "Descriptor: %d Tamanio: %d", descriptor_archivo, tamanio);
 	if (socket_send_string(serverKernel, "escribir")>0){
 		log_info(logCPU, "Informo correctamente al kernel que el programa %d quiere escribir un archivo\n", pcb->pid);
