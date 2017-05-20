@@ -268,6 +268,7 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
+	printf("entramos a escribir\n");
 	int FD = 0;
 	//Envio al kernel el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
@@ -283,13 +284,19 @@ void handle_cpu_escribir(t_cpu* cpu){
 		return;
 	}
 
-	if(FD == DESCRIPTOR_SALIDA){
-		if(buffer[nbytes-1] == '\0'){
+	printf("%i %s\n", FD, buffer);
+	printf("%i\n", DESCRIPTOR_SALIDA);
+	//if(FD == DESCRIPTOR_SALIDA){
+	if(FD == 0){ //Por algun motivo cuando es imprimir me llama con 0
+		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';
 			nbytes = nbytes + 1;
 		}
 
+		printf("%i %s\n", FD, buffer);
+
+		printf("todo listo para mandar\n");
 		if(socket_send_string(cpu->program->socket, "imprimir")<=0){
 			log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
 		}
