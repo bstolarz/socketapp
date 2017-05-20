@@ -29,7 +29,7 @@ int main(int arg, char* argv[]) {
 	socket_server_create(&serverSocket, configFileSystem->puerto);
 	int socketKernel;
 	while (1) {
-		socketKernel = socket_server_accept_connection(serverSocket);
+		socket_server_accept_connection(serverSocket, &socketKernel);
 
 		if (socketKernel <= 0) {
 			printf("No se pudo conectar con el server\n");
