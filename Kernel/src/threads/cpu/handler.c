@@ -16,7 +16,73 @@
 #include "../../commons/structures.h"
 #include "../../commons/declarations.h"
 
-#include "../../functions/dispatcher.h"
+#include "../../planner/dispatcher.h"
+
+#include "../../functions/cpu.h"
+
+void handle_new_cpu(int socket){
+	t_cpu* cpu = malloc(sizeof(t_cpu));
+	cpu->socket = socket;
+	list_add(queueCPUs->list,cpu);
+	log_info(logKernel,"New CPU added to list\n");
+	if(list_size(queueReadyPrograms->list)>0){
+		cpu->program = planificar();
+		if(cpu->program != NULL){
+			cpu_send_pcb(cpu);
+		}
+	}else{
+		cpu->program=NULL;
+	}
+	//TODO send quantum
+}
+
+void handle_interruption(t_cpu * cpu){
+	if(socket_send_int(cpu->socket, cpu->program->interruptionCode)<=0){
+		exit(EXIT_FAILURE);
+	}
+}
+
+void handle_still_burst(t_cpu* cpu){
+	int burst = 1;
+	if(cpu->program->waiting == 1){
+		burst = 0;
+	}
+
+	if(socket_send_int(cpu->socket, burst)<=0){
+		exit(EXIT_FAILURE);
+	}
+}
+
+void handle_end_burst(t_cpu* cpu){
+	t_program* program = cpu->program;
+	program->pcb = cpu_recv_pcb(cpu);
+
+	int termino = 0;
+	if(socket_recv_int(cpu->socket, &termino)<=0){
+		//TODO Eliminar cpu de la lista de cpus
+		exit(EXIT_FAILURE);
+	}
+
+	if(termino == 1){
+		program_finish(program);
+	}else{
+		if(program->waiting == 1){
+			pthread_mutex_lock(&queueBlockedPrograms->mutex);
+			list_add(queueBlockedPrograms->list, program);
+			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+		}else{
+			pthread_mutex_lock(&queueReadyPrograms->mutex);
+			list_add(queueReadyPrograms->list, program);
+			pthread_mutex_unlock(&queueReadyPrograms->mutex);
+		}
+
+	}
+
+	cpu->program = planificar();
+	if(cpu->program != NULL){
+		cpu_send_pcb(cpu);
+	}
+}
 
 void handle_cpu_get_shared_variable(t_cpu* cpu){
 	//Obtengo el nombre de la shared variable
@@ -93,48 +159,6 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	if(socket_send_string(cpu->socket, "Success")<=0){
 		log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
 	}
-}
-
-void handle_cpu_imprimir_valor(t_cpu* cpu){
-	//Obtengo el valor de la shared variable
-	int value = 0;
-	if (socket_recv_int(cpu->socket,&value)<=0){
-		log_info(logKernel,"No se obtuvo el valor de la shared variable de %d\n", cpu->socket);
-		return;
-	}
-
-	if (socket_send_string(cpu->program->socket,"imprimirValor")<=0){
-		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->socket);
-		return;
-	}
-
-	if (socket_send_int(cpu->program->socket,value)<=0){
-		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->socket);
-		return;
-	}
-
-	return;
-}
-
-void handle_cpu_imprimir_literal(t_cpu* cpu){
-	//Obtengo el valor de la shared variable
-	char* mensaje=string_new();
-	if (socket_recv_string(cpu->socket,&mensaje)<=0){
-		log_info(logKernel,"No se obtuvo el valor de la shared variable de %d\n", cpu->socket);
-		return;
-	}
-
-	if (socket_send_string(cpu->program->socket,"imprimirLiteral")<=0){
-		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->program->socket);
-		return;
-	}
-
-	if (socket_send_string(cpu->program->socket,mensaje)<=0){
-		log_info(logKernel,"No se pudo enviar el mensaje a la consola %d\n", cpu->program->socket);
-		return;
-	}
-
-	return;
 }
 
 void handle_cpu_wait(t_cpu* cpu){
@@ -244,7 +268,37 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
-	//TODO
+	int FD = 0;
+	//Envio al kernel el descriptor de archivo
+	if (socket_recv_int(cpu->socket,&FD)<=0){
+		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
+		return;
+	}
+
+	//Envio al kernel la informacion con su tamanio
+	char* buffer = string_new();
+	int nbytes=0;
+	if ((nbytes = socket_recv(cpu->socket, (void**)&buffer, 1))<=0){
+		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
+		return;
+	}
+
+	if(FD == DESCRIPTOR_SALIDA){
+		if(buffer[nbytes-1] == '\0'){
+			buffer = realloc(buffer, nbytes+1);
+			buffer[nbytes] = '\0';
+			nbytes = nbytes + 1;
+		}
+
+		if(socket_send_string(cpu->program->socket, "imprimir")<=0){
+			log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
+		}
+
+		if(socket_send_string(cpu->program->socket, buffer)<=0){
+			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
+		}
+	}
+
 }
 
 void handle_cpu_leer(t_cpu* cpu){

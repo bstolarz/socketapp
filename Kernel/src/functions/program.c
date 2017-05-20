@@ -13,8 +13,9 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-#include "../functions/memory.h"
-#include "../functions/ltp.h"
+#include "../interface/memory.h"
+#include "../planner/ltp.h"
+#include "../functions/cpu.h"
 
 int program_generate_id(){
 	programID++;
@@ -107,6 +108,7 @@ void program_process_new(fd_set* master, int socket){
 	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
 
 	planificador_largo_plazo();
+	cpu_inactive_planner();
 
 	return;
 }

@@ -13,7 +13,7 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-#include "../functions/memory.h"
+#include "../interface/memory.h"
 #include "../functions/program.h"
 
 int planificador_largo_plazo(){

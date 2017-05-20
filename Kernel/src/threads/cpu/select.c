@@ -18,8 +18,9 @@
 #include "../../libSockets/recv.h"
 #include "../../libSockets/send.h"
 
+#include "../../functions/cpu.h"
+
 #include "../../commons/declarations.h"
-#include "functions.h"
 #include "handler.h"
 
 void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
@@ -37,28 +38,22 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 	if(strcmp(package, "NewCPU") == 0){
 		log_info(logKernel,"New CPU connected on socket %d\n",socket);
 		printf("New CPU connected on socket %d\n",socket);
-		cpu_process_new(socket);
+		handle_new_cpu(socket);
 	}else if(strcmp(package, "interruption") == 0){
 		t_cpu* cpu = cpu_find(socket);
-		cpu_interruption(cpu);
+		handle_interruption(cpu);
 	}else if(strcmp(package, "still_burst") == 0){
 		t_cpu* cpu = cpu_find(socket);
-		cpu_still_burst(cpu);
+		handle_still_burst(cpu);
 	}else if(strcmp(package, "end_burst") == 0){
 		t_cpu* cpu = cpu_find(socket);
-		cpu_end_burst(cpu);
+		handle_end_burst(cpu);
 	}else if (strcmp(package, "getSharedVariable")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_get_shared_variable(cpu);
 	}else if (strcmp(package, "setSharedVariable")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_set_shared_variable(cpu);
-	}else if (strcmp(package, "imprimirValor")==0){
-		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_imprimir_valor(cpu);
-	}else if (strcmp(package, "imprimirLiteral")==0){
-		t_cpu* cpu = cpu_find(socket);
-		handle_cpu_imprimir_literal(cpu);
 	}else if (strcmp(package, "wait")==0){
 		t_cpu* cpu = cpu_find(socket);
 		handle_cpu_wait(cpu);

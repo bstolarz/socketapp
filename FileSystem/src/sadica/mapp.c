@@ -6,8 +6,8 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <commons/bitarray.h>
-#include "commons/sadica.h"
-#include "commons/declarations.h"
+#include "../commons/sadica.h"
+#include "../commons/declarations.h"
 //#include "functions/dump.h"
 
 void initSadica (char* pathSadicaDrive){

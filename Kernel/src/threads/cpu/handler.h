@@ -16,11 +16,15 @@
 #include "../../commons/structures.h"
 #include "../../commons/declarations.h"
 
-#include "../../functions/dispatcher.h"
+#include "../../planner/dispatcher.h"
 
 #ifndef THREADS_CPU_HANDLER_H_
 #define THREADS_CPU_HANDLER_H_
 
+void handle_new_cpu(int socket);
+void handle_interruption(t_cpu * cpu);
+void handle_still_burst(t_cpu* cpu);
+void handle_end_burst(t_cpu* cpu);
 void handle_cpu_get_shared_variable(t_cpu* cpu);
 void handle_cpu_set_shared_variable(t_cpu* cpu);
 void handle_cpu_wait(t_cpu* cpu);
@@ -33,7 +37,5 @@ void handle_cpu_cerrar(t_cpu* cpu);
 void handle_cpu_mover_cursor(t_cpu* cpu);
 void handle_cpu_escribir(t_cpu* cpu);
 void handle_cpu_leer(t_cpu* cpu);
-void handle_cpu_imprimir_valor(t_cpu* cpu);
-void handle_cpu_imprimir_literal(t_cpu* cpu);
 
 #endif /* THREADS_CPU_HANDLER_H_ */
