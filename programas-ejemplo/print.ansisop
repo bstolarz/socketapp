@@ -1,0 +1,6 @@
+#!/usr/bin/ansisop
+begin	
+		prints s a
+end
+
+
