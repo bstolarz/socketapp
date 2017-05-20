@@ -25,6 +25,8 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
+	initSadica();
+
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
 	int socketKernel;
