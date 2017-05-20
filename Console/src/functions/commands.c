@@ -34,17 +34,17 @@ void command_start(){
 	program->pid = 0;
 
 	if(strcmp(path, "facil")==0){
-		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/facil.ansisop");
+		string_append(&program->pathProgram, "../../programas-ejemplo/facil.ansisop");
 	}else if(strcmp(path, "for")==0){
-		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/for.ansisop");
+		string_append(&program->pathProgram, "../../programas-ejemplo/for.ansisop");
 	}else if(strcmp(path, "productor")==0){
-		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/productor.ansisop");
+		string_append(&program->pathProgram, "../../programas-ejemplo/productor.ansisop");
 	}else if(strcmp(path, "stackoverflow")==0){
-		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/stackoverflow.ansisop");
+		string_append(&program->pathProgram, "../../programas-ejemplo/stackoverflow.ansisop");
 	}else if(strcmp(path, "completo")==0){
-		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/completo.ansisop");
+		string_append(&program->pathProgram, "../../programas-ejemplo/completo.ansisop");
 	}else if(strcmp(path, "consumidor")==0){
-		string_append(&program->pathProgram, "../../../ansisop-parser/programas-ejemplo/consumidor.ansisop");
+		string_append(&program->pathProgram, "../../programas-ejemplo/consumidor.ansisop");
 	}else{
 		string_append(&program->pathProgram, path);
 	}
