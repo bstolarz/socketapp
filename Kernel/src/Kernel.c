@@ -16,6 +16,7 @@
 #include "functions/config.h"
 #include "functions/log.h"
 #include "interface/memory.h"
+#include "interface/filesystem.h"
 
 int main(int argc, char* argv[]) {
 	if(argc!=2){
@@ -33,6 +34,7 @@ int main(int argc, char* argv[]) {
 	programID = 0;
 
 	memory_connect();
+	//filesystem_connect();
 
 	//Inicio lista nueva
 	queueNewPrograms = malloc(sizeof(t_queue));
