@@ -284,8 +284,8 @@ void handle_cpu_escribir(t_cpu* cpu){
 		return;
 	}
 
-	printf("%i %s\n", FD, buffer);
-	printf("%i\n", DESCRIPTOR_SALIDA);
+//	printf("%i %s\n", FD, buffer);
+	//printf("%i\n", DESCRIPTOR_SALIDA);
 	//if(FD == DESCRIPTOR_SALIDA){
 	if(FD == 0){ //Por algun motivo cuando es imprimir me llama con 0
 		if(buffer[nbytes] != '\0'){
@@ -296,7 +296,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 
 		printf("%i %s\n", FD, buffer);
 
-		printf("todo listo para mandar\n");
+	//	printf("todo listo para mandar\n");
 		if(socket_send_string(cpu->program->socket, "imprimir")<=0){
 			log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
 		}
