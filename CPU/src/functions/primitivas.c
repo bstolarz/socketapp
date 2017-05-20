@@ -34,7 +34,7 @@ bool is_argument(t_nombre_variable identificador_variable)
 }
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
-	printf("AnSISOP_definirVariable [%s]\n",identificador_variable);
+	printf("AnSISOP_definirVariable [%c]\n",identificador_variable);
 	// Guardo el offset dond está esta variable/arg
 	int varStackPosition = pcb->stackPosition;
 
@@ -56,7 +56,7 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
-	printf("AnSISOP_obtenerPosicionVariable [%s]\n",identificador_variable);
+	printf("AnSISOP_obtenerPosicionVariable [%c]\n",identificador_variable);
 	log_debug(logCPU, "[obtenerPosicionVariable] identificador = %c", identificador_variable);
 
 	t_position* varPos;
