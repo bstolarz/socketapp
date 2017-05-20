@@ -15,6 +15,7 @@
 #include "threads/cpu/select.h"
 #include "functions/config.h"
 #include "functions/log.h"
+#include "interface/memory.h"
 
 int main(int argc, char* argv[]) {
 	if(argc!=2){
@@ -31,8 +32,7 @@ int main(int argc, char* argv[]) {
 
 	programID = 0;
 
-	pthread_mutex_init(&(memoryServer.mutex),NULL);
-	socket_client_create(&memoryServer.socket, configKernel->ip_memoria, configKernel->puerto_memoria);
+	memory_connect();
 
 	//Inicio lista nueva
 	queueNewPrograms = malloc(sizeof(t_queue));
