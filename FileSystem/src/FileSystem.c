@@ -8,6 +8,7 @@
 #include "commons/declarations.h"
 #include "functions/config.h"
 #include "functions/operaciones.h"
+#include "init.h"
 #include "libSockets/client.h"
 #include "libSockets/server.h"
 #include "libSockets/send.h"
