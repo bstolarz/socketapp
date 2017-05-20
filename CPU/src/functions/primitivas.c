@@ -215,12 +215,21 @@ t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 
 t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 	printf("AnSISOP_asignarValorCompartida\n");
+
 	log_info(logCPU, "Voy a asignar el valor %d a la variable compartida %s.", valor, variable);
 	//Envio al kernel la variable
-	if(socket_send_string(serverKernel,variable)>0){
-		log_info(logCPU,"AnSISOP_asignarValorCompartida: Envio correctamente la variable %s\n",variable);
+	char* variable_compartida=string_new();
+	string_append(&variable_compartida,"!");
+	string_append(&variable_compartida,variable);
+	if (socket_send_string(serverKernel,"setSharedVariable")>0){
+			log_info(logCPU, "Solicito al Kernel asignar el valor %d a la variable %s",valor,variable_compartida);
+		}else{
+			log_info(logCPU, "Error solicitando al Kernel asignal el valor %d a la variable %s", valor, variable_compartida);
+		}
+	if(socket_send_string(serverKernel,variable_compartida)>0){
+		log_info(logCPU,"AnSISOP_asignarValorCompartida: Envio correctamente la variable %s\n",variable_compartida);
 	}else{
-		log_info(logCPU,"AnSISOP_asignarValorCompartida: Error enviando la variable %s\n",variable);
+		log_info(logCPU,"AnSISOP_asignarValorCompartida: Error enviando la variable %s\n",variable_compartida);
 	}
 	//Envio al kernel el valor que quiero que le setee a la variable
 	if(socket_send_int(serverKernel,valor)>0){
@@ -229,13 +238,21 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 		log_info(logCPU,"AnSISOP_asignarValorCompartida: Error enviando el valor %d de la variable %s\n",valor,variable);
 	}
 	//Declaro la variable que voy a usar para recibir el valor seteado por kernel
-	int valorAsignado;
-	//Recibo del kernel el valor asignado
-	if(socket_recv_int(serverKernel,&valorAsignado)>0){
-		log_info(logCPU,"AnSISOP_asignarValorCompartida: Recibo correctamente el valor %d de la variable %s\n",valorAsignado,variable);;
+	char* resultado=string_new();
+	//Recibo del kernel el resultado de efectuar la operacion
+	if(socket_recv_string(serverKernel,&resultado)>0){
+		log_info(logCPU,"Se recibe correctamente el resultado de asignar el valor %d a la variable compartida %s",valor, variable_compartida);
+		if (strcmp(resultado,"Success")==0){
+			log_info(logCPU, "Se ha seteado correctamente el valor %d a la variable %s", valor, variable_compartida);
+		}else{
+			log_info(logCPU, "No se pudo setear el valor %d a la variable %s", valor, variable_compartida);
+			EXIT_FAILURE;
+		}
+	}else{
+		log_info(logCPU, "Error al recibir el resultado de asignar el valor %d a la variable compartida %s",valor, variable_compartida);
 	}
 	printf("Finalizo_AnSISOP\n");
-	return valorAsignado;
+	return valor;
 }
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
