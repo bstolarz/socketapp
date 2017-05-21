@@ -210,14 +210,17 @@ t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 	string_append(&variable_compartida,variable);
 	int value;
 	char* resp=string_new();
-	printf("Le pido al kernel el valor (copia) de la variable compartida.");
+	//printf("Le pido al kernel el valor (copia) de la variable compartida.");
 	if (socket_send_string(serverKernel,"getSharedVariable")>0){
-	log_info(logCPU, "Le aviso al Kernel que necesito obtener el valor de una variable compartida");
+		log_info(logCPU, "Le aviso al Kernel que necesito obtener el valor de una variable compartida");
+	}else{
+		log_info(logCPU, "Error al informar al Kernel que necesito obtener el valor de una variable compartida");
 	}
 	if (socket_send_string(serverKernel, variable_compartida)>0){
 		log_info(logCPU, "Le envio al kernel el nombre de la variable compartida %s",variable_compartida)	;
+	}else{
+		log_info(logCPU, "Error al enviar al kernel el nombre de la variable compartida %s",variable_compartida)	;
 	}
-
 	if(socket_recv_string(serverKernel,&resp)>0){
 		if (strcmp(resp,"Success")==0){
 			if(socket_recv_int(serverKernel,&value)>0){
