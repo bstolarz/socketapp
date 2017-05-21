@@ -142,7 +142,7 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 	log_info(logCPU, "Es necesario volver al PC: %d", pcb->pc);
 
 	t_indiceDelStack* ind = stack_context_create();
-	list_add(pcb->indiceDeStack, ind);
+
 
 	ind->retPos=pcb->pc; // guardar instruccion de retorno
 	log_info(logCPU, "Se debe retornar a: %d",ind->retPos);
@@ -154,6 +154,8 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 	ind->retVar->off = returnToPos.off;
 	ind->retVar->size = VAR_SIZE;
 
+	list_add(pcb->indiceDeStack, ind);
+	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack (%d contextos).", list_size(pcb->indiceDeStack));
 	log_info(logCPU,"Se agrega en retVar: %d|%d|%d",ind->retVar->page, ind->retVar->off, ind->retVar->size);
 	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack (%d contextos).", list_size(pcb->indiceDeStack));
 
@@ -203,14 +205,34 @@ void AnSISOP_finalizar (void)
 //Dummies, algunas voy a ver de llenarlas estos dias
 t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 	printf("AnSISOP_obtenerValorCompartida [%s]\n",variable);
-	log_info(logCPU, "Voy a obtener el valor de variable Compartida: %s.", variable);
+	char* variable_compartida=string_new();
+	string_append(&variable_compartida,"!");
+	string_append(&variable_compartida,variable);
+	int value;
+	char* resp=string_new();
 	printf("Le pido al kernel el valor (copia) de la variable compartida.");
-	socket_send_string(serverKernel,"getSharedVariable");
-	int valorVariable;
-	socket_recv_int(serverKernel, &valorVariable);
-	log_info(logCPU, "El valor de la variable compartida %s es %d.", variable, valorVariable);
+	if (socket_send_string(serverKernel,"getSharedVariable")>0){
+	log_info(logCPU, "Le aviso al Kernel que necesito obtener el valor de una variable compartida");
+	}
+	if (socket_send_string(serverKernel, variable_compartida)>0){
+		log_info(logCPU, "Le envio al kernel el nombre de la variable compartida %s",variable_compartida)	;
+	}
+
+	if(socket_recv_string(serverKernel,&resp)>0){
+		if (strcmp(resp,"Success")==0){
+			if(socket_recv_int(serverKernel,&value)>0){
+				log_info(logCPU, "Recibo el valor %d de variable %s", value, variable_compartida);
+			}else{
+				log_info(logCPU, "Error recibiendo el valor de la variable %s", variable_compartida);
+			}
+		}
+	}else{
+		log_info(logCPU, "Error recibiendo la respuesta del Kernel");
+	}
+	free(variable_compartida);
+	free(resp);
 	printf("Finalizo AnSISOP_obtenerValorCompartida\n");
-	return valorVariable;
+	return value;
 }
 
 t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
@@ -251,6 +273,8 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 	}else{
 		log_info(logCPU, "Error al recibir el resultado de asignar el valor %d a la variable compartida %s",valor, variable_compartida);
 	}
+	free(variable_compartida);
+	free(resultado);
 	printf("Finalizo AnSISOP_asignarValorCompartida\n");
 	return valor;
 }
@@ -312,6 +336,7 @@ void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 		}else{
 			log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el SIGNAL al semaforo %s\n", identificador_semaforo);
 		}
+	free(answerFromKernel);
 	printf("Finalizo AnSISOP_signal\n");
 }
 
