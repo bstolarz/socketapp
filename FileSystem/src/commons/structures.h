@@ -13,4 +13,9 @@ typedef struct{
 	char* punto_montaje;
 }t_fileSystem;
 
+typedef struct{
+	int tamanioBloques;
+	int cantidadBloques;
+} t_metadata;
+
 #endif /* COMMONS_STRUCTURES_H_ */

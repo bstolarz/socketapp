@@ -12,7 +12,7 @@
 
 
 void config_print(){
-	printf("El puerto del FS: %s\n", configFileSystem->puerto);
+	printf("El Tamanio de los bloques es: %s\n", configFileSystem->puerto);
 	printf("Punto de montaje: %s\n", configFileSystem->punto_montaje);
 }
 

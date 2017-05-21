@@ -8,6 +8,7 @@
 #include "commons/declarations.h"
 #include "functions/config.h"
 #include "functions/operaciones.h"
+#include "init.h"
 #include "libSockets/client.h"
 #include "libSockets/server.h"
 #include "libSockets/send.h"
@@ -24,6 +25,8 @@ int main(int arg, char* argv[]) {
 	configFileSystem = malloc(sizeof(t_fileSystem));
 	config_read(argv[1]);
 	config_print();
+
+	initSadica();
 
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
