@@ -19,16 +19,18 @@
 t_program* planificar(){
 	t_program* program = NULL;
 
-	if(strcmp(configKernel->algoritmo, "FIFO") == 0){
-		pthread_mutex_lock(&(queueReadyPrograms->mutex));
-		if(list_size(queueReadyPrograms->list)>0){
-			program = list_remove(queueReadyPrograms->list, 0);
+
+	pthread_mutex_lock(&(queueReadyPrograms->mutex));
+	if(list_size(queueReadyPrograms->list)>0){
+		program = list_remove(queueReadyPrograms->list, 0);
+		if(strcmp(configKernel->algoritmo, "FIFO") == 0){
+			program->quantum = -1;
+		}else if(strcmp(configKernel->algoritmo, "RR") == 0){
+			program->quantum = configKernel->quantum;
 		}
-		pthread_mutex_unlock(&(queueReadyPrograms->mutex));
-	}else if(strcmp(configKernel->algoritmo, "RR") == 0)
-	{
-		//Round robin
+
 	}
+	pthread_mutex_unlock(&(queueReadyPrograms->mutex));
 
 	return program;
 }

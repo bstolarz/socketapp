@@ -80,6 +80,7 @@ typedef struct{
 	int waiting;
 	char* waitingReason;
 	t_list* fileDescriptors;
+	int quantum;
 }t_program;
 
 typedef struct{

@@ -46,6 +46,14 @@ void handle_still_burst(t_cpu* cpu){
 	int burst = 1;
 	if(cpu->program->waiting == 1){
 		burst = 0;
+		cpu->program->quantum = 0;
+	}else{
+		if(cpu->program->quantum != -1){
+			cpu->program->quantum = cpu->program->quantum - 1;
+			if(cpu->program->quantum == 0){
+				burst = 0;
+			}
+		}
 	}
 
 	if(socket_send_int(cpu->socket, burst)<=0){
@@ -56,6 +64,7 @@ void handle_still_burst(t_cpu* cpu){
 void handle_end_burst(t_cpu* cpu){
 	t_program* program = cpu->program;
 	program->pcb = cpu_recv_pcb(cpu);
+	program->quantum = 0;
 
 	int termino = 0;
 	if(socket_recv_int(cpu->socket, &termino)<=0){
