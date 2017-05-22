@@ -14,6 +14,7 @@
 #include "threads/program/select.h"
 #include "threads/cpu/select.h"
 #include "functions/config.h"
+#include "functions/console.h"
 #include "functions/log.h"
 #include "interface/memory.h"
 #include "interface/filesystem.h"
@@ -68,6 +69,37 @@ int main(int argc, char* argv[]) {
 
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);
+
+	size_t cantidad = 50;
+	char* comando = malloc(sizeof(char)*cantidad);
+
+	while(1){
+		printf("[SISTEMA] - Ingrese un comando:\n");
+		size_t cantLeida = getline(&comando, &cantidad, stdin);
+		comando[cantLeida-1]='\0';
+
+		if(strcmp(comando, "1") == 0){
+			console_process_list();
+		}else if(strcmp(comando, "2") == 0){\
+			console_get_process_stats();
+		}else if(strcmp(comando, "3") == 0){
+			console_get_global_file_table();
+		}else if(strcmp(comando, "4") == 0){
+			console_multiprogram_degree();
+		}else if(strcmp(comando, "5") == 0){
+			console_finish_process();
+		}else if(strcmp(comando, "6") == 0){
+			console_stop_planning();
+		}else{
+			printf("[SISTEMA] - 1) Listado de procesos del sistema.\n");
+			printf("[SISTEMA] - 2) Obtener estadistica de proceso.\n");
+			printf("[SISTEMA] - 3) Obtener tabla global de archivos.\n");
+			printf("[SISTEMA] - 4) Modificar grado de multiprogramacion.\n");
+			printf("[SISTEMA] - 5) Finalizar proceso.\n");
+			printf("[SISTEMA] - 6) Detener planificacion.\n");
+
+		}
+	}
 
 	pthread_join(selectProgramThread, NULL);
 	pthread_join(selectCPUThread, NULL);
