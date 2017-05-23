@@ -100,7 +100,7 @@ typedef struct{
 }t_socket;
 
 typedef struct{
-	int value;
+//	int value;
 	char* path;
 	int open;
 }t_gobal_fd;
