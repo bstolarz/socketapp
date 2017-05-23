@@ -257,11 +257,22 @@ void handle_cpu_alocar(t_cpu* cpu){
 }
 
 void handle_cpu_liberar(t_cpu* cpu){
-	//TODO
 }
 
 void handle_cpu_abrir(t_cpu* cpu){
-	//TODO
+	//Me llega la ruta del archivo
+	char* path=string_new();
+	char* flags=string_new();
+	if(socket_recv_string(cpu->socket,&path)>0){
+		log_info(logKernel, "Recibi el path %s", path);
+	}else{
+		log_info(logKernel, "Error recibiendo path");
+	}
+	if (socket_recv_string(cpu->socket,&flags)>0){
+		log_info(logKernel, "Recibo los flags '%s'",flags);
+	}else{
+		log_info(logKernel, "Error recibiendo los flags");
+	}
 }
 
 void handle_cpu_borrar(t_cpu* cpu){

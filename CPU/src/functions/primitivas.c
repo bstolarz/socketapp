@@ -378,6 +378,18 @@ void AnSISOP_liberar(t_puntero puntero){
 	}
 	printf("Finalizo AnSISOP_liberar\n");
 }
+
+void flagsAppend(char* string, t_banderas flags){
+	if(flags.creacion){
+		string_append(&string,string_from_format("%c",'c'));
+	}
+	if(flags.escritura){
+		string_append(&string,string_from_format("%c",'w'));
+	}
+	if(flags.lectura){
+		string_append(&string,string_from_format("%c",'r'));
+	}
+}
 t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas flags){
 	printf("AnSISOP_abrir [%s]\n", direccion);
 	//Envio orden: abrir
@@ -393,11 +405,9 @@ t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas fl
 		log_info(logCPU, "Error enviando la ruta del archivo: %s\n", direccion);
 	}
 	//Envio flags
-	if (socket_send(serverKernel,&flags,sizeof(flags))>0){
-		log_info(logCPU, "Envio correctamente los permisos de apertura del archivo: %s\n",flags);
-	}else{
-		log_info(logCPU, "Error enviando los permisos de apertura del archivo: %s\n",flags);
-	}
+	char* flagString=string_new();
+	flagsAppend(flagString, flags);
+	socket_send_string(serverKernel, flagString);
 	//Recibo el descriptor de archivo
 	int descriptor;
 	t_descriptor_archivo descriptorPosta;
