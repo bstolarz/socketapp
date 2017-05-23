@@ -258,7 +258,66 @@ void handle_cpu_alocar(t_cpu* cpu){
 
 void handle_cpu_liberar(t_cpu* cpu){
 }
+t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
+	int tamanio=list_size(l);
+	int i;
+	t_gobal_fd* pointerToGlobalFile=NULL;
+	for (i=0;i!=tamanio;i++){
+		t_gobal_fd* globalFD=(t_gobal_fd*)list_get(l,i);
+		if(strcmp(globalFD->path,path)==0){
+			pointerToGlobalFile=globalFD;
+		}
+	}
+	return pointerToGlobalFile;
+}
+int filesystem_validar(char* path, t_cpu* cpu){
+	//Le pido el file descriptor a FS
+	if (socket_send_string(fileSystemServer.socket,"VALIDAR")>0){
+		log_info(logKernel, "Le indico a FS que quiero validar una path");
+	}else{
+		log_info(logKernel, "Error al indicarle a FS que quiero validar una path");
+	}
+	//Envio el path a FS
+	if (socket_send_string(fileSystemServer.socket,path)>0){
+		log_info(logKernel, "Le envio a FS la path: %s",path);
+	}else{
+		log_info(logKernel, "Error al enviarle a FS la path: %s", path);
+	}
+	int respuesta;
+	if (socket_recv_int(cpu->socket,&respuesta)>0){
+		log_info(logKernel, "Recibo la validacion del FS");
+		if (respuesta>0){
+			log_info(logKernel, "Existe el archivo en FS");
+		}else{
+			log_info(logKernel, "No existe el archivo en FS");
+			EXIT_FAILURE;
+		}
+	}
+	return respuesta;
+}
+int filesystem_create(char* flags,char* path){
+	//Le envio al FS la orden de crear
+	if(socket_send_string(fileSystemServer.socket,"CREAR")>0){
+		log_info(logKernel, "Le informo al FS que cree un archivo");
+	}else{
+		log_info(logKernel, "Error al informar as FS que cree un archivo");
+	}
+	//Le envio al FS el path
+	if(socket_send_string(fileSystemServer.socket,path)>0){
+		log_info(logKernel, "Le envio al FS la path: %s",path);
+	}else{
+		log_info(logKernel, "Error al enviar al FS el archivo: %s", path);
+	}
 
+	//Recibo exito o fail de FS
+	int resp;
+	if(socket_recv_int(fileSystemServer.socket,&resp)>0){
+		log_info(logKernel, "Recibo con exito la respuesta de creacion de un archivo de FS");
+	}else{
+		log_info(logKernel, "Error al informar as FS que cree un archivo");
+	}
+	return resp;
+}
 void handle_cpu_abrir(t_cpu* cpu){
 	//Me llega la ruta del archivo
 	char* path=string_new();
@@ -273,6 +332,46 @@ void handle_cpu_abrir(t_cpu* cpu){
 	}else{
 		log_info(logKernel, "Error recibiendo los flags");
 	}
+	//Chequeo si el archivo existe en la tabla global de archivos
+	t_gobal_fd* pointer=existeArchivoEnTablaGlobalDeArchivos(globalFileDescriptors->list,path);
+	int descriptorToCPU;
+	if (pointer!=NULL){ //Existe
+		pointer->open++;
+		t_fd* fd=(t_fd*)malloc(sizeof(t_fd));
+		strcpy(fd->flags,flags);
+		fd->value++;
+		descriptorToCPU=fd->value;
+		fd->global=pointer;
+		list_add(cpu->program->fileDescriptors,fd);
+	}else{   //No existe, la agrego
+		int respuesta= filesystem_validar(path,cpu);
+		if (respuesta==1){
+			//Agrego a la tabla global una entrada
+			t_gobal_fd* newFD=(t_gobal_fd*)malloc(sizeof(t_gobal_fd));
+			newFD->open=1;
+			strcpy(newFD->path,path);
+			list_add(globalFileDescriptors->list,newFD);
+
+			//Agrego a la tabla del proceso
+			t_fd* newFD_to_file=(t_fd*)malloc(sizeof(t_fd));
+			strcpy(newFD_to_file->flags,flags);
+			newFD_to_file->value++;
+			descriptorToCPU=newFD_to_file->value;
+			newFD_to_file->global=newFD;
+			list_add(cpu->program->fileDescriptors,newFD_to_file);
+		}else{
+			//Verifico si tengo permiso de creacion
+			if(string_contains(flags,string_from_format("%c",'c'))){
+				int creation=filesystem_create(flags,path);
+				if (creation==1){
+					log_info(logKernel, "El archivo fue creado con exito");
+				}else{
+					log_info(logKernel, "Error creando el archivo");
+				}
+			}
+		}
+	}
+	socket_send_int(cpu->socket,descriptorToCPU);
 }
 
 void handle_cpu_borrar(t_cpu* cpu){
