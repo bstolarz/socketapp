@@ -22,7 +22,12 @@
 #include "functions/instruction_cycle.h"
 #include "functions/pcb.h"
 #include "others/tests.h"
-
+#include <signal.h>
+#include <unistd.h>
+void desconectarCPU(){
+	printf("CPU desconectada por la senial SIGUSR1\n");
+	desconectar=1;
+}
 
 
 int main(int arg, char* argv[]) {
@@ -31,13 +36,15 @@ int main(int arg, char* argv[]) {
 		return 1;
 	}
 	printf("Checkout logCPU%d\n",(int)getpid());
+	printf("PID of Linux: %d\n",(int)getpid());
 	//Inicializo
 	configCPU = malloc(sizeof(t_cpu));
 	config_read(argv[1]);
 
 	logCPU = log_create_file();
 	log_config();
-
+	desconectar=0;
+	signal(SIGUSR1,desconectarCPU);
 	//Me conecto a memoria
 	memory_connect();
 
@@ -55,6 +62,7 @@ int main(int arg, char* argv[]) {
 	socket_send_string(serverKernel, "NewCPU");
 
 	int interruption=0;
+	//Chequeo señal SIGUSR1
 
 	while(1){
 		if ((pcb = recv_pcb(serverKernel)) == NULL){
@@ -62,6 +70,8 @@ int main(int arg, char* argv[]) {
 		}
 
 		int continuoEjecucion = 1;
+
+
 		while(continuoEjecucion && pcb->exitCode == 1){
 			//Fetch
 			char* instruccion = cycle_fetch(pcb->indiceDeCodigo + pcb->pc);
@@ -78,11 +88,17 @@ int main(int arg, char* argv[]) {
 
 			}
 
+
 			//Consulto al kernel si continuo ejecutando - respondera segun planificacion
 			continuoEjecucion = cycle_still_burst();
 		}
-
 		cycle_send_pcv(pcb);
+
+		if (desconectar==1){
+			printf("Exit OK!\n");
+			return EXIT_SUCCESS;
+		}
+
 	}
 
 	return EXIT_SUCCESS;
