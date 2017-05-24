@@ -404,6 +404,19 @@ void handle_cpu_cerrar(t_cpu* cpu){
 			//Borro de la tabla de archivos por proceso la entrada correspondiente al file descriptor que recibi de CPU
 			list_remove(cpu->program->fileDescriptors,position);
 			log_info(logKernel, "Se borro de la tabla de archivos por proceso el indice %d que tenía al file descriptor %d",position, d);
+			//Le digo a FS que cierre el archivo
+			//filesystem_close();
+			if(socket_send_int(cpu->socket,1)>0){
+				log_info(logKernel, "Notifico al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
+			}else{
+				log_info(logKernel, "Error al notificar al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
+			}
+		}else{
+			if(socket_send_int(cpu->socket,-ENOENT)>0){
+				log_info(logKernel, "Notifico al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
+			}else{
+				log_info(logKernel, "Error al notificar al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
+			}
 		}
 	}
 }

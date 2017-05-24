@@ -450,6 +450,16 @@ void AnSISOP_cerrar (t_descriptor_archivo descriptor_archivo){
 	}else{
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);
 	}
+
+	//Recibo el resultado
+	int resultado;
+	if(socket_recv_int(serverKernel,&resultado)>0){
+		if(resultado==1){
+			log_info(logCPU, "Se cerro el archivo con file descriptor %d con exito", descriptor_archivo);
+		}else{
+			log_info(logCPU, "Error al solicitar cerrar archivo, Se recibio el error: %d", resultado);
+		}
+	}
 	printf("Finalizo AnSISOP_cerrar\n");
 }
 void AnSISOP_moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
