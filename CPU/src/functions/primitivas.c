@@ -434,7 +434,7 @@ void AnSISOP_borrar (t_descriptor_archivo direccion){
 		log_info(logCPU, "Error enviando la direccion al kernel: %d\n", direccion);
 	}
 	int resultado;
-	if (socket_recv_int(serverKernel,resultado)>0){
+	if (socket_recv_int(serverKernel,&resultado)>0){
 		if(resultado==1){
 			log_info(logCPU, "Se borro el archivo con file descriptor %d con exito",direccion);
 		}else{
