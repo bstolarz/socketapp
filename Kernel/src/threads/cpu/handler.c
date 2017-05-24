@@ -375,9 +375,69 @@ void handle_cpu_abrir(t_cpu* cpu){
 	}
 	socket_send_int(cpu->socket,descriptorToCPU);
 }
-
+int delete_file_from_global_file_table(t_descriptor_archivo d, t_cpu* cpu){
+	int tam=list_size(cpu->program->fileDescriptors);
+	int i;
+	int result=0;
+	for(i=0;i!=tam;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if(fd->global==NULL){
+			result=1;
+		}
+	}
+	return result;
+}
+int program_has_permission_to_delete(t_cpu* cpu,t_descriptor_archivo d){
+	int tam=list_size(cpu->program->fileDescriptors);
+	int i;
+	int result=0;
+	for(i=0;i!=tam;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if(fd->value==d){
+			if(string_contains(fd->flags,string_from_format("%c",'w'))){
+				result=1;
+			}
+		}
+	}
+	return result;
+}
 void handle_cpu_borrar(t_cpu* cpu){
-	//TODO
+	//Recibo el file descriptor del archivo que CPU quiere borrar
+	int dAux;
+	t_descriptor_archivo d;
+	if (socket_recv_int(cpu->socket,&dAux)>0){
+		d=(t_descriptor_archivo)dAux;
+		log_info(logKernel, "CPU quiere borrar el archivo con file descriptor %d",d);
+		if(program_has_permission_to_delete(cpu,d)){
+			int resultado=delete_file_from_global_file_table(d, cpu);
+			if(resultado==1){
+				//Comunico a FS que borre el archivo
+				//filesystem_delete();
+				//Recibo de FS la respuesta al indicarle que borre el archivo
+				int answer;
+				if(socket_recv_int(fileSystemServer.socket,&answer)>0){
+					if (answer==1){
+						//Le digo a CPU que el archivo fue borrado con exito
+						if(socket_send_int(cpu->socket,1)>0){
+							log_info(logKernel, "Notifico a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  pudo hacerlo  con exito",cpu->program->pcb->pid,d);
+						}else{
+							log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  pudo hacerlo  con exito",cpu->program->pcb->pid,d);
+						}
+					}else{
+						//No se pudo borrar el archivo fisico
+						if(socket_send_int(cpu->socket,0)>0){
+							log_info(logKernel, "Notifico a CPU que el programa %d que pedia borrar el archivo con file descriptor %d, no pudo hacerlo",cpu->program->pcb->pid,d);
+						}else{
+							log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo",cpu->program->pcb->pid,d);
+						}
+					}
+				}
+			}
+		}
+	}else{
+		log_info(logKernel, "Error recibiendo el file descriptor del archivo");
+	}
+
 }
 int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
 	int size=(int)list_size(cpu->program->fileDescriptors);
