@@ -512,7 +512,7 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion
 	}
 
 	//Envio al kernel el descriptor de archivo
-	if (socket_send_int(serverKernel, descriptor_archivo)>0){
+	if (socket_send_int(serverKernel, (int)descriptor_archivo)>0){
 		log_info(logCPU, "Envio correctamente el descriptor de archivo: %d\n", descriptor_archivo);
 	}else{
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);

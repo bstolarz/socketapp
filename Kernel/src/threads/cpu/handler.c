@@ -19,6 +19,8 @@
 #include "../../planner/dispatcher.h"
 
 #include "../../functions/cpu.h"
+#include "../../interface/memory.h"
+
 
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
@@ -314,7 +316,7 @@ int filesystem_create(char* flags,char* path){
 	if(socket_recv_int(fileSystemServer.socket,&resp)>0){
 		log_info(logKernel, "Recibo con exito la respuesta de creacion de un archivo de FS");
 	}else{
-		log_info(logKernel, "Error al informar as FS que cree un archivo");
+		log_info(logKernel, "Error al informar al FS que cree un archivo");
 	}
 	return resp;
 }
@@ -377,9 +379,33 @@ void handle_cpu_abrir(t_cpu* cpu){
 void handle_cpu_borrar(t_cpu* cpu){
 	//TODO
 }
-
+int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
+	int size=(int)list_size(cpu->program->fileDescriptors);
+	int i;
+	int exists=-1;
+	for(i=0;i!=size;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if (fd->value==d){
+			exists=i;
+			//Decremento la cantidad de veces abierto el archivo en la tabla global de archivos
+			fd->global->open--;
+		}
+	}
+	return exists;
+}
 void handle_cpu_cerrar(t_cpu* cpu){
-	//TODO
+	//Recibo el file descriptor
+	int dAux;
+	t_descriptor_archivo d;
+	if(socket_recv_int(cpu->socket,&dAux)>0){
+		d=(t_descriptor_archivo)dAux;
+		int position=process_had_opened_file(cpu,d);
+		if(position!=-1){
+			//Borro de la tabla de archivos por proceso la entrada correspondiente al file descriptor que recibi de CPU
+			list_remove(cpu->program->fileDescriptors,position);
+			log_info(logKernel, "Se borro de la tabla de archivos por proceso el indice %d que tenía al file descriptor %d",position, d);
+		}
+	}
 }
 
 void handle_cpu_mover_cursor(t_cpu* cpu){
@@ -426,9 +452,46 @@ void handle_cpu_escribir(t_cpu* cpu){
 	}
 
 }
-
+int get_permission_on_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
+	int tamanio=list_size(cpu->program->fileDescriptors);
+	int i;
+	int permiso=0;
+	for (i=0;i!=tamanio;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if (fd->value==d){
+			strcpy(path,fd->global->path);
+			if(string_contains(fd->flags,string_from_format("%c",'r'))){
+				permiso=1;
+			}
+		}
+	}
+	return permiso;
+}
 void handle_cpu_leer(t_cpu* cpu){
-	//TODO
+	//Recibo el file descriptor
+	t_descriptor_archivo descriptor;
+	int d;
+	int dondeGuardarLoLeido;
+	int tamanioALeer;
+	if(socket_recv_int(cpu->socket,&d)>0){
+		log_info(logKernel, "Recibi correctamente el file descriptor: %d",d);
+	}
+	descriptor=(t_descriptor_archivo)d;
+	char* path=string_new();
+	int puedeLeer=get_permission_on_file(descriptor, cpu,path);
+	if(puedeLeer){
+		if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido)>0){
+			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
+		}else{
+			log_info(logKernel, "Error al recibir el puntero donde se quiere guardar lo leido");
+		}
+	}
+	if(socket_recv_int(cpu->socket,&tamanioALeer)>0){
+		log_info(logKernel, "CPU necesita leer %d bytes",tamanioALeer);
+	}else{
+		log_info(logKernel, "Error al recibir el tamanio de lo que se quiere leer");
+	}
+
 }
 
 
