@@ -26,7 +26,7 @@ AnSISOP_kernel* ansisop_funciones_kernel;
 
 t_pcb* pcb;
 int pageSize;
-
+int desconectar;
 int serverKernel;
 int serverMemory;
 

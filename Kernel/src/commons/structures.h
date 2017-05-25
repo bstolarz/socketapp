@@ -79,6 +79,8 @@ typedef struct{
 	void* code;
 	int waiting;
 	char* waitingReason;
+	t_list* fileDescriptors;
+	int quantum;
 }t_program;
 
 typedef struct{
@@ -90,10 +92,23 @@ typedef struct{
 	pthread_mutex_t mutex;
 	t_list * list;
 }t_queue;
+typedef t_queue t_secure_list;
 
 typedef struct{
 	int socket;
 	pthread_mutex_t mutex;
 }t_socket;
+
+typedef struct{
+//	int value;
+	char* path;
+	int open;
+}t_gobal_fd;
+
+typedef struct{
+	int value;
+	char* flags;
+	t_gobal_fd* global;
+}t_fd;
 
 #endif /* COMMONS_STRUCTURES_H_ */

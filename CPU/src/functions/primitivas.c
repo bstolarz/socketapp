@@ -34,6 +34,7 @@ bool is_argument(t_nombre_variable identificador_variable)
 }
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
+	printf("AnSISOP_definirVariable [%c]\n",identificador_variable);
 	// Guardo el offset dond está esta variable/arg
 	int varStackPosition = pcb->stackPosition;
 
@@ -49,12 +50,13 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 	// Incremento la pila
 	// TODO: check stack overflow?
 	pcb->stackPosition += VAR_SIZE;
-
+	printf("Finalizo AnSISOP_definirVariable\n");
  	return varStackPosition; // retorno donde empezaba la var que puse en stack*/
 }
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
+	printf("AnSISOP_obtenerPosicionVariable [%c]\n",identificador_variable);
 	log_debug(logCPU, "[obtenerPosicionVariable] identificador = %c", identificador_variable);
 
 	t_position* varPos;
@@ -73,10 +75,12 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 	if (varPos == NULL){
 		log_error(logCPU, "[obtenerPosicionVariable] no encontre %c", identificador_variable);
 	}
+	printf("Finalizo AnSISOP_obtenerPosicionVariable\n");
 	return position_to_puntero(varPos);
 }
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
+	printf("AnSISOP_dereferenciar [%d]\n",direccion_variable);
 	printf("[dereferenciar]: %d\n", direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
 
@@ -86,11 +90,12 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
 	log_debug(logCPU, "El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
-
+	printf("Finalizo AnSISOP_dereferenciar\n");
 	return *((t_valor_variable*)readResult);
 }
 
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
+	printf("AnSISOP_asignar a [%d] el valor [%d]\n", direccion_variable, valor);
 	printf("[asignar]: %d en la direccion %d\n", valor, direccion_variable);
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d", pos.page, pos.off, valor);
@@ -98,12 +103,15 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	int writeResult = memory_write(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
 
 	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
+	printf("Finalizo AnSISOP_asignar\n");
 }
 
 // Cambia la linea de ejecucion a la correspondiente de la etiqueta buscada
 void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
+	printf("AnSISOP_irAlLabel [%s]\n",etiqueta);
 	log_debug(logCPU, "[irAlLabel] %s\n", etiqueta);
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
+	printf("Finalizo AnSISOP_irAlLabel\n");
 }
 
 // Preserva el contexto de ejecución actual para poder retornar luego al mismo.
@@ -111,7 +119,7 @@ void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
 // Los parámetros serán definidos luego de esta instrucción de la misma manera que una variable local,
 // con identificadores numéricos empezando por el 0.
 void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
-
+	printf("AnSISOP_llamarSinRetorno [%s]\n", etiqueta);
 
 	t_indiceDelStack* ind = stack_context_create();
 	list_add(pcb->indiceDeStack, ind);
@@ -122,17 +130,19 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 	// irallabel?
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
+	printf("Finalizo AnSISOP_llamarSinRetorno\n");
 }
 
 //Preserva el contexto de ejecución actual para poder retornar luego al mismo, junto con la posicion de la variable entregada por donde_retornar.
 //	 * Modifica las estructuras correspondientes para mostrar un nuevo contexto vacío.
 void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+	printf("AnSISOP_llamarConRetorno [etiqueta: %s] [Retorno: %d]\n",etiqueta, donde_retornar);
 	// llamar sin retorno?
 	log_info(logCPU, "[llamarConRetorno] Recibo por parametro: %s y %d", etiqueta, donde_retornar);
 	log_info(logCPU, "Es necesario volver al PC: %d", pcb->pc);
 
 	t_indiceDelStack* ind = stack_context_create();
-	list_add(pcb->indiceDeStack, ind);
+
 
 	ind->retPos=pcb->pc; // guardar instruccion de retorno
 	log_info(logCPU, "Se debe retornar a: %d",ind->retPos);
@@ -144,24 +154,25 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 	ind->retVar->off = returnToPos.off;
 	ind->retVar->size = VAR_SIZE;
 
+	list_add(pcb->indiceDeStack, ind);
+	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack (%d contextos).", list_size(pcb->indiceDeStack));
 	log_info(logCPU,"Se agrega en retVar: %d|%d|%d",ind->retVar->page, ind->retVar->off, ind->retVar->size);
 	log_info(logCPU, "[llamarConRetorno] Agrego nuevo contexto al indice de stack (%d contextos).", list_size(pcb->indiceDeStack));
 
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
+	printf("Finalizo AnSISOP_llamarConRetorno\n");
 }
 
 void AnSISOP_retornar(t_valor_variable retorno){
+	printf("AnSISOP_retornar [%d]\n", retorno);
 	log_info(logCPU, "[retornar] con valor %d.", retorno);
-
 	t_indiceDelStack* currentContext = stack_context_current();
-
-	pcb->pc = currentContext->retPos; // este no es necesario, ya se hace en finalizar
-
 	if (currentContext->retVar != NULL)
 	{
 		AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
 	}
+	printf("Finalizo AnSISOP_retornar\n");
 }
 
 //Cambia el Contexto de Ejecución Actual para volver al Contexto anterior al que se está ejecutando,
@@ -170,6 +181,7 @@ void AnSISOP_retornar(t_valor_variable retorno){
 // deberá finalizar la ejecución del programa.
 void AnSISOP_finalizar (void)
 {
+	printf("AnSISOP_finalizar\n");
 	//vuelvo el PC a la posicion de retorno de la primitiva
 	t_indiceDelStack* currentStackContext = stack_context_current();
 
@@ -185,30 +197,64 @@ void AnSISOP_finalizar (void)
 	}else{
 		log_info(logCPU, "[finalizar] termina funcion. pc: %d. quedan %d contextos\n", pcb->pc, list_size(pcb->indiceDeStack));
 	}
-
+	printf("Finalizo el programa\n");
 }
 
 
 //----------------------------------------------------------------------------------------------
 //Dummies, algunas voy a ver de llenarlas estos dias
 t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
-	log_info(logCPU, "Voy a obtener el valor de variable Compartida: %s.", variable);
-	printf("Le pido al kernel el valor (copia) de la variable compartida.");
-	socket_send_string(serverKernel,"getSharedVariable");
-	int valorVariable;
-	socket_recv_int(serverKernel, &valorVariable);
-	log_info(logCPU, "El valor de la variable compartida %s es %d.", variable, valorVariable);
-
-	return valorVariable;
+	printf("AnSISOP_obtenerValorCompartida [%s]\n",variable);
+	char* variable_compartida=string_new();
+	string_append(&variable_compartida,"!");
+	string_append(&variable_compartida,variable);
+	int value;
+	char* resp=string_new();
+	//printf("Le pido al kernel el valor (copia) de la variable compartida.");
+	if (socket_send_string(serverKernel,"getSharedVariable")>0){
+		log_info(logCPU, "Le aviso al Kernel que necesito obtener el valor de una variable compartida");
+	}else{
+		log_info(logCPU, "Error al informar al Kernel que necesito obtener el valor de una variable compartida");
+	}
+	if (socket_send_string(serverKernel, variable_compartida)>0){
+		log_info(logCPU, "Le envio al kernel el nombre de la variable compartida %s",variable_compartida)	;
+	}else{
+		log_info(logCPU, "Error al enviar al kernel el nombre de la variable compartida %s",variable_compartida)	;
+	}
+	if(socket_recv_string(serverKernel,&resp)>0){
+		if (strcmp(resp,"Success")==0){
+			if(socket_recv_int(serverKernel,&value)>0){
+				log_info(logCPU, "Recibo el valor %d de variable %s", value, variable_compartida);
+			}else{
+				log_info(logCPU, "Error recibiendo el valor de la variable %s", variable_compartida);
+			}
+		}
+	}else{
+		log_info(logCPU, "Error recibiendo la respuesta del Kernel");
+	}
+	free(variable_compartida);
+	free(resp);
+	printf("Finalizo AnSISOP_obtenerValorCompartida\n");
+	return value;
 }
 
 t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	printf("AnSISOP_asignarValorCompartida [%s con valor %d]\n", variable, valor);
+
 	log_info(logCPU, "Voy a asignar el valor %d a la variable compartida %s.", valor, variable);
 	//Envio al kernel la variable
-	if(socket_send_string(serverKernel,variable)>0){
-		log_info(logCPU,"AnSISOP_asignarValorCompartida: Envio correctamente la variable %s\n",variable);
+	char* variable_compartida=string_new();
+	string_append(&variable_compartida,"!");
+	string_append(&variable_compartida,variable);
+	if (socket_send_string(serverKernel,"setSharedVariable")>0){
+			log_info(logCPU, "Solicito al Kernel asignar el valor %d a la variable %s",valor,variable_compartida);
+		}else{
+			log_info(logCPU, "Error solicitando al Kernel asignal el valor %d a la variable %s", valor, variable_compartida);
+		}
+	if(socket_send_string(serverKernel,variable_compartida)>0){
+		log_info(logCPU,"AnSISOP_asignarValorCompartida: Envio correctamente la variable %s\n",variable_compartida);
 	}else{
-		log_info(logCPU,"AnSISOP_asignarValorCompartida: Error enviando la variable %s\n",variable);
+		log_info(logCPU,"AnSISOP_asignarValorCompartida: Error enviando la variable %s\n",variable_compartida);
 	}
 	//Envio al kernel el valor que quiero que le setee a la variable
 	if(socket_send_int(serverKernel,valor)>0){
@@ -217,15 +263,27 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 		log_info(logCPU,"AnSISOP_asignarValorCompartida: Error enviando el valor %d de la variable %s\n",valor,variable);
 	}
 	//Declaro la variable que voy a usar para recibir el valor seteado por kernel
-	int valorAsignado;
-	//Recibo del kernel el valor asignado
-	if(socket_recv_int(serverKernel,&valorAsignado)>0){
-		log_info(logCPU,"AnSISOP_asignarValorCompartida: Recibo correctamente el valor %d de la variable %s\n",valorAsignado,variable);;
+	char* resultado=string_new();
+	//Recibo del kernel el resultado de efectuar la operacion
+	if(socket_recv_string(serverKernel,&resultado)>0){
+		log_info(logCPU,"Se recibe correctamente el resultado de asignar el valor %d a la variable compartida %s",valor, variable_compartida);
+		if (strcmp(resultado,"Success")==0){
+			log_info(logCPU, "Se ha seteado correctamente el valor %d a la variable %s", valor, variable_compartida);
+		}else{
+			log_info(logCPU, "No se pudo setear el valor %d a la variable %s", valor, variable_compartida);
+			EXIT_FAILURE;
+		}
+	}else{
+		log_info(logCPU, "Error al recibir el resultado de asignar el valor %d a la variable compartida %s",valor, variable_compartida);
 	}
-	return valorAsignado;
+	free(variable_compartida);
+	free(resultado);
+	printf("Finalizo AnSISOP_asignarValorCompartida\n");
+	return valor;
 }
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
+	printf("AnSISOP_wait [%s]\n", identificador_semaforo);
 	char* answerFromKernel=string_new();
 	int resp;
 	if(socket_send_string(serverKernel,"wait")>0){
@@ -255,9 +313,11 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 		log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el WAIT al semaforo %s\n", identificador_semaforo);
 	}
 	free(answerFromKernel);
+	printf("Finalizo AnSISOP_wait\n");
 }
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
+	printf("AnSISOP_signal\n");
 	char* answerFromKernel=string_new();
 	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
 	if (socket_send_string(serverKernel,"signal")>0){
@@ -279,9 +339,12 @@ void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 		}else{
 			log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el SIGNAL al semaforo %s\n", identificador_semaforo);
 		}
+	free(answerFromKernel);
+	printf("Finalizo AnSISOP_signal\n");
 }
 
 t_puntero AnSISOP_alocar(t_valor_variable espacio){
+	printf("AnSISOP_alocar [Espacio: %d]\n", espacio);
 	log_info(logCPU, "Se llamo a la funcion alocar, para un espacio de: %d", espacio);
 
 	if (socket_send_string(serverKernel, "alocar")>0){
@@ -300,10 +363,12 @@ t_puntero AnSISOP_alocar(t_valor_variable espacio){
 		log_info(logCPU,"Recibo el puntero donde se aloco el espacio: %d\n", puntero);
 		 punteroFinal=(int)puntero;
 	}
+	printf("Finalizo AnSISOP_alocar\n");
 	return punteroFinal;
 }
 
 void AnSISOP_liberar(t_puntero puntero){
+	printf("AnSISOP_liberar el puntero [%d]\n",puntero);
 	//COMO VALIDAMOS QUE PUNTERO HAYA SIDO PREVIAMENTE ALOCADO?
 	log_info(logCPU, "Se va a liberar el puntero: %d", puntero);
 	if(socket_send_int(serverKernel,puntero)>0){
@@ -311,8 +376,22 @@ void AnSISOP_liberar(t_puntero puntero){
 	}else{
 		log_info(logCPU, "Error enviando al kernel el puntero que quiero liberar: %d\n", puntero);
 	}
+	printf("Finalizo AnSISOP_liberar\n");
+}
+
+void flagsAppend(char* string, t_banderas flags){
+	if(flags.creacion){
+		string_append(&string,string_from_format("%c",'c'));
+	}
+	if(flags.escritura){
+		string_append(&string,string_from_format("%c",'w'));
+	}
+	if(flags.lectura){
+		string_append(&string,string_from_format("%c",'r'));
+	}
 }
 t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas flags){
+	printf("AnSISOP_abrir [%s]\n", direccion);
 	//Envio orden: abrir
 	if (socket_send_string(serverKernel,"abrir")>0){
 		log_info(logCPU,"Informo al Kernel que el programa %d quiere abrir un archivo\n", pcb->pid);
@@ -326,11 +405,9 @@ t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas fl
 		log_info(logCPU, "Error enviando la ruta del archivo: %s\n", direccion);
 	}
 	//Envio flags
-	if (socket_send(serverKernel,&flags,sizeof(flags))>0){
-		log_info(logCPU, "Envio correctamente los permisos de apertura del archivo: %s\n",flags);
-	}else{
-		log_info(logCPU, "Error enviando los permisos de apertura del archivo: %s\n",flags);
-	}
+	char* flagString=string_new();
+	flagsAppend(flagString, flags);
+	socket_send_string(serverKernel, flagString);
 	//Recibo el descriptor de archivo
 	int descriptor;
 	t_descriptor_archivo descriptorPosta;
@@ -340,9 +417,11 @@ t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas fl
 	}else{
 		log_info(logCPU, "Error recibiendo el descriptor de archivo\n");
 	}
+	printf("Finalizo AnSISOP_abrir\n");
 	return descriptorPosta;
 }
 void AnSISOP_borrar (t_descriptor_archivo direccion){
+	printf("AnSISOP_borrar [%d]\n", direccion);
 	//Informo al kernel que el programa quiere borrar el archivo
 	if (socket_send_string(serverKernel,"borrar")>0){
 		log_info(logCPU, "Informo correctamente al Kernel que el programa %d quiere borrar el archivo ubicado en: %d\n",pcb->pid,direccion);
@@ -354,8 +433,20 @@ void AnSISOP_borrar (t_descriptor_archivo direccion){
 	}else{
 		log_info(logCPU, "Error enviando la direccion al kernel: %d\n", direccion);
 	}
+	int resultado;
+	if (socket_recv_int(serverKernel,&resultado)>0){
+		if(resultado==1){
+			log_info(logCPU, "Se borro el archivo con file descriptor %d con exito",direccion);
+		}else{
+			log_info(logCPU, "No se pudo borrar el archivo con file descriptor %d",direccion);
+		}
+	}else{
+		log_info(logCPU, "Error enviando la direccion al kernel: %d\n", direccion);
+	}
+	printf("Finalizo AnSISOP_borrar\n");
 }
 void AnSISOP_cerrar (t_descriptor_archivo descriptor_archivo){
+	printf("AnSISOP_cerrar [%d]\n",descriptor_archivo);
 	//Informo al kernel que el programa quiere cerrar un archivo
 	if (socket_send_string(serverKernel,"cerrar")>0){
 		log_info(logCPU, "Informo correctamente que el programa %d quiere cerrar el archivo ubicado en %d\n", pcb->pid, descriptor_archivo);
@@ -369,8 +460,20 @@ void AnSISOP_cerrar (t_descriptor_archivo descriptor_archivo){
 	}else{
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);
 	}
+
+	//Recibo el resultado
+	int resultado;
+	if(socket_recv_int(serverKernel,&resultado)>0){
+		if(resultado==1){
+			log_info(logCPU, "Se cerro el archivo con file descriptor %d con exito", descriptor_archivo);
+		}else{
+			log_info(logCPU, "Error al solicitar cerrar archivo, Se recibio el error: %d", resultado);
+		}
+	}
+	printf("Finalizo AnSISOP_cerrar\n");
 }
 void AnSISOP_moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
+	printf("AnSISOP_moverCursor [descriptor: %d] [posicion: %d]\n", descriptor_archivo, posicion);
 	//Informo al kernel que quiero mover cursor
 	if (socket_send_string(serverKernel, "moverCursor")>0){
 		log_info(logCPU, "Informo correctamente al kernel que el programa %d quiere mover el cursor en el archivo ubicado en %d a la posicion %d\n", pcb->pid, descriptor_archivo, posicion);
@@ -391,9 +494,12 @@ void AnSISOP_moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variab
 	}else{
 		log_info(logCPU, "Error enviando la posicion a la que quiero mover el cursor: %d\n", posicion);
 	}
+	printf("Finalizo AnSISOP_moverCursor\n");
 }
 void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
+	printf("AnSISOP_escribir [Descriptor: %d] [Tamanio: %d]\n",descriptor_archivo, tamanio);
 	//Informo al kernel que quiero escribir archivo
+	printf("escribir\n");
 	log_info(logCPU, "Descriptor: %d Tamanio: %d", descriptor_archivo, tamanio);
 	if (socket_send_string(serverKernel, "escribir")>0){
 		log_info(logCPU, "Informo correctamente al kernel que el programa %d quiere escribir un archivo\n", pcb->pid);
@@ -414,8 +520,20 @@ void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion
 	}else{
 		log_info(logCPU, "Error enviando la informacion %s cuyo tamanio es %d\n", (char*)informacion,tamanio);
 	}
+	//Recibo la respuesta del Kernel
+	int resp;
+	if(socket_recv_int(serverKernel,&resp)>0){
+		if (resp==1){
+			log_info(logCPU, "Se escribio correctamente lo solicitado");
+		}else{
+			log_info(logCPU, "El programa intentó escribir un archivo sin permisos");
+			EXIT_FAILURE;
+		}
+	}
+	printf("Finalizo AnSISOP_escribir\n");
 }
 void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
+	printf("AnSISOP_leer [Descriptor: %d] [Donde: %d] [Tamanio: %d]\n",descriptor_archivo, informacion, tamanio);
 	//Informo al kernel que quiero leer archivo
 	if (socket_send_string(serverKernel,"leer")>0){
 		log_info(logCPU, "Informo correctamente al kernel que el programa %d quiere leer un archivo\n", pcb->pid);
@@ -424,7 +542,7 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion
 	}
 
 	//Envio al kernel el descriptor de archivo
-	if (socket_send_int(serverKernel, descriptor_archivo)>0){
+	if (socket_send_int(serverKernel, (int)descriptor_archivo)>0){
 		log_info(logCPU, "Envio correctamente el descriptor de archivo: %d\n", descriptor_archivo);
 	}else{
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);
@@ -443,4 +561,16 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion
 	}else{
 		log_info(logCPU, "Error enviando el tamanio de lo que quiero leer: %d\n", tamanio);
 	}
+
+	//Recibo la respuesta del Kernel
+	int resp;
+	if (socket_recv_int(serverKernel,&resp)>0){
+		if (resp==1){
+			log_info(logCPU, "Se leyo correctamente el archivo solicitado");
+		}else{
+			log_info(logCPU, "El programa intentó leer un archivo sin permisos");
+			EXIT_FAILURE;
+		}
+	}
+	printf("Finalizo AnSISOP_leer\n");
 }

@@ -22,9 +22,11 @@ void ansisop_init(){
 	ansisop_funciones->AnSISOP_llamarConRetorno=AnSISOP_llamarConRetorno;
 	ansisop_funciones->AnSISOP_retornar=AnSISOP_retornar;
 	ansisop_funciones->AnSISOP_llamarSinRetorno=AnSISOP_llamarSinRetorno;
-
+	ansisop_funciones->AnSISOP_asignarValorCompartida=AnSISOP_asignarValorCompartida;
+ansisop_funciones->AnSISOP_obtenerValorCompartida=AnSISOP_obtenerValorCompartida;
 	ansisop_funciones_kernel = (AnSISOP_kernel*) malloc(sizeof(AnSISOP_kernel));
 	ansisop_funciones_kernel->AnSISOP_wait=AnSISOP_wait;
 	ansisop_funciones_kernel->AnSISOP_signal=AnSISOP_signal;
 	ansisop_funciones_kernel->AnSISOP_escribir=AnSISOP_escribir;
+
 }

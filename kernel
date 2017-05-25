@@ -10,5 +10,5 @@ ALGORITMO=FIFO
 GRADO_MULTIPROG=1
 SEM_IDS=[SEM1, SEM2, SEM3,c]
 SEM_INIT=[0, 0, 5,1]
-SHARED_VARS=[!Global, !UnaVar, !tiempo3]
+SHARED_VARS=[!Global, !UnaVar, !tiempo3,!colas]
 STACK_SIZE=2

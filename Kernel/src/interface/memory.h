@@ -4,6 +4,7 @@
 #ifndef FUNCTIONS_MEMORY_H_
 #define FUNCTIONS_MEMORY_H_
 
+void memory_connect();
 int memory_frame_size();
 int memory_init(t_program* program, int cantPaginas);
 int memory_write(t_program* program, int page, int offset, void* buffer, int size);

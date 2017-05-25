@@ -13,8 +13,9 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-#include "../functions/memory.h"
-#include "../functions/ltp.h"
+#include "../interface/memory.h"
+#include "../planner/ltp.h"
+#include "../functions/cpu.h"
 
 int program_generate_id(){
 	programID++;
@@ -27,6 +28,8 @@ void program_process_new(fd_set* master, int socket){
 	program->interruptionCode = 0;
 	program->waiting=0;
 	program->waitingReason = string_new();
+	program->fileDescriptors =  list_create();
+	program->quantum = 0;
 
 	program->pcb = malloc(sizeof(t_pcb));
 
@@ -107,6 +110,7 @@ void program_process_new(fd_set* master, int socket){
 	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
 
 	planificador_largo_plazo();
+	cpu_inactive_planner();
 
 	return;
 }
