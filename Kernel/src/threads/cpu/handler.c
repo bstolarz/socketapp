@@ -393,7 +393,7 @@ int program_has_permission_to_write(t_cpu* cpu,t_descriptor_archivo d){
 	int permission=0;
 	for(i=0;i!=tam;i++){
 		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (string_contains(fd->global,string_from_format("%c",'w'))){
+		if (string_contains(fd->flags,string_from_format("%c",'w'))){
 			permission=1;
 		}
 	}
