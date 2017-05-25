@@ -17,6 +17,7 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
+
 	configMemory = malloc(sizeof(t_memory));
 	config_read(argv[1]);
 

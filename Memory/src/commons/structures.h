@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 #include <commons/collections/list.h>
 
 #ifndef COMMONS_STRUCTURES_H_
@@ -39,7 +40,7 @@ typedef struct
 	int PID;
 	int page;
 	char* content; // frameSize byte block
-	void* lastAccess; // TODO: ver que tipo conviene
+	clock_t lastAccess;
 } t_cache_entry;
 
 

@@ -33,22 +33,23 @@ void* memory_read(int PID, int page, int offset, int size)
 		int currentPageSize = (size < (configMemory->frameSize - offset)) ? size : (configMemory->frameSize - offset);
 		size -= currentPageSize;
 
-		char* currentPageData;
-
 		// esta en cache?
-		t_cache_entry* cacheEntry = NULL;//= cache_search(PID, page);
+		cache_access_lock();
+		t_cache_entry* cacheEntry = cache_search(PID, page);
 
 		if (cacheEntry) // cache hit
 		{
 			log_info(logMemory, "[cache hit] PID: %d, page: %d", PID, page);
-			currentPageData = cacheEntry->content;
+			memcpy(bufferStart, cacheEntry->content + offset, currentPageSize);
+			cache_access_unlock();
 		}
 		else // cache miss
 		{
+			cache_access_unlock();
 			cacheMiss = true;
-			currentPageData = ram_frame_lookup(PID, page);
+			char* ramFrame = ram_frame_lookup(PID, page);
 
-			if (currentPageData == NULL)
+			if (ramFrame == NULL)
 			{
 				// TODO: chequear que esto este bien
 				free(buffer);
@@ -58,11 +59,14 @@ void* memory_read(int PID, int page, int offset, int size)
 			else
 			{
 				// cachear
-				// cache_cache_contents(PID, page, currentPageData);
+				pthread_mutex_lock(&replaceLock);
+				cache_cache_contents(PID, page, ramFrame);
+				pthread_mutex_unlock(&replaceLock);
+
+				// copiar desde ram lo que haya
+				memcpy(bufferStart, ramFrame + offset, currentPageSize);
 			}
 		}
-
-		memcpy(bufferStart, currentPageData + offset, currentPageSize);
 
 		bufferStart = bufferStart + currentPageSize;
 		offset = 0;
@@ -72,7 +76,9 @@ void* memory_read(int PID, int page, int offset, int size)
 	if (cacheMiss)
 	{
 		log_info(logMemory, "[memory_read] cache miss page: %d, offset: %d, size: %d\nsleeping %d\n", page, offset, size, configMemory->responseDelay);
-		//usleep(configMemory->responseDelay /* in ms */ * 1000);
+		// printf("[cacheMiss pid = %d] before sleep...\n", PID);
+		usleep(configMemory->responseDelay /* in ms */ * 1000 /* in microsecs */);
+		// printf("cacheMiss pid = %d] ...after sleep\n", PID);
 	}
 
 	return buffer;
@@ -80,5 +86,55 @@ void* memory_read(int PID, int page, int offset, int size)
 
 int memory_write(int PID, int page, int offset, int size, void* buffer)
 {
-	return ram_write(PID, page, offset, size, buffer);
+	int wroteSize = 0;
+	bool cacheMiss = false;
+
+	while (size > 0)
+	{
+		int currentPageSize = (size < configMemory->frameSize - offset) ? size : (configMemory->frameSize - offset);
+		size -= currentPageSize;
+
+		// primero fijarse si existe el frame
+		char* frame = ram_frame_lookup(PID, page);
+
+		if (frame == NULL) return ERROR_MEMORY;
+
+		// traer a cache si no esta
+		cache_access_lock();
+		t_cache_entry* cacheEntry = cache_search(PID, page);
+
+		if (cacheEntry)
+		{
+			// actualizar cache
+			memcpy(cacheEntry->content + offset, buffer + wroteSize, currentPageSize);
+			cache_access_unlock();
+		}
+		else
+		{
+			cacheMiss = true;
+			cache_access_unlock(); // dejar el lock de acceso porq necesito reemplazar o buscar
+
+			pthread_mutex_lock(&replaceLock);
+			cacheEntry = cache_cache_contents(PID, page, frame); // cachear, con el contenido del frame ya actualizado
+			memcpy(cacheEntry->content + offset, buffer + wroteSize, currentPageSize);
+			pthread_mutex_unlock(&replaceLock);
+		}
+
+		// actualizacion inmediata de ram
+		memcpy(frame + offset, buffer + wroteSize, currentPageSize);
+
+		wroteSize += currentPageSize;
+		offset = 0;
+		++page;
+	}
+
+	if (cacheMiss)
+	{
+		log_info(logMemory, "[memory_write] cache miss page: %d, offset: %d, size: %d\nsleeping %d\n", page, offset, size, configMemory->responseDelay);
+		// printf("[cacheMiss pid = %d] before sleep...\n", PID);
+		usleep(configMemory->responseDelay /* in ms */ * 1000 /* in microsecs */);
+		// printf("cacheMiss pid = %d] ...after sleep\n", PID);
+	}
+
+	return wroteSize;
 }
