@@ -387,6 +387,18 @@ int delete_file_from_global_file_table(t_descriptor_archivo d, t_cpu* cpu){
 	}
 	return result;
 }
+int program_has_permission_to_write(t_cpu* cpu,t_descriptor_archivo d){
+	int tam=list_size(cpu->program->fileDescriptors);
+	int i;
+	int permission=0;
+	for(i=0;i!=tam;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if (string_contains(fd->global,string_from_format("%c",'w'))){
+			permission=1;
+		}
+	}
+	return permission;
+}
 int program_has_permission_to_delete(t_cpu* cpu,t_descriptor_archivo d){
 	int tam=list_size(cpu->program->fileDescriptors);
 	int i;
@@ -508,13 +520,13 @@ void filesystem_escribir(){
 void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
 	int FD = 0;
-	//Envio al kernel el descriptor de archivo
+	//Recibo de CPU el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
 		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
 		return;
 	}
 
-	//Envio al kernel la informacion con su tamanio
+	//Recibo de CPU la informacion con su tamanio
 	char* buffer = string_new();
 	int nbytes=0;
 	if ((nbytes = socket_recv(cpu->socket, (void**)&buffer, 1))<=0){
@@ -522,9 +534,6 @@ void handle_cpu_escribir(t_cpu* cpu){
 		return;
 	}
 
-//	printf("%i %s\n", FD, buffer);
-	//printf("%i\n", DESCRIPTOR_SALIDA);
-	//if(FD == DESCRIPTOR_SALIDA){
 	if(FD == 0){ //Por algun motivo cuando es imprimir me llama con 0
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
@@ -542,9 +551,24 @@ void handle_cpu_escribir(t_cpu* cpu){
 		if(socket_send_string(cpu->program->socket, buffer)<=0){
 			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
 		}
-	}else{
-		//Informo a FS que quiero escribir
-		filesystem_escribir();
+	}//SE PIDE ESCRIBIR EN UN ARCHIVO
+
+	else{
+		//Verifico que tenga los permisos
+		if(program_has_permission_to_write(cpu,FD)){
+			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
+			//Informo a FS que quiero escribir
+			filesystem_escribir();
+		}else{
+			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
+			//Le nofitico a CPU el error de escritura por permisos
+			if(socket_send_int(cpu->socket,-4)>0){
+				log_info(logKernel, "Informo correctamente a CPU que el programa con pid %d NO puede escribir archivos", cpu->program->pcb->pid);
+			}else{
+				log_info(logKernel, "Error informando a CPU que el programa con pid %d NO puede escribir archivos", cpu->program->pcb->pid);
+			}
+		}
+
 	}
 
 }
