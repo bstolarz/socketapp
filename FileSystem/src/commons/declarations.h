@@ -11,6 +11,6 @@
 t_fileSystem* configFileSystem;
 t_metadata* configMetadata;
 int serverSocket;
-char* bitarray;
+t_bitarray* bitarray;
 
 #endif /* COMMONS_DECLARATIONS_H_ */
