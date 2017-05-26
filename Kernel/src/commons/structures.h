@@ -9,6 +9,11 @@
 #include <commons/collections/dictionary.h>
 #include <parser/metadata_program.h>
 #include <unistd.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #ifndef COMMONS_STRUCTURES_H_
 #define COMMONS_STRUCTURES_H_
@@ -81,12 +86,23 @@ typedef struct{
 	char* waitingReason;
 	t_list* fileDescriptors;
 	int quantum;
+	t_list* heapPages;
 }t_program;
 
 typedef struct{
 	int socket;
 	t_program* program;
 }t_cpu;
+
+typedef struct{
+	u_int32_t size;
+	bool isFree;
+}t_heapmetadata;
+
+typedef struct{
+	int page;
+	int freeSpace;
+}t_heap_page;
 
 typedef struct{
 	pthread_mutex_t mutex;
