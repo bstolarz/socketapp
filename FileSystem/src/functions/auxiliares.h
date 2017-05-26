@@ -9,5 +9,6 @@
 #define FUNCTIONS_AUXILIARES_H_
 
 void crearArchivo(char* path, int posBloqueLibre);
+void crearBloqueDatos(int posBloqueLibre);
 
 #endif /* FUNCTIONS_AUXILIARES_H_ */

@@ -28,3 +28,7 @@ void crearArchivo(char* path, int posBloqueLibre){
 	fprintf(archivo, "%s", lineaBloques);
 	fclose(archivo);
 }
+
+void crearBloqueDatos(int posBloqueLibre){
+	//Creo el bloque de datos posBloqueLibre.bin adentro de la carpeta Bloques (donde estan los bloques de datos)
+}

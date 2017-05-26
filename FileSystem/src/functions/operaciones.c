@@ -24,6 +24,7 @@ int crear(char* path){
 	if (posBloqueLibre > 0){
 		ocuparBloqueLibre(posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
+		crearBloqueDatos(posBloqueLibre);
 	}
 	return 0;
 }
