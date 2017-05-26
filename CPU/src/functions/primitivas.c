@@ -520,16 +520,7 @@ void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion
 	}else{
 		log_info(logCPU, "Error enviando la informacion %s cuyo tamanio es %d\n", (char*)informacion,tamanio);
 	}
-	//Recibo la respuesta del Kernel
-	int resp;
-	if(socket_recv_int(serverKernel,&resp)>0){
-		if (resp==1){
-			log_info(logCPU, "Se escribio correctamente lo solicitado");
-		}else{
-			log_info(logCPU, "El programa intentó escribir un archivo sin permisos");
-			EXIT_FAILURE;
-		}
-	}
+
 	printf("Finalizo AnSISOP_escribir\n");
 }
 void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
