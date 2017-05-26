@@ -9,7 +9,6 @@ int ram_init();
 // Operaciones de Memoria (pag 26)
 int ram_program_init(int PID, int pageCount);
 void ram_program_end(int PID);
-int ram_write(int PID, int page, int offset, int size, void* buffer);
 char* ram_frame_lookup(int PID, int page);
 
 char* get_frame(int i); // busca el frame por indice

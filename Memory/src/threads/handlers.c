@@ -101,8 +101,8 @@ int handle_read(int clientSocket)
 	 * Primero se enviara este estado y despues se enviara la data
 	 * Luego si se envio la data, se hara el free
 	 */
-    void* data = memory_read(PID, page, offset, size);
-
+	void* data = memory_read(PID, page, offset, size);
+    
     //Envio la respuesta
     int nBytes = socket_send(clientSocket, data, size);
     if (nBytes == -1){
@@ -147,7 +147,7 @@ int handle_write(int clientSocket)
 	}
 
 	//Proceso la solicitud
-    int writeResult = memory_write(PID, page, offset, size, buffer);
+	int writeResult = memory_write(PID, page, offset, size, buffer);
 
     //Envio la respuesta
     int nBytes = socket_send_int(clientSocket, writeResult);

@@ -520,6 +520,7 @@ void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion
 	}else{
 		log_info(logCPU, "Error enviando la informacion %s cuyo tamanio es %d\n", (char*)informacion,tamanio);
 	}
+
 	printf("Finalizo AnSISOP_escribir\n");
 }
 void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
@@ -550,6 +551,17 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion
 		log_info(logCPU, "Envio correctamente el tamanio de lo que quiero leer: %d\n", tamanio);
 	}else{
 		log_info(logCPU, "Error enviando el tamanio de lo que quiero leer: %d\n", tamanio);
+	}
+
+	//Recibo la respuesta del Kernel
+	int resp;
+	if (socket_recv_int(serverKernel,&resp)>0){
+		if (resp==1){
+			log_info(logCPU, "Se leyo correctamente el archivo solicitado");
+		}else{
+			log_info(logCPU, "El programa intentó leer un archivo sin permisos");
+			EXIT_FAILURE;
+		}
 	}
 	printf("Finalizo AnSISOP_leer\n");
 }

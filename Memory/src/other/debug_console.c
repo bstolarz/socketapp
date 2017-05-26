@@ -1,6 +1,3 @@
-#include "debug_console.h"
-#include "../commons/declarations.h"
-#include "../functions/frame.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -8,7 +5,12 @@
 #include <ctype.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
+#include "debug_console.h"
+#include "../commons/declarations.h"
+#include "../functions/frame.h"
 #include "../functions/ram.h"
+#include "../functions/cache.h"
+
 
 void set_response_delay(int newResponseDelay)
 {
@@ -184,6 +186,31 @@ char* stringify_all_memory_content(frame_stringifier frameStringifier)
 	return stringify_frames_content(&anyFrame, frameStringifier);
 }
 
+char* stringify_cache_contents(frame_stringifier frameStringifier)
+{
+	int i;
+	char* contents = string_from_format("Cache: data cacheada\n");
+
+	cache_access_lock();
+
+	for (i = 0; i != configMemory->cacheEntryCount; ++i)
+	{
+		t_cache_entry* cacheEntry = &cache[i];
+
+		string_append_with_format(&contents, "frame: %d, PID: %d, page: %d, lastAccess: %zu\n", i, cacheEntry->PID, cacheEntry->page, cacheEntry->lastAccess);
+
+		char* frameStr = frameStringifier(cacheEntry->content);
+		string_append(&contents, frameStr);
+		free(frameStr);
+
+		string_append(&contents, "\n");
+	}
+
+	cache_access_unlock();
+
+	return contents;
+}
+
 
 
 
@@ -232,7 +259,7 @@ void show_options()
 	printf("- [dump structs] Muestra la Tabla de páginas y listado de procesos activos\n"); // semi done (ver si hay que locker) (testear)
 	printf("- [dump cont (PID|*) type] Datos almacenados en memoria de todos los procesos o de un proceso en particular\n");
 	printf("\n");
-	printf("- [flush] borra lo que está cacheado\n"); // TODO
+	printf("- [flu] borra lo que está cacheado\n"); // done
 	printf("\n");
 	printf("- [size mem] Total frames, cant ocupados y cant libres\n"); // done
 	printf("- [size pid] Muestra el tamano de un proceso\n"); // done
@@ -290,14 +317,42 @@ _Bool handle_delay(char** tokens, char** info)
 	return false;
 }
 
+_Bool handle_flush(char** tokens, char** info)
+{
+	if (string_starts_with(tokens[0], "flu"))
+	{
+		cache_flush();
+		*info = string_from_format("[flu] se limpio la cache");
+
+		return true;
+	}
+
+	return false;
+}
+
 _Bool handle_dump(char** tokens, char** info)
 {
+	frame_stringifier frame_stringifier_from_tokens(char** tokens)
+	{
+		int i;
+
+		// dump cont | dump cont *
+		for (i = 1; i != 4; ++i)
+		{
+			if (tokens[i] == NULL)
+				return stringify_frame_content_int;
+
+			if (string_equals_ignore_case(tokens[i], "str"))
+				return stringify_frame_content_str;
+		}
+		return stringify_frame_content_int;
+	};
+
 	if (string_starts_with(tokens[0], "dump") && (tokens + 1) != NULL)
 	{
 		if (string_starts_with(tokens[1], "cache"))
 		{
-			// [dump cache] Muestra qué hay en la memoria caché\n"); // TODO
-			*info = string_from_format("[dump cache] todavia no implementado");
+			*info = stringify_cache_contents(frame_stringifier_from_tokens(tokens));
 			return true;
 		}
 		else if (string_starts_with(tokens[1], "structs"))
@@ -308,16 +363,7 @@ _Bool handle_dump(char** tokens, char** info)
 		}
 		else if (string_starts_with(tokens[1], "cont"))
 		{
-			frame_stringifier frame_stringifier_from_tokens(char** tokens)
-			{
-				// dump cont | dump cont *
-				if (((tokens + 2) != NULL && string_equals_ignore_case(tokens[2], "str")) ||
-					((tokens + 3) != NULL && string_equals_ignore_case(tokens[3], "str")))
-					return stringify_frame_content_str;
 
-				else
-					return stringify_frame_content_int;
-			};
 
 			if ((tokens + 2) == NULL || string_equals_ignore_case(tokens[2], "*") || string_equals_ignore_case(tokens[2], "str"))
 			{
@@ -342,6 +388,12 @@ _Bool handle_dump(char** tokens, char** info)
 	}
 
 	return false;
+}
+
+void dump_che_int()
+{
+	char* info = stringify_cache_contents(stringify_frame_content_int);
+	printf("%s", info);
 }
 
 _Bool handle_size(char** tokens, char** info)
@@ -388,6 +440,7 @@ _Bool proccess_command(char** commandTokens, char** resultInfo)
 {
 	console_command_handler commandHandlers[] = {
 		&handle_delay,
+		&handle_flush,
 		&handle_dump,
 		&handle_size
 	};

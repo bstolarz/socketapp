@@ -112,30 +112,6 @@ char* ram_frame_lookup(int PID, int page)
     return NULL;
 }
 
-// no hace falta lockear porque va a ser 1 sola computadora la que acceda a este frame
-int ram_write(int PID, int page, int offset, int size, void* buffer)
-{
-	int wroteSize = 0;
-
-	while (size > 0)
-	{
-		int currentPageSize = (size < configMemory->frameSize - offset) ? size : (configMemory->frameSize - offset);
-		size -= currentPageSize;
-
-		char* frame = ram_frame_lookup(PID, page);
-
-		if (frame == NULL) return ERROR_MEMORY;
-
-		memcpy(frame + offset, buffer + wroteSize, currentPageSize);
-
-		wroteSize += currentPageSize;
-		offset = 0;
-		++page;
-	}
-
-    return wroteSize;
-}
-
 int frame_count(_Bool (*framePredicate)(t_pageTableEntry*))
 {
     int i;
