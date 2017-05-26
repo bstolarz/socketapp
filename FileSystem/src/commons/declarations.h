@@ -5,6 +5,8 @@
  *      Author: utnso
  */
 #include "structures.h"
+#include <commons/bitarray.h>
+
 #ifndef COMMONS_DECLARATIONS_H_
 #define COMMONS_DECLARATIONS_H_
 
