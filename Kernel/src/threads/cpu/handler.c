@@ -127,9 +127,9 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 
 	//Busco la shared variable
 	int _is_the_variable(t_sharedVar* var){
-		return strcmp(sharedVariable,var->nombre);
+		return (strcmp(sharedVariable,var->nombre)==0);
 	}
-	t_sharedVar* sv = list_find(configKernel->shared_vars,(void*)_is_the_variable);
+	t_sharedVar* sv = (t_sharedVar*)list_find(configKernel->shared_vars,(void*)_is_the_variable);
 
 	//Verifico que exista
 	if(sv == NULL){
@@ -160,6 +160,8 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
 		log_info(logKernel,"No se obtuvo el nombre de la shared variable de %d\n", cpu->socket);
 		return;
+	}else{
+		log_info(logKernel, "Nombre de variable compartida: %s", sharedVariable);
 	}
 
 	//Obtengo el valor de la shared variable
@@ -167,19 +169,23 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	if (socket_recv_int(cpu->socket,&value)<=0){
 		log_info(logKernel,"No se obtuvo el valor de la shared variable de %d\n", cpu->socket);
 		return;
+	}else{
+		log_info(logKernel, "Valor a setear a %s: %d", sharedVariable, value);
 	}
 
 	//Busco la shared variable
 	int _is_the_variable(t_sharedVar* var){
-		return strcmp(sharedVariable,var->nombre);
+		return (strcmp(sharedVariable,var->nombre)==0);
 	}
-	t_sharedVar* sv = list_find(configKernel->shared_vars,(void*)_is_the_variable);
+	t_sharedVar* sv = (t_sharedVar*)list_find(configKernel->shared_vars,(void*)_is_the_variable);
 
 	//Verifico que exista
 	if(sv == NULL){
 		log_info(logKernel,"La shared variable '%s' que solicito %d no existe.\n", sv->nombre, cpu->socket);
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+		}else{
+			log_info(logKernel, "Notifique correctamente que no existe la variable compartida");
 		}
 		return;
 	}
