@@ -123,8 +123,34 @@ typedef struct{
 
 typedef struct{
 	int value;
+	int cursor;
 	char* flags;
 	t_gobal_fd* global;
 }t_fd;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif /* COMMONS_STRUCTURES_H_ */

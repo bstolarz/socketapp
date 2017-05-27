@@ -20,8 +20,30 @@
 
 #include "../../functions/cpu.h"
 #include "../../interface/memory.h"
-
-
+void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo fd, char* path){
+	int tam=list_size(cpu->program->fileDescriptors);
+	int i;
+	for(i=0;i!=tam;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if(fd->value==fd){
+			strcpy(path,fd->global->path);
+		}
+	}
+}
+int get_cursor_of_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
+	int tamanio=list_size(cpu->program->fileDescriptors);
+	int i;
+	int cursor=0;
+	for (i=0;i!=tamanio;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if (fd->global->path==path){
+			if(string_contains(fd->flags,string_from_format("%c",'r'))){
+				cursor=fd->cursor;
+			}
+		}
+	}
+	return cursor;
+}
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
@@ -526,18 +548,48 @@ void handle_cpu_cerrar(t_cpu* cpu){
 }
 
 void handle_cpu_mover_cursor(t_cpu* cpu){
-	//TODO
-}
-void filesystem_escribir(){
-	if(socket_send_string(fileSystemServer.socket,"GUARDARDATOS")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero borrar");
+	//Recibo el descriptor de archivo
+	int FD;
+	if (socket_recv_int(cpu->socket,&FD)<=0){
+			log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
+			return;
 	}
+	//Recibo la cantidad de bytes a moverme
+	int bytesToMove;
+	if (socket_recv_int(cpu->socket,&bytesToMove)<=0){
+		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
+		return;
+	}
+
+}
+void filesystem_escribir(char* path, int offset, int size){
+	if(socket_send_string(fileSystemServer.socket,"GUARDARDATOS")>0){
+		log_info(logKernel, "Envio correctamente a FS que quiero escribir el archivo '%s'",path);
+	}else{
+		log_info(logKernel, "Error al enviar a FS que quiero escribir el archivo '%s'",path);
+	}
+	if(socket_send_string(fileSystemServer.socket,path)>0){
+		log_info(logKernel, "Envio correctamente a FS la path '%s' que quiero escribir",path);
+	}else{
+		log_info(logKernel, "Error al enviar a FS la path '%s' que quiero escribir",path);
+	}
+	if(socket_send_int(fileSystemServer.socket,offset)>0){
+		log_info(logKernel, "Envio correctamente a FS el offset: %d",offset);
+	}else{
+		log_info(logKernel, "Error al enviar a FS el offset: %d", offset);
+	}
+	if(socket_send_int(fileSystemServer.socket,size)>0){
+		log_info(logKernel, "Envio correctamente a FS el tamanio a escribir: %d",size);
+	}else{
+		log_info(logKernel, "Error al enviar a FS el tamanio a escribir: %d", size);
+	}
+
+
 }
 void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
 	int FD = 0;
+	char* path=string_new();
 	//Recibo de CPU el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
 		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
@@ -576,7 +628,19 @@ void handle_cpu_escribir(t_cpu* cpu){
 		if(program_has_permission_to_write(cpu,FD)){
 			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Informo a FS que quiero escribir
-			filesystem_escribir();
+			get_filename_with_filedescriptor(cpu,FD,path);
+			int cursorToFS=get_cursor_of_file(FD,cpu,path);
+			filesystem_escribir(path, cursorToFS, nbytes);
+			int respuestaFromFS;
+			if(socket_recv_int(fileSystemServer.socket,respuestaFromFS)>0){
+				if(respuestaFromFS>0){
+					log_info(logKernel, "Se pudo escribir con exito");
+				}else{
+					log_info(logKernel, "Error al escribir en FS");
+				}
+			}else{
+				log_info(logKernel, "Error recibiendo respuesta del FS al escribir archivo");
+			}
 		}else{
 			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Le nofitico a CPU el error de escritura por permisos
@@ -606,7 +670,7 @@ int get_permission_on_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
 	return permiso;
 }
 
-void filesystem_leer(char* path, int page, size_t offset){
+void filesystem_leer(char* path, size_t offset, int size){
 	if (socket_send_string(fileSystemServer.socket,"OBTENERDATOS")>0){
 		log_info(logKernel, "Le pido a FS obtener datos");
 		if (socket_send_string(fileSystemServer.socket,path)>0){
@@ -617,8 +681,8 @@ void filesystem_leer(char* path, int page, size_t offset){
 		}
 	}
 }
+
 void handle_cpu_leer(t_cpu* cpu){
-	//Recibo el file descriptor
 	t_descriptor_archivo descriptor;
 	int d;
 	int dondeGuardarLoLeido;
@@ -632,7 +696,8 @@ void handle_cpu_leer(t_cpu* cpu){
 	}
 	descriptor=(t_descriptor_archivo)d;
 	char* path=string_new();
-
+	//Busco el path
+	get_filename_with_filedescriptor(cpu,descriptor,path);
 	//Recibo el tamanio a leer
 	if(socket_recv_int(cpu->socket,&tamanioALeer)>0){
 		log_info(logKernel, "CPU necesita leer %d bytes",tamanioALeer);
@@ -648,10 +713,9 @@ void handle_cpu_leer(t_cpu* cpu){
 		//PUEDE LEER
 		if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido)>0){
 			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
-			int page;
-			int tamanioALeer;
 			//Le pido a FS leer el archivo
-			//filesystem_leer(path,);
+			int cursorToFS=get_cursor_of_file(descriptor,cpu,path);
+			filesystem_leer(path,cursorToFS,tamanioALeer);
 			//Recibo la respuesta de FS de la lectura efectuada
 			int resp;
 			if (socket_recv_int(fileSystemServer.socket,&resp)>0){
@@ -677,8 +741,6 @@ void handle_cpu_leer(t_cpu* cpu){
 			log_info(logKernel, "Error al informar al CPU que el programa con pid %d no tiene permisos de lectura", cpu->program->pcb->pid);
 		}
 	}
-
-
 }
 
 
