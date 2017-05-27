@@ -20,6 +20,7 @@
 
 #include "../../functions/cpu.h"
 #include "../../interface/memory.h"
+#include "../../interface/filesystem.h"
 void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo _fd, char* path){
 	int tam=list_size(cpu->program->fileDescriptors);
 	int i;
@@ -30,7 +31,7 @@ void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo _fd, char
 		}
 	}
 }
-int get_cursor_of_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
+int get_cursor_of_file(t_cpu* cpu, char* path){
 	int tamanio=list_size(cpu->program->fileDescriptors);
 	int i;
 	int cursor=0;
@@ -557,7 +558,16 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		}
 	}
 }
-
+void update_cursor_of_file(t_cpu* cpu, t_descriptor_archivo f, int c){
+	int tam=list_size(cpu->program->fileDescriptors);
+	int i;
+	for (i=0;i!=tam;i++){
+		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
+		if (fd->value==f){
+			fd->cursor=c;
+		}
+	}
+}
 void handle_cpu_mover_cursor(t_cpu* cpu){
 	//Recibo el descriptor de archivo
 	int FD;
@@ -565,13 +575,16 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 			log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
 			return;
 	}
+	t_descriptor_archivo f=(t_descriptor_archivo)FD;
 	//Recibo la cantidad de bytes a moverme
 	int bytesToMove;
 	if (socket_recv_int(cpu->socket,&bytesToMove)<=0){
 		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
 		return;
 	}
-
+	char* nombre=string_new();
+	get_filename_with_filedescriptor(cpu,FD,nombre);
+	update_cursor_of_file(cpu,f,bytesToMove);
 }
 void filesystem_escribir(char* path, int offset, int size){
 	if(socket_send_string(fileSystemServer.socket,"GUARDARDATOS")>0){
@@ -640,7 +653,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Informo a FS que quiero escribir
 			get_filename_with_filedescriptor(cpu,FD,path);
-			int cursorToFS=get_cursor_of_file(FD,cpu,path);
+			int cursorToFS=get_cursor_of_file(cpu,path);
 			filesystem_escribir(path, cursorToFS, nbytes);
 			int respuestaFromFS;
 			if(socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0){
@@ -715,7 +728,7 @@ void handle_cpu_leer(t_cpu* cpu){
 		if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido)>0){
 			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
 			//Le pido a FS leer el archivo
-			int cursorToFS=get_cursor_of_file(descriptor,cpu,path);
+			int cursorToFS=get_cursor_of_file(cpu,path);
 			filesystem_leer(path,cursorToFS,tamanioALeer);
 			//Recibo la respuesta de FS de la lectura efectuada
 			int resp;
