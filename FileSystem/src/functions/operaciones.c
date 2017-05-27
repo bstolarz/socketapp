@@ -21,7 +21,7 @@ int validar(char* path){
 
 int crear(char* path){
 	int posBloqueLibre = encontrarUnBloqueLibre();
-	if (posBloqueLibre > 0){
+	if (posBloqueLibre >= 0){
 		ocuparBloqueLibre(posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
 		crearBloqueDatos(posBloqueLibre);

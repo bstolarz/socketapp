@@ -14,7 +14,7 @@ void crearArchivo(char* path, int posBloqueLibre){
 
 	FILE* archivo = fopen(path, "w");
 	//Cuando creo el bloque de datos va a tener 0 bytes o 1 byte?
-	fprintf(archivo, "TAMANIO=1\n");
+	fprintf(archivo, "TAMANIO=0\n");
 
 	char* lineaBloques = "BLOQUES=[";
 	char* bloque = "";
@@ -30,5 +30,13 @@ void crearArchivo(char* path, int posBloqueLibre){
 }
 
 void crearBloqueDatos(int posBloqueLibre){
-	//Creo el bloque de datos posBloqueLibre.bin adentro de la carpeta Bloques (donde estan los bloques de datos)
+	char* path = configFileSystem->punto_montaje;
+	string_append(&path, "Bloques/");
+
+	char* bloque = "";
+	sprintf(bloque, "%d.bin", posBloqueLibre);
+	string_append(&path, bloque);
+
+	FILE* archivoBloqueDatos = fopen(path, "w");
+	fclose(archivoBloqueDatos);
 }
