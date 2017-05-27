@@ -25,6 +25,8 @@ void* socket_thread_requests(void* args){
 			response = handle_init(request->socket);
 		}else if (strcmp("end", command) == 0){
 			response = handle_end(request->socket);
+		}else if (strcmp("get_pages", command) == 0){
+			response = handle_get_pages(request->socket);
 		}else if (strcmp("frame_size", command) == 0){
 			response = handle_frame_size(request->socket);
 		}else{

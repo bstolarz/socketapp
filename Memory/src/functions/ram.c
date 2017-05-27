@@ -38,8 +38,7 @@ int ram_init()
 }
 
 
-// Operaciones de Memoria (pag 26)
-int ram_program_init(int PID, int pageCount)
+int ram_get_pages_for_proccess(int PID, int pageCount, int startPage)
 {
 	// puede que el kernel mande pedidos de iniciar proceso al mismo tiempo
 	// lockeo aca para que no traten de usar los mismos frames vacios los 2 procesos
@@ -49,8 +48,9 @@ int ram_program_init(int PID, int pageCount)
 
 	if (freeFrameCount < pageCount)
 	{
-		log_error(logMemory, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
 		pthread_mutex_unlock(&freeFrameMutex);
+		log_error(logMemory, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
+
 		return ERROR_NO_RESOURCES_FOR_PROCCESS;
 	}
 
@@ -62,12 +62,31 @@ int ram_program_init(int PID, int pageCount)
 	{
 		t_pageTableEntry* freeFrameEntry = freeFramesEntries[freeFrameCount + i];
 		freeFrameEntry->PID = PID;
-		freeFrameEntry->page = i;
+		freeFrameEntry->page = startPage + i;
 	}
 
 	pthread_mutex_unlock(&freeFrameMutex);
 
-    return 0;
+	return 0;
+}
+
+
+// Operaciones de Memoria (pag 26)
+int ram_program_init(int PID, int pageCount)
+{
+	return ram_get_pages_for_proccess(PID, pageCount, 0);
+}
+
+int ram_get_pages(int PID, int pageCount)
+{
+	_Bool isProccessFrame(t_pageTableEntry* entry)
+	{
+		return PID == entry->PID;
+	};
+
+	int proccessCurrentPageCount = frame_count(isProccessFrame);
+
+	return ram_get_pages_for_proccess(PID, pageCount, proccessCurrentPageCount - 1);
 }
 
 void ram_program_end(int PID)
