@@ -13,32 +13,46 @@
 #include "../functions/memory.h"
 #include "../functions/ram.h"
 
-int handle_init(int clientSocket)
+// iniciar el programa y obtener paginas son mas o menos lo mismo,
+// solo varia donde empieza a enumerar las paginas
+// por eso esta funcion toma como parametro la funcion q busca las paginas
+// lo q le manda el kernel es lo mismo (PID, pageCount)
+int handle_page_request(int clientSocket, int (*page_request_handler)(int, int), char* operationName)
 {
 	//Recivo PID
 	int PID;
 	if(socket_recv_int(clientSocket, &PID) <= 0){
-		log_error(logMemory, "[init] request: problema recviendo PID (socket %d)", clientSocket);
+		log_error(logMemory, "[%s] request: problema recviendo PID (socket %d)", operationName, clientSocket);
 		return -1;
 	}
 
 	//Recivo page count
 	int pageCount;
 	if(socket_recv_int(clientSocket, &pageCount) <= 0){
-		log_error(logMemory, "[init] request: problema recviendo pageCount (socket %d)", clientSocket);
+		log_error(logMemory, "[%s] request: problema recviendo pageCount (socket %d)", operationName, clientSocket);
 		return -1;
 	}
 
 	//Proceso la peticion
-	int success = ram_program_init(PID, pageCount);
+	int success = page_request_handler(PID, pageCount);
 
 	//Envio el resultado
 	int nBytes = socket_send_int(clientSocket, success);
 	if (nBytes <= 0){
-		log_error(logMemory, "[init] request: problema send result (PID: %d, pageCount: %d, success: %d, socket: %d)", PID, pageCount, success, clientSocket);
+		log_error(logMemory, "[%s] request: problema send result (PID: %d, pageCount: %d, success: %d, socket: %d)", operationName, PID, pageCount, success, clientSocket);
 	}
 
 	return 0;
+}
+
+int handle_init(int clientSocket)
+{
+	return handle_page_request(clientSocket, ram_program_init, "init");
+}
+
+int handle_get_pages(int clientSocket)
+{
+	return handle_page_request(clientSocket, ram_get_pages, "get_pages");
 }
 
 int handle_end(int clientSocket){

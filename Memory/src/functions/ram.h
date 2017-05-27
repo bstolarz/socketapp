@@ -10,6 +10,7 @@ int ram_init();
 int ram_program_init(int PID, int pageCount);
 void ram_program_end(int PID);
 char* ram_frame_lookup(int PID, int page);
+int ram_get_pages(int PID, int pageCount);
 
 char* get_frame(int i); // busca el frame por indice
 int frame_count(_Bool (*framePredicate)(t_pageTableEntry*));
