@@ -20,12 +20,12 @@
 
 #include "../../functions/cpu.h"
 #include "../../interface/memory.h"
-void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo fd, char* path){
+void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo _fd, char* path){
 	int tam=list_size(cpu->program->fileDescriptors);
 	int i;
 	for(i=0;i!=tam;i++){
 		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if(fd->value==fd){
+		if(fd->value==_fd){
 			strcpy(path,fd->global->path);
 		}
 	}
@@ -400,6 +400,9 @@ void handle_cpu_abrir(t_cpu* cpu){
 			newFD_to_file->value++;
 			descriptorToCPU=newFD_to_file->value;
 			newFD_to_file->global=newFD;
+			newFD_to_file->cursor=0;
+			log_info(logKernel, "Entrada en tabla de archivos del proceso:");
+			log_info(logKernel, "FD: %d|Flags: %s|Cursor: %d",newFD_to_file->value, newFD_to_file->flags,newFD_to_file->cursor);
 			list_add(cpu->program->fileDescriptors,newFD_to_file);
 		}else{
 			//Verifico si tengo permiso de creacion
@@ -413,6 +416,8 @@ void handle_cpu_abrir(t_cpu* cpu){
 			}
 		}
 	}
+	free(path);
+	free(flags);
 	socket_send_int(cpu->socket,descriptorToCPU);
 }
 int delete_file_from_global_file_table(t_descriptor_archivo d, t_cpu* cpu){
@@ -632,7 +637,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			int cursorToFS=get_cursor_of_file(FD,cpu,path);
 			filesystem_escribir(path, cursorToFS, nbytes);
 			int respuestaFromFS;
-			if(socket_recv_int(fileSystemServer.socket,respuestaFromFS)>0){
+			if(socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0){
 				if(respuestaFromFS>0){
 					log_info(logKernel, "Se pudo escribir con exito");
 				}else{
@@ -652,7 +657,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 		}
 
 	}
-
+	free(path);
 }
 int get_permission_on_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
 	int tamanio=list_size(cpu->program->fileDescriptors);
@@ -670,17 +675,7 @@ int get_permission_on_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
 	return permiso;
 }
 
-void filesystem_leer(char* path, size_t offset, int size){
-	if (socket_send_string(fileSystemServer.socket,"OBTENERDATOS")>0){
-		log_info(logKernel, "Le pido a FS obtener datos");
-		if (socket_send_string(fileSystemServer.socket,path)>0){
-			log_info(logKernel, "Le paso a FS el path '%s'",path);
 
-		}else{
-
-		}
-	}
-}
 
 void handle_cpu_leer(t_cpu* cpu){
 	t_descriptor_archivo descriptor;
