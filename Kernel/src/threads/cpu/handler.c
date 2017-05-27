@@ -255,11 +255,29 @@ void handle_cpu_signal(t_cpu* cpu){
 	//TODO avisarle a los bloqueados que se levanto este semaforo
 }
 void handle_cpu_alocar(t_cpu* cpu){
-	//TODO
+	t_program* program = cpu->program;
+
+	//Obtengo el tamaño a alocar
+	int size = 0;
+	if (socket_recv_int(cpu->socket,&size)<=0){
+		log_info(logKernel,"No se obtuvo el size a alocar de %d\n", cpu->socket);
+		return;
+	}
+
+	int puntero = memory_dynamic_alloc(program, size);
+	if(puntero > 0 ){
+		if (socket_recv_int(cpu->socket,&puntero)<=0){
+			log_info(logKernel,"No se pudo enviar el puntero de %d\n", cpu->socket);
+			return;
+		}
+	}else{
+		//TODO error handler
+	}
 }
 
 void handle_cpu_liberar(t_cpu* cpu){
 }
+
 t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
 	int tamanio=list_size(l);
 	int i;

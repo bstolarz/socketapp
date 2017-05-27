@@ -26,7 +26,7 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
-	initSadica();
+	//initSadica();
 
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
@@ -58,8 +58,8 @@ int main(int arg, char* argv[]) {
 	char* mensajeDeOperacion = "";
 	while (1) {
 		if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
-			printf("%s", mensajeDeOperacion);
-			//hacerLoQueCorresponda(mensajeDeOperacion);
+			//printf("%s", mensajeDeOperacion);
+			hacerLoQueCorresponda(mensajeDeOperacion);
 		} else {
 			printf("Se desconecto el kernel.\n");
 			close(socketKernel);

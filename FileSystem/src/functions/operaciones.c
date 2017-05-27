@@ -3,8 +3,10 @@
 #include <unistd.h>
 #include <errno.h>
 #include <commons/config.h>
+#include "bitmap.h"
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+#include "auxiliares.h"
 
 //Implementacion de operaciones, por ahora son dummies
 int validar(char* path){
@@ -18,6 +20,12 @@ int validar(char* path){
 }
 
 int crear(char* path){
+	int posBloqueLibre = encontrarUnBloqueLibre();
+	if (posBloqueLibre > 0){
+		ocuparBloqueLibre(posBloqueLibre);
+		crearArchivo(path, posBloqueLibre);
+		crearBloqueDatos(posBloqueLibre);
+	}
 	return 0;
 }
 

@@ -13,6 +13,7 @@
 #define COMMONS_DEFINITIONS_H_
 
 int programID;
+int pageSize;
 
 pthread_t selectProgramThread;
 pthread_t selectCPUThread;

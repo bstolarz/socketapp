@@ -5,12 +5,14 @@
  *      Author: utnso
  */
 #include "structures.h"
+#include <commons/bitarray.h>
+
 #ifndef COMMONS_DECLARATIONS_H_
 #define COMMONS_DECLARATIONS_H_
 
 t_fileSystem* configFileSystem;
 t_metadata* configMetadata;
 int serverSocket;
-char* bitarray;
+t_bitarray* bitarray;
 
 #endif /* COMMONS_DECLARATIONS_H_ */
