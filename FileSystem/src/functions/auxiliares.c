@@ -9,6 +9,16 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+char* armarPathBloqueDatos(char** path, int numeroBloque) {
+	*path = configFileSystem->punto_montaje;
+	string_append(path, "Bloques/");
+
+	char* bloqueDato = "";
+	sprintf(bloqueDato, "%d.bin", numeroBloque);
+	string_append(path, bloqueDato);
+
+	return *path;
+}
 
 void crearArchivo(char* path, int posBloqueLibre){
 
@@ -33,28 +43,16 @@ void eliminarMetadataArchivo(char* path){
 	remove(path);
 }
 void crearBloqueDatos(int posBloqueLibre){
-	//Abstraer desde aca asi lo reuso en eliminarBloqueDatos
-	char* path = configFileSystem->punto_montaje;
-	string_append(&path, "Bloques/");
-
-	char* bloque = "";
-	sprintf(bloque, "%d.bin", posBloqueLibre);
-	string_append(&path, bloque);
-	//Hasta aca
+	char* path = "";
+	armarPathBloqueDatos(&path, posBloqueLibre);
 
 	FILE* archivoBloqueDatos = fopen(path, "w");
 	fclose(archivoBloqueDatos);
 }
 
 void eliminarBloqueDatos(int bloque){
-	//Abstraer desde aca
-	char* path = configFileSystem->punto_montaje;
-	string_append(&path, "Bloques/");
-
-	char* bloqueD = "";
-	sprintf(bloqueD, "%d.bin", bloque);
-	string_append(&path, bloqueD);
-	//Hasta aca
+	char* path = "";
+	armarPathBloqueDatos(&path, bloque);
 
 	remove(path);
 }
