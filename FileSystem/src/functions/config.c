@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 #include "../commons/declarations.h"
 
 
@@ -29,4 +30,23 @@ void config_free(){
 	free(configFileSystem->puerto);
 	free(configFileSystem->punto_montaje);
 	free(configFileSystem);
+}
+
+void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
+	t_config* config = config_create(path);
+
+	archivo->tamanio = config_get_int_value(config, "TAMANIO");
+
+	char** s = config_get_array_value(config, "BLOQUES");
+
+	archivo->bloques = list_create();
+	while (*s != NULL) {
+		int bloque = atoi(*s);
+
+		list_add(archivo->bloques, &bloque);
+
+		s++;
+	}
+
+	config_destroy(config);
 }

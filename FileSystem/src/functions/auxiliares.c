@@ -29,14 +29,32 @@ void crearArchivo(char* path, int posBloqueLibre){
 	fclose(archivo);
 }
 
+void eliminarMetadataArchivo(char* path){
+	remove(path);
+}
 void crearBloqueDatos(int posBloqueLibre){
+	//Abstraer desde aca asi lo reuso en eliminarBloqueDatos
 	char* path = configFileSystem->punto_montaje;
 	string_append(&path, "Bloques/");
 
 	char* bloque = "";
 	sprintf(bloque, "%d.bin", posBloqueLibre);
 	string_append(&path, bloque);
+	//Hasta aca
 
 	FILE* archivoBloqueDatos = fopen(path, "w");
 	fclose(archivoBloqueDatos);
+}
+
+void eliminarBloqueDatos(int bloque){
+	//Abstraer desde aca
+	char* path = configFileSystem->punto_montaje;
+	string_append(&path, "Bloques/");
+
+	char* bloqueD = "";
+	sprintf(bloqueD, "%d.bin", bloque);
+	string_append(&path, bloqueD);
+	//Hasta aca
+
+	remove(path);
 }

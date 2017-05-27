@@ -10,5 +10,6 @@
 
 int encontrarUnBloqueLibre();
 void ocuparBloqueLibre(int posBloqueLibre);
+void liberarBloqueDelBitmap(int bloque);
 
 #endif /* FUNCTIONS_BITMAP_H_ */
