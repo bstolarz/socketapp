@@ -7,6 +7,7 @@ t_indiceDelStack* stack_context_create()
 	t_indiceDelStack* nivelStack = (t_indiceDelStack*) malloc(sizeof(t_indiceDelStack));
 	
 	nivelStack->vars = dictionary_create();
+	nivelStack->argCount = 0;
 	nivelStack->retPos = -1;
 	nivelStack->retVar = NULL;
 	nivelStack->argCount=0;
@@ -19,7 +20,7 @@ void stack_context_destroy(void* stackContextVoid)
 	t_indiceDelStack* stackContext = (t_indiceDelStack*) stackContextVoid;
 
 	dictionary_destroy_and_destroy_elements(stackContext->vars, &free);
-	free(stackContext->retVar);
+	if (stackContext->retVar != NULL) free(stackContext->retVar);
 	int i;
 	for (i=0;i!=9;i++){
 	stackContext->args[i].off=0;
@@ -38,7 +39,7 @@ t_indiceDelStack* stack_context_current()
 
 void stack_pop()
 {
-	t_indiceDelStack* indiceToDelete=list_get(pcb->indiceDeStack,list_size(pcb->indiceDeStack) - 1);
+	t_indiceDelStack* indiceToDelete=list_get(pcb->indiceDeStack, list_size(pcb->indiceDeStack) - 1);
 	
 	int varsUsed=dictionary_size(indiceToDelete->vars);
 	//Reduzco el stackPosition en la cantidad de argumentos y de variables locales multiplicadas por su tamanio

@@ -8,18 +8,18 @@
 #include "../commons/structures.h"
 
 u_int32_t PUNTERO_SIZE = sizeof(u_int32_t);
-u_int32_t POSITION_SIZE = sizeof(int32_t) * 3;
+u_int32_t SERIALIZED_POSITION_SIZE = sizeof(int32_t) * 3;
 
 // calculo tamanio y despues copio
 // stream de bytes regex = elemCount [key\0value]*
-t_dataBlob serialize_static_type_dict(t_dictionary* dict, u_int32_t elemSize, SerializerCopier valueSerializer)
+t_dataBlob serialize_static_type_dict(t_dictionary* dict, u_int32_t serializedElemSize, SerializerCopier valueSerializer)
 {
 	t_dataBlob serializedDict;
 	u_int32_t elemCount = dictionary_size(dict);
 
 	// calculo tamanio total del dict
 	// como los elementos tienen tamano fijo, no tengo que calcular dinamicamente su tamano
-	serializedDict.size = sizeof(u_int32_t)/*elemCount*/ + (elemCount * elemSize);
+	serializedDict.size = sizeof(u_int32_t)/*elemCount*/ + (elemCount * serializedElemSize);
 
 	void key_size_iterator(char* key, void* value)
 	{
@@ -45,7 +45,7 @@ t_dataBlob serialize_static_type_dict(t_dictionary* dict, u_int32_t elemSize, Se
 		dataIter += keyLen;
 
 		valueSerializer(value, dataIter);
-		dataIter += elemSize;
+		dataIter += serializedElemSize;
 	}
 
 	dictionary_iterator(dict, serialize_iterator);
@@ -55,6 +55,7 @@ t_dataBlob serialize_static_type_dict(t_dictionary* dict, u_int32_t elemSize, Se
 
 t_dictionary* deserialize_static_type_dict(	char*  serializedDict,
 											u_int32_t elemSize,
+											u_int32_t serializedElemSize,
 											DeserializerCopier valueDeserializer,
 											u_int32_t* byteSize)
 {
@@ -75,7 +76,7 @@ t_dictionary* deserialize_static_type_dict(	char*  serializedDict,
 
 		void* value = malloc(elemSize);
 		valueDeserializer(serializedDict + offset, value);
-		offset += elemSize;
+		offset += serializedElemSize;
 
 		dictionary_put(dict, key, value);
 	}
@@ -88,50 +89,56 @@ t_dictionary* deserialize_static_type_dict(	char*  serializedDict,
 t_dataBlob serialize_static_type_array(	void* array,
 										u_int32_t elemCount,
 										u_int32_t elemSize,
+										u_int32_t serializedElemSize,
 										SerializerCopier valueSerializer)
 {
 	t_dataBlob serializedArray;
-	serializedArray.size = sizeof(u_int32_t)/*elemCount*/ + (elemCount * elemSize);
+	serializedArray.size = sizeof(u_int32_t)/*elemCount*/ + (elemCount * serializedElemSize);
 	serializedArray.data = malloc(serializedArray.size);
-	u_int32_t offset = 0;
+	u_int32_t serializationOffset = 0;
+	u_int32_t arrayOffset = 0;
 	u_int32_t i;
 
 	// count
 	memcpy(serializedArray.data, &elemCount, sizeof(u_int32_t));
-	offset += sizeof(u_int32_t);
+	serializationOffset += sizeof(u_int32_t);
 
 
 	// content
 	for (i = 0; i != elemCount; ++i)
 	{
-		valueSerializer(array + (offset - sizeof(u_int32_t)), serializedArray.data + offset);
-		offset += elemSize;
+		valueSerializer(array + arrayOffset, serializedArray.data + serializationOffset);
+		serializationOffset += serializedElemSize;
+		arrayOffset += elemSize;
 	}
 
-	assert(offset == (elemSize * elemCount + sizeof(u_int32_t)));
+	assert(serializationOffset == serializedArray.size);
 
 	return serializedArray;
 }
 
 void* deserialize_static_type_array(char* serializedArray,
 									u_int32_t elemSize,
+									u_int32_t serializedElemSize,
 									DeserializerCopier valueDeserializer,
 									u_int32_t* byteSize)
 {
-	u_int32_t offset = 0;
+	u_int32_t deserializationOffset = 0;
+	u_int32_t arrayOffset = 0;
 	int i;
 	u_int32_t elemCount = *((u_int32_t*) serializedArray);
 
-	offset += sizeof(u_int32_t);
+	deserializationOffset += sizeof(u_int32_t);
 	void * array = malloc(elemSize * elemCount);
 
 	for (i = 0; i != elemCount; ++i)
 	{
-		valueDeserializer(serializedArray + offset, array + (offset - sizeof(u_int32_t)));
-		offset += elemSize;
+		valueDeserializer(serializedArray + deserializationOffset, array + arrayOffset);
+		deserializationOffset += serializedElemSize;
+		arrayOffset += elemSize;
 	}
 
-	*byteSize = offset;
+	*byteSize = deserializationOffset;
 
 	return array;
 }
@@ -219,11 +226,11 @@ void position_deserializer(char* from, void* to)
 
 t_dataBlob stack_context_serialize(t_indiceDelStack* stackContext)
 {
-	t_dataBlob serializedVars = serialize_static_type_dict(stackContext->vars, POSITION_SIZE, &position_serializer);
-	t_dataBlob serializedArgs = serialize_static_type_array(stackContext->args, 10, POSITION_SIZE, &position_serializer);
+	t_dataBlob serializedVars = serialize_static_type_dict(stackContext->vars, SERIALIZED_POSITION_SIZE, &position_serializer);
+	t_dataBlob serializedArgs = serialize_static_type_array(stackContext->args, stackContext->argCount, sizeof(t_position), SERIALIZED_POSITION_SIZE, &position_serializer);
 	u_int32_t stackContextSize =	serializedVars.size +
 									serializedArgs.size +
-									POSITION_SIZE  + // retVar
+									SERIALIZED_POSITION_SIZE  + // retVar
 									sizeof(int32_t); // retPos
 
 	t_dataBlob serializedStackContext = { stackContextSize, malloc(stackContextSize) };
@@ -239,7 +246,7 @@ t_dataBlob stack_context_serialize(t_indiceDelStack* stackContext)
 	free(serializedArgs.data);
 
 	position_serializer(stackContext->retVar, serializedStackContext.data + offset);
-	offset += POSITION_SIZE;
+	offset += SERIALIZED_POSITION_SIZE;
 
 	memcpy(serializedStackContext.data + offset, &stackContext->retPos, sizeof(int32_t));
 
@@ -253,17 +260,21 @@ t_indiceDelStack* stack_context_deserialize(char* serializedStackContext, u_int3
 
 	u_int32_t varsSize;
 	stackContext->vars = deserialize_static_type_dict(	serializedStackContext,
-														POSITION_SIZE,
+														sizeof(t_position),
+														SERIALIZED_POSITION_SIZE,
 														&position_deserializer,
 														&varsSize);
 
+	stackContext->argCount = *((u_int32_t*) (serializedStackContext + varsSize));
+
 	u_int32_t argsSize;
 	void* deserializedArgs = deserialize_static_type_array(	serializedStackContext + varsSize,
-															POSITION_SIZE,
+															sizeof(t_position),
+															SERIALIZED_POSITION_SIZE,
 															&position_deserializer,
 															&argsSize);
 
-	memcpy(stackContext->args, deserializedArgs, argsSize);
+	memcpy(stackContext->args, deserializedArgs, stackContext->argCount * sizeof(t_position));
 
 	free(deserializedArgs);
 
@@ -277,9 +288,9 @@ t_indiceDelStack* stack_context_deserialize(char* serializedStackContext, u_int3
 		stackContext->retVar = NULL;
 	}
 
-	stackContext->retPos = *((int32_t*) (serializedStackContext + varsSize + argsSize + POSITION_SIZE));
+	stackContext->retPos = *((int32_t*) (serializedStackContext + varsSize + argsSize + SERIALIZED_POSITION_SIZE));
 
-	*byteSize = varsSize + argsSize + POSITION_SIZE + PUNTERO_SIZE;
+	*byteSize = varsSize + argsSize + SERIALIZED_POSITION_SIZE + PUNTERO_SIZE;
 
 	return stackContext;
 }
@@ -342,6 +353,7 @@ t_dataBlob pcb_serialize(t_pcb* pcb)
 {
 	t_dataBlob serializedCodeIndex = serialize_static_type_array(pcb->indiceDeCodigo,
 																 pcb->indiceDeCodigoCant,
+																 sizeof(t_intructions),
 																 sizeof(u_int32_t) * 2,
 																 &instruction_serializer);
 
@@ -452,6 +464,7 @@ t_pcb* pcb_deserialize(t_dataBlob serializedPcb)
 	// indice de codigo
 	u_int32_t codeIndexSize;
 	pcb->indiceDeCodigo = deserialize_static_type_array(serializedPcb.data + offset,
+													sizeof(t_intructions),
 													sizeof(u_int32_t) * 2,
 													&instruction_deserializer,
 													&codeIndexSize);
@@ -520,9 +533,13 @@ bool stack_context_compare(t_indiceDelStack* original, t_indiceDelStack* copy)
 	if (!dictionary_compare(original->vars, copy->vars, &position_compare))
 		return false;
 
+
+	if (original->argCount != copy->argCount)
+		return false;
+
 	// args
 	int i;
-	for (i = 0; i != 10; ++i)
+	for (i = 0; i != original->argCount; ++i)
 		if (!position_compare(&original->args[i], &copy->args[i]))
 			return false;
 

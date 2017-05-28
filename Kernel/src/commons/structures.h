@@ -55,6 +55,7 @@ typedef struct{
 
 typedef struct{
 	t_dictionary* vars;
+	size_t argCount;
 	t_position args[10]; // pueden haber de 0 a 9 args. por valor para no necesitar allocar y dellocar
 	int retPos;
 	t_position* retVar;
