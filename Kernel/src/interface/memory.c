@@ -13,6 +13,8 @@
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+
+#include "../functions/heap.h"
 #include "memory.h"
 
 void memory_connect(){
@@ -52,6 +54,47 @@ int memory_init(t_program* program, int cantPaginas){
 
 	//Pido el inicio de un nuevo programa
 	if(socket_send_string(memoryServer.socket, "init")<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	//Envio el PID
+	if(socket_send_int(memoryServer.socket, program->pcb->pid)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	//Envio la cantidad de paginas a pedir
+	if(socket_send_int(memoryServer.socket, cantPaginas)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	//Obtengo respuesta del init
+	int respuesta =0;
+	if(socket_recv_int(memoryServer.socket, &respuesta)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	pthread_mutex_unlock(&memoryServer.mutex);
+	return respuesta;
+}
+
+int memory_get_pages(t_program* program, int cantPaginas){
+
+	pthread_mutex_lock(&memoryServer.mutex);
+
+	//Pido el inicio de un nuevo programa
+	if(socket_send_string(memoryServer.socket, "get_pages")<=0){
 		printf("Se perdio la conexion con la memoria\n");
 		log_warning(logKernel, "Se perdio la conexion con la memoria");
 		pthread_mutex_unlock(&memoryServer.mutex);
@@ -207,44 +250,19 @@ t_puntero memory_dynamic_alloc(t_program* program, int size){
 		return -8;
 	}
 
-	//Busco que paginas tienen el tamaño disponible y contiguo
-	int locatedPage = 0;
-	int locatedOffset = 0;
-	int locatedSpace = 0;
-	void _hasFreeSpace(t_heap_page* page){
-		if(page->freeSpace <= size){
-			int offset = 0;
-			t_heapmetadata* metadata = NULL;
-			if(memory_read(program, page->page, offset, sizeof(t_heapmetadata), metadata) == sizeof(t_heapmetadata)){
-				while(offset < pageSize && locatedSpace==0){
-					if(size==metadata->size || (size+sizeof(t_heapmetadata))<=metadata->size){
-						locatedPage = page->page;
-						locatedOffset = offset;
-						locatedSpace=1;
-					}else{
-						offset += metadata->size + sizeof(t_heapmetadata);
-					}
-				}
-			}
-		}
-	}
-	list_iterate(program->heapPages, (void*)_hasFreeSpace);
-
-	//Si no encontre ninguna pagina con el espacio suficiente, reservo una nueva y seteo las variables
-	if(locatedSpace == 0){
-		//TODO crear pagina nueva
-		//TODO inicializar pagina nueva
-		//TODO setear locatedPage y locatedOffset
-		//TODO Si no se puede reservar una pagina nueva, dar error
+	int page = 0;
+	int offset = 0;
+	if(heap_find_space_available(program, size, &page, &offset) != 1){
+		page = heap_new_page(program);
 	}
 
-	int returnValue = (locatedPage * pageSize) + locatedOffset + sizeof(t_heapmetadata);
+	int returnValue = (page * pageSize) + offset + sizeof(t_heapmetadata);
 	t_heapmetadata* metadata = NULL;
-	if(memory_read(program, locatedPage, locatedOffset, sizeof(t_heapmetadata), metadata) == sizeof(t_heapmetadata)){
+	if(memory_read(program, page, offset, sizeof(t_heapmetadata), metadata) == sizeof(t_heapmetadata)){
 
 		if(size==metadata->size){
 			metadata->isFree = 0;
-			if(memory_write(program, locatedPage, locatedOffset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
+			if(memory_write(program, page, offset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
 				printf("Ocurrio algo al alocar con valor exacto\n");
 				return 0;
 			}
@@ -252,14 +270,14 @@ t_puntero memory_dynamic_alloc(t_program* program, int size){
 			t_heapmetadata* newMetadata = malloc(sizeof(t_heapmetadata));
 			newMetadata->isFree = 0;
 			newMetadata->size = size;
-			if(memory_write(program, locatedPage, locatedOffset, newMetadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
+			if(memory_write(program, page, offset, newMetadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
 				printf("Ocurrio algo al alocar con valor menor - parte 1\n");
 				return 0;
 			}
 
-			locatedOffset +=  sizeof(t_heapmetadata) + size;
+			offset +=  sizeof(t_heapmetadata) + size;
 			metadata->size -= newMetadata->size - sizeof(t_heapmetadata);
-			if(memory_write(program, locatedPage, locatedOffset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
+			if(memory_write(program, page, offset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
 				printf("Ocurrio algo al alocar con valor meonr - parte 2\n");
 				return 0;
 			}
