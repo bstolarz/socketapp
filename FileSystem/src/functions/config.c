@@ -15,11 +15,13 @@
 void config_print(){
 	printf("El Tamanio de los bloques es: %s\n", configFileSystem->puerto);
 	printf("Punto de montaje: %s\n", configFileSystem->punto_montaje);
+
 }
 
 void config_read(char* path){
 	t_config* config = config_create(path);
-
+	if(config==NULL)
+		log_info(logs, "El create no enconro el path");
 	configFileSystem->puerto=string_duplicate(config_get_string_value(config,"PUERTO"));
 	configFileSystem->punto_montaje=string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 

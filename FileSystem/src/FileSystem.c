@@ -6,6 +6,7 @@
 #include <commons/string.h>
 #include "commons/structures.h"
 #include "commons/declarations.h"
+#include <commons/log.h>
 #include "functions/config.h"
 #include "functions/operaciones.h"
 #include "init.h"
@@ -21,13 +22,19 @@ int main(int arg, char* argv[]) {
 		printf("Path missing! %d\n", arg);
 		return 1;
 	}
+	remove("logFileSystem");
+	logs = log_create("logFileSystem", "FileSystem", 0, LOG_LEVEL_TRACE);
+	log_info(logs, "Inicia logueo");
 
 	configFileSystem = malloc(sizeof(t_fileSystem));
 	config_read(argv[1]);
+	log_info(logs, "antes de config_print");
 	config_print();
+	log_info(logs, "antes de initSadica");
 
-	//initSadica();
+	initSadica();
 
+	printf("YA EJECUTO initSadica");
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
 	int socketKernel;
@@ -68,6 +75,8 @@ int main(int arg, char* argv[]) {
 		}
 	}
 
+	unmountSadica();
+	log_destroy(logs);
 	return EXIT_SUCCESS;
 }
 
