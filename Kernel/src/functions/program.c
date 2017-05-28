@@ -71,6 +71,7 @@ void program_process_new(fd_set* master, int socket){
 
 	// crear el contexto del main del programa
 	t_indiceDelStack* mainContext = malloc(sizeof(t_indiceDelStack));
+	mainContext->argCount = 0;
 	mainContext->vars = dictionary_create();
 	mainContext->retPos = -1;
 	mainContext->retVar = NULL;

@@ -13,14 +13,19 @@ typedef struct {
 	char* data;
 } t_dataBlob;
 
-t_dataBlob serialize_static_type_dict(t_dictionary* dict, u_int32_t elemSize, SerializerCopier valueSerializer);
+t_dataBlob serialize_static_type_dict(t_dictionary* dict, u_int32_t serializedElemSizelemSize, SerializerCopier valueSerializer);
 t_dictionary* deserialize_static_type_dict(	char* serializedDict,
 											u_int32_t elemSize,
+											u_int32_t serializedElemSize,
 											DeserializerCopier valueDeserializer,
 											u_int32_t* byteSize);
 
-t_dataBlob serialize_static_type_array(void* array, u_int32_t elemCount, u_int32_t elemSize, SerializerCopier valueSerializer);
-void* deserialize_static_type_array(char* serializedArray, u_int32_t elemSize, DeserializerCopier valueDeserializer, u_int32_t* byteSize);
+t_dataBlob serialize_static_type_array(	void* array,
+										u_int32_t elemCount,
+										u_int32_t elemSize,
+										u_int32_t serializedElemSize,
+										SerializerCopier valueSerializer);
+void* deserialize_static_type_array(char* serializedArray, u_int32_t elemSize, u_int32_t serializedElemSize, DeserializerCopier valueDeserializer, u_int32_t* byteSize);
 
 void int_value_serializer(void* from, char* toByteStream);
 void int_value_deserializer(char* fromByteStream, void* to);
