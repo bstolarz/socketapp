@@ -27,3 +27,7 @@ int encontrarUnBloqueLibre(){
 void ocuparBloqueLibre(int posBloqueLibre){
 	bitarray_set_bit(bitarray, posBloqueLibre);
 }
+
+void liberarBloqueDelBitmap(int bloque){
+	bitarray_clean_bit(bitarray, bloque);
+}

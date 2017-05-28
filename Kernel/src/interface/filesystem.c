@@ -20,3 +20,14 @@ void filesystem_connect(){
 
 	socket_send_string(fileSystemServer.socket, "Kernel");
 }
+void filesystem_leer(char* path, size_t offset, int size){
+	if (socket_send_string(fileSystemServer.socket,"OBTENERDATOS")>0){
+		log_info(logKernel, "Le pido a FS obtener datos");
+		if (socket_send_string(fileSystemServer.socket,path)>0){
+			log_info(logKernel, "Le paso a FS el path '%s'",path);
+
+		}else{
+
+		}
+	}
+}

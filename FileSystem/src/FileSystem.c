@@ -52,13 +52,13 @@ int main(int arg, char* argv[]) {
 			printf("Se conecto alguien que no es kernel. Te equivocaste de barrio papu!\n");
 			close(socketKernel);
 		}
-
+		break;
 	}
 
 	char* mensajeDeOperacion = "";
 	while (1) {
 		if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
-			//printf("%s", mensajeDeOperacion);
+			printf("Recibi el mensaje de operacion: %s", mensajeDeOperacion);
 			hacerLoQueCorresponda(mensajeDeOperacion);
 		} else {
 			printf("Se desconecto el kernel.\n");
@@ -78,8 +78,9 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	int size;
 	int resultado;
 
-	if (string_equals_ignore_case(unMensajeDeOperacion, "VALIDAR")) {
+	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
 		socket_recv_string(serverSocket, &path);
+		printf("Recibi el path: %s", path);
 		resultado = validar(path);
 	} else if (string_equals_ignore_case(unMensajeDeOperacion, "CREAR")) {
 		socket_recv_string(serverSocket, &path);

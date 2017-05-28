@@ -37,5 +37,5 @@ void handle_cpu_cerrar(t_cpu* cpu);
 void handle_cpu_mover_cursor(t_cpu* cpu);
 void handle_cpu_escribir(t_cpu* cpu);
 void handle_cpu_leer(t_cpu* cpu);
-
+int get_cursor_of_file(t_cpu* cpu, char* path);
 #endif /* THREADS_CPU_HANDLER_H_ */

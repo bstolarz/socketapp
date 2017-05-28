@@ -9,12 +9,22 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+char* armarPathBloqueDatos(char** path, int numeroBloque) {
+	*path = configFileSystem->punto_montaje;
+	string_append(path, "Bloques/");
+
+	char* bloqueDato = "";
+	sprintf(bloqueDato, "%d.bin", numeroBloque);
+	string_append(path, bloqueDato);
+
+	return *path;
+}
 
 void crearArchivo(char* path, int posBloqueLibre){
 
 	FILE* archivo = fopen(path, "w");
 	//Cuando creo el bloque de datos va a tener 0 bytes o 1 byte?
-	fprintf(archivo, "TAMANIO=1\n");
+	fprintf(archivo, "TAMANIO=0\n");
 
 	char* lineaBloques = "BLOQUES=[";
 	char* bloque = "";
@@ -29,6 +39,20 @@ void crearArchivo(char* path, int posBloqueLibre){
 	fclose(archivo);
 }
 
+void eliminarMetadataArchivo(char* path){
+	remove(path);
+}
 void crearBloqueDatos(int posBloqueLibre){
-	//Creo el bloque de datos posBloqueLibre.bin adentro de la carpeta Bloques (donde estan los bloques de datos)
+	char* path = "";
+	armarPathBloqueDatos(&path, posBloqueLibre);
+
+	FILE* archivoBloqueDatos = fopen(path, "w");
+	fclose(archivoBloqueDatos);
+}
+
+void eliminarBloqueDatos(int bloque){
+	char* path = "";
+	armarPathBloqueDatos(&path, bloque);
+
+	remove(path);
 }
