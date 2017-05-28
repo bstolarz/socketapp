@@ -130,7 +130,7 @@ int memory_get_pages(t_program* program, int cantPaginas){
 	return respuesta;
 }
 
-int memory_read(t_program* program, int page, int offset, int size, void* buffer){
+int memory_read(t_program* program, int page, int offset, int size, void** buffer){
 	pthread_mutex_lock(&memoryServer.mutex);
 
 	//Envio la operacion
@@ -175,7 +175,7 @@ int memory_read(t_program* program, int page, int offset, int size, void* buffer
 
 	//Obtengo respuesta
 	int nbytes =0;
-	if((nbytes = socket_recv(memoryServer.socket, &buffer, 1))<=0){
+	if((nbytes = socket_recv(memoryServer.socket, buffer, 1))<=0){
 		printf("Se perdio la conexion con la memoria\n");
 		log_warning(logKernel, "Se perdio la conexion con la memoria");
 		pthread_mutex_unlock(&memoryServer.mutex);
