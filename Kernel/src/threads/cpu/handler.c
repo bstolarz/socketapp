@@ -58,7 +58,6 @@ void handle_new_cpu(int socket){
 	}else{
 		cpu->program=NULL;
 	}
-	//TODO send quantum
 }
 
 void handle_interruption(t_cpu * cpu){
@@ -284,8 +283,6 @@ void handle_cpu_signal(t_cpu* cpu){
 	//TODO avisarle a los bloqueados que se levanto este semaforo
 }
 void handle_cpu_alocar(t_cpu* cpu){
-	t_program* program = cpu->program;
-
 	//Obtengo el tamaño a alocar
 	int size = 0;
 	if (socket_recv_int(cpu->socket,&size)<=0){
@@ -293,18 +290,24 @@ void handle_cpu_alocar(t_cpu* cpu){
 		return;
 	}
 
-	int puntero = memory_dynamic_alloc(program, size);
-	if(puntero > 0 ){
-		if (socket_recv_int(cpu->socket,&puntero)<=0){
-			log_info(logKernel,"No se pudo enviar el puntero de %d\n", cpu->socket);
-			return;
-		}
-	}else{
-		//TODO error handler
+	int puntero = memory_heap_alloc(cpu->program, size);
+
+	if (socket_send_int(cpu->socket, puntero)<=0){
+		log_info(logKernel,"No se pudo enviar el puntero de %d\n", cpu->socket);
 	}
 }
 
 void handle_cpu_liberar(t_cpu* cpu){
+
+	//Obtengo el tamaño a alocar
+	int posicion = 0;
+	if (socket_recv_int(cpu->socket,&posicion)<=0){
+		log_info(logKernel,"No se obtuvo el size a alocar de %d\n", cpu->socket);
+		return;
+	}
+
+	div_t pos = div(posicion, pageSize);
+	memory_heap_free(cpu->program, pos.quot, pos.rem);
 }
 
 t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
@@ -637,7 +640,6 @@ void handle_cpu_escribir(t_cpu* cpu){
 
 		printf("%i %s\n", FD, buffer);
 
-	//	printf("todo listo para mandar\n");
 		if(socket_send_string(cpu->program->socket, "imprimir")<=0){
 			log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
 		}

@@ -242,10 +242,10 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 	return respuesta;
 }
 
-t_puntero memory_dynamic_alloc(t_program* program, int size){
+t_puntero memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
-	if(size > (pageSize - 2*(sizeof(t_heapmetadata)))){
+	if(size >= (pageSize - 2*(sizeof(t_heapmetadata)))){
 		program->interruptionCode = -8;
 		return -8;
 	}
@@ -256,37 +256,23 @@ t_puntero memory_dynamic_alloc(t_program* program, int size){
 		page = heap_new_page(program);
 	}
 
-	int returnValue = (page * pageSize) + offset + sizeof(t_heapmetadata);
-	t_heapmetadata* metadata = NULL;
-	if(memory_read(program, page, offset, sizeof(t_heapmetadata), metadata) == sizeof(t_heapmetadata)){
+	heap_alloc(program, size, page, offset);
 
-		if(size==metadata->size){
-			metadata->isFree = 0;
-			if(memory_write(program, page, offset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
-				printf("Ocurrio algo al alocar con valor exacto\n");
-				return 0;
-			}
-		}else if(size < metadata->size){
-			t_heapmetadata* newMetadata = malloc(sizeof(t_heapmetadata));
-			newMetadata->isFree = 0;
-			newMetadata->size = size;
-			if(memory_write(program, page, offset, newMetadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
-				printf("Ocurrio algo al alocar con valor menor - parte 1\n");
-				return 0;
-			}
+	return (page * pageSize) + offset + sizeof(t_heapmetadata);
+}
 
-			offset +=  sizeof(t_heapmetadata) + size;
-			metadata->size -= newMetadata->size - sizeof(t_heapmetadata);
-			if(memory_write(program, page, offset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
-				printf("Ocurrio algo al alocar con valor meonr - parte 2\n");
-				return 0;
-			}
-		}else{
-			printf("Ocurrio algo al alocar\n");
-		}
+void memory_heap_free(t_program* program, int page, int offset){
+	if(page < (program->pcb->cantPagsCodigo + configKernel->stack_size) || page > (program->pcb->cantPagsCodigo + configKernel->stack_size + list_size(program->heapPages) -1)){
+		program->interruptionCode = -5;
+		return;
 	}
 
-	return returnValue;
+	if(offset< 0 || offset>(pageSize-1)){
+		program->interruptionCode = -5;
+		return;
+	}
+
+	heap_free(program, page, offset);
 }
 
 
