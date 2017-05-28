@@ -41,7 +41,6 @@ int borrar(char* path){
 	for(i=0; i<list_size(archivo->bloques); i++){
 		int* bloque = list_get(archivo->bloques, i);
 		liberarBloqueDelBitmap(*bloque);
-		eliminarBloqueDatos(*bloque);
 		eliminarMetadataArchivo(path);
 	}
 

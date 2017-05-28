@@ -10,7 +10,6 @@
 
 void crearArchivo(char* path, int posBloqueLibre);
 void crearBloqueDatos(int posBloqueLibre);
-void eliminarBloqueDatos(int bloque);
 void eliminarMetadataArchivo(char* path);
 
 #endif /* FUNCTIONS_AUXILIARES_H_ */

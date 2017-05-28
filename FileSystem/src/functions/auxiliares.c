@@ -49,10 +49,3 @@ void crearBloqueDatos(int posBloqueLibre){
 	FILE* archivoBloqueDatos = fopen(path, "w");
 	fclose(archivoBloqueDatos);
 }
-
-void eliminarBloqueDatos(int bloque){
-	char* path = "";
-	armarPathBloqueDatos(&path, bloque);
-
-	remove(path);
-}
