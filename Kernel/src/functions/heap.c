@@ -88,6 +88,12 @@ void heap_defrag(t_program* program, int page){
 					exit(EXIT_FAILURE);
 				}
 				free(currentMetadata);
+
+				bool _findPage(t_heap_page* hp){
+					return hp->page==page;
+				}
+				t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
+				heapPage->freeSpace = heapPage->freeSpace + sizeof(t_heapmetadata);
 			}else{
 				free(prevMetadata);
 				prevMetadata=currentMetadata;
@@ -102,6 +108,12 @@ void heap_defrag(t_program* program, int page){
 
 int heap_alloc(t_program* program, int size, int page, int offset){
 	t_heapmetadata* metadata = NULL;
+
+	bool _findPage(t_heap_page* hp){
+		return hp->page==page;
+	}
+	t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
+
 	if(memory_read(program, page, offset, sizeof(t_heapmetadata), (void**)&metadata) == sizeof(t_heapmetadata)){
 		if(size==metadata->size){
 			metadata->isFree = 0;
@@ -109,17 +121,20 @@ int heap_alloc(t_program* program, int size, int page, int offset){
 				printf("heap_alloc: PID:%i, Size:%i, Page:%i, Offset:%i - Tamaño igual\n", program->pcb->pid, size, page, offset);
 				exit(EXIT_FAILURE);
 			}
+			heapPage->freeSpace = heapPage->freeSpace - metadata->size;
 		}else if(size < metadata->size){
 			t_heapmetadata* newMetadata = malloc(sizeof(t_heapmetadata));
 			newMetadata->isFree = 0;
 			newMetadata->size = size;
+
 			if(memory_write(program, page, offset, newMetadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
 				printf("heap_alloc: PID:%i, Size:%i, Page:%i, Offset:%i - Tamaño menor parte 1\n", program->pcb->pid, size, page, offset);
 				exit(EXIT_FAILURE);
 			}
 
 			offset +=  sizeof(t_heapmetadata) + size;
-			metadata->size -= newMetadata->size - sizeof(t_heapmetadata);
+			metadata->size = metadata->size - newMetadata->size - sizeof(t_heapmetadata);
+			heapPage->freeSpace = heapPage->freeSpace -newMetadata->size - sizeof(t_heapmetadata);
 			if(memory_write(program, page, offset, metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
 				printf("heap_alloc: PID:%i, Size:%i, Page:%i, Offset:%i - Tamaño menor parte 2\n", program->pcb->pid, size, page, offset);
 				exit(EXIT_FAILURE);
@@ -153,6 +168,12 @@ int heap_free(t_program* program, int page, int offset){
 		printf("heap_free write\n");
 		exit(EXIT_FAILURE);
 	}
+
+	bool _findPage(t_heap_page* hp){
+		return hp->page==page;
+	}
+	t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
+	heapPage->freeSpace = heapPage->freeSpace + metadata->size;
 
 	heap_defrag(program, page);
 
