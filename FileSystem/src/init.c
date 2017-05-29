@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <errno.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include "commons/structures.h"
@@ -17,32 +18,11 @@
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
 
-void metadataFS_print(){
-	printf("El puerto del FS: %s\n", configFileSystem->puerto);
-	printf("Punto de montaje: %s\n", configFileSystem->punto_montaje);
-}
-
-void metadataFS_read(char* path){
-	t_config* config = config_create(path);
-
-	configMetadata->tamanioBloques=config_get_int_value(config,"TAMANIO_BLOQUES");
-	log_info(logs, "Lei tamanio Bloques");
-	configMetadata->cantidadBloques=config_get_int_value(config,"CANTIDAD_BLOQUES");
-
-	config_destroy(config);
-}
-
-void metadataFS_free(){
-	free(configFileSystem->puerto);
-	free(configFileSystem->punto_montaje);
-	free(configFileSystem);
-}
-
 
 void crearArchivos()
 {
 	// Funcion que crea Metada y bitmap. Creemos que esto despues sera proveido por la catedra
-
+	/*
 	int tamanioBloques = 64;
 	int cantBloques=5192;
 
@@ -52,40 +32,67 @@ void crearArchivos()
 	fprintf(fp, "CANTIDAD_BLOQUES=%i\n", cantBloques);
 	fprintf(fp, "MAGIC_NUMBER=SADICA\n");
 	fclose(fp);
+	*/
 
 	/*** c r e o  b i t  a r r a y ***/
 
-	char * bitArray = (char *) malloc(tamanioBloques);
 	int i;
+	char * strPath = string_new();
 
-	FILE * fp2 = fopen((char*) strcat(configFileSystem->punto_montaje, "/Metadata/Bitmap.bin"), "ab+");
-	for(i=0;i<cantBloques;i++)
+	string_append(&strPath, configFileSystem->punto_montaje);
+	string_append(&strPath, "Metadata/Bitmap.bin");
+
+
+	int bitmapFD = open(strPath, O_RDWR, (mode_t)0600);
+
+	log_info(logs, "Creo archivo bitarray %s", strPath);
+	char * bitmap = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapFD, 0);
+
+	if (bitmap == MAP_FAILED) {
+		close(bitmapFD);
+		perror("No se pudo mappear Sadica");
+		log_info(logs, "%i", errno);
+		exit(EXIT_FAILURE);
+	}
+
+	for(i=0;i<configMetadata->cantidadBloques;i++)
+		bitmap[i]=0;
+
+	log_info(logs, "Se mapeo bitarray a memoria");
+
+	t_bitarray * bArray = bitarray_create_with_mode(bitmap, configMetadata->cantidadBloques/8, MSB_FIRST);
+
+	log_info(logs, "hizo el create with mode, tamanio: %i", bitarray_get_max_bit(bArray));
+
+	for(i=0;i<configMetadata->cantidadBloques;i++)
 		if(i==40 || i==21 || i==82 || i==3)
-			bitArray[i] = 1;
+			bitarray_set_bit(bArray, i);
 		else
-			bitArray[i] = 0;
+			bitarray_clean_bit(bArray, i);
 
 
-	if(fwrite(bitArray, sizeof(char *), cantBloques, fp2) == NULL)
-		printf("No se pudo crear el archivo bitarray");
+	log_info(logs, "cant bloques recorridos: %i", i);
+	close(bitmapFD);
 
-	fclose(fp2);
+	munmap(&bArray, configMetadata->cantidadBloques-1);
 
 	/*** c r e o  m e t a  d a t a  p o r  a r c h i v o ***/
-
+	/*
 	FILE *fp3 = fopen((char*) strcat(configFileSystem->punto_montaje, "/Archivos/passwords/alumnosSIGA.bin"), "ab+");
 	fprintf(fp3, "TAMANIO=250\n");
 	fprintf(fp3, "BLOQUES=[40,21,82,3]");
 
 	fclose(fp3);
+	*/
 
 	/*** c r e o  b l o q u e s  d e  d a t o s ***/
+	/*
 	FILE * fpBloque;
 	for(i=0;i<cantBloques;i++){
 		fpBloque = fopen((char*) strcat(configFileSystem->punto_montaje, "/Bloques/%i.bin"), "ab+");
 		fclose(fpBloque);
 	}
-
+	*/
 }
 
 void initSadica(){
@@ -97,26 +104,21 @@ void initSadica(){
 
 	log_info(logs, "entro a initSadica");
 
-	//crearArchivos();
 
-	/***** Abro archivos ******/
-
-
+	/***** Abro Metadata ******/
 	char * strPath = string_new();
-	string_append(&strPath, ".");
 	string_append(&strPath, configFileSystem->punto_montaje);
 	string_append(&strPath, "Metadata/Metadata.bin");
 
 	log_info(logs, "%s", strPath);
-	/*
-	if(strPath == "")
-		printf("strPath esta VACIO");
-	else
-		printf("strPath TIENE ALGO");
-		*/
-	//printf("path: %s", strPath);
 
 	metadataFS_read(strPath);
+
+	log_info(logs, "Leyo metadata OK");
+	metadataFS_print();
+	log_info(logs, "Imprimio metadata OK");
+
+	crearArchivos(); /*Por ahora solo creo el Bitmap*/
 
 	//int bitmapArchive = open(strcat(configFileSystem->punto_montaje, "/Metadata/Bitmap.bin"), O_RDWR);
 
@@ -129,6 +131,7 @@ void initSadica(){
 	//Crear bit array
 	//bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
 
+	//Liberar strings
 }
 
 void unmountSadica(){

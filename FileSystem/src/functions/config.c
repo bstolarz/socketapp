@@ -13,7 +13,7 @@
 
 
 void config_print(){
-	printf("El Tamanio de los bloques es: %s\n", configFileSystem->puerto);
+	printf("El puerto del FileSystem: %s\n", configFileSystem->puerto);
 	printf("Punto de montaje: %s\n", configFileSystem->punto_montaje);
 
 }
@@ -21,7 +21,8 @@ void config_print(){
 void config_read(char* path){
 	t_config* config = config_create(path);
 	if(config==NULL)
-		log_info(logs, "El create no enconro el path");
+		log_info(logs, "El config_create no encontro el path");
+
 	configFileSystem->puerto=string_duplicate(config_get_string_value(config,"PUERTO"));
 	configFileSystem->punto_montaje=string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 
@@ -52,3 +53,23 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 
 	config_destroy(config);
 }
+
+
+void metadataFS_print(){
+	printf("Cantidad de bloques del FS: %i\n", configMetadata->cantidadBloques);
+	printf("Tamanio de cada bloque: %i\n", configMetadata->tamanioBloques);
+}
+
+void metadataFS_read(char* path){
+	t_config* config = config_create(path);
+
+	configMetadata->tamanioBloques=config_get_int_value(config,"TAMANIO_BLOQUES");
+	configMetadata->cantidadBloques=config_get_int_value(config,"CANTIDAD_BLOQUES");
+
+	config_destroy(config);
+}
+
+void metadataFS_free(){
+	free(configMetadata);
+}
+
