@@ -27,6 +27,8 @@ int main(int arg, char* argv[]) {
 	log_info(logs, "Inicia logueo");
 
 	configFileSystem = malloc(sizeof(t_fileSystem));
+	configMetadata = malloc(sizeof(t_metadata));
+
 	config_read(argv[1]);
 	log_info(logs, "antes de config_print");
 	config_print();
@@ -34,7 +36,7 @@ int main(int arg, char* argv[]) {
 
 	initSadica();
 
-	printf("YA EJECUTO initSadica");
+
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
 	int socketKernel;
