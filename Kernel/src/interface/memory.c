@@ -256,6 +256,13 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 		page = heap_new_page(program);
 	}
 
+	printf("++++++++++++++++++++++\n");
+	printf("Page: %i\n", page);
+	printf("Offset: %i\n", offset);
+	printf("Size: %i\n", size);
+	printf("Ret: %i\n", (page * pageSize) + offset + sizeof(t_heapmetadata));
+	printf("----------------------\n");
+
 	heap_alloc(program, size, page, offset);
 
 	return (page * pageSize) + offset + sizeof(t_heapmetadata);

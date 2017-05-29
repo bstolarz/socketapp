@@ -2,7 +2,9 @@
 begin
 	variables a, b
 	alocar a 50
+	alocar b 61
 	liberar a
+	liberar b
 end
 
 
