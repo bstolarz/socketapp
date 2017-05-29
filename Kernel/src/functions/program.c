@@ -194,7 +194,6 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		if(cpu->program->interruptionCode == 0 || overrideInterruption == 1){
 			cpu->program->interruptionCode = interruptionCode;
 		}
-		//TODO enviar interrupcion al cpu para que este lo devuelva con el error y se procese la muerte con la funcion 'program_finish'
 	}
 
 

@@ -86,7 +86,7 @@ int ram_get_pages(int PID, int pageCount)
 
 	int proccessCurrentPageCount = frame_count(isProccessFrame);
 
-	return ram_get_pages_for_proccess(PID, pageCount, proccessCurrentPageCount - 1);
+	return ram_get_pages_for_proccess(PID, pageCount, proccessCurrentPageCount);
 }
 
 void ram_program_end(int PID)
