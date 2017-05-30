@@ -26,9 +26,8 @@ int crear(char* path){
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	if (posBloqueLibre >= 0){
 		ocuparBloqueLibre(posBloqueLibre);
-		log_info(logs, "Se ocupo el bloque libre %d del bitmap", posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
-		log_info(logs, "Se crea el archivo");
+		log_info(logs, "Se creo el archivo");
 	}
 	else{
 		log_info(logs, "No se encontro un bloque libre en el bitmap");
