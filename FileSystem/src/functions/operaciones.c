@@ -37,21 +37,40 @@ int crear(char* path){
 }
 
 int borrar(char* path){
-	t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
-	read_fileMetadata(path, archivo);
+	//Valido que exista el archivo
+	if(validar(path) == 1){
+		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
+			read_fileMetadata(path, archivo);
 
-	list_iterate(archivo->bloques, (void*)liberarBloqueDelBitmap);
-	eliminarMetadataArchivo(path);
+			list_iterate(archivo->bloques, (void*)liberarBloqueDelBitmap);
+			eliminarMetadataArchivo(path);
 
-	list_destroy(archivo->bloques);
-	free(archivo);
+			list_destroy(archivo->bloques);
+			free(archivo);
+	}
+	else{
+		log_info(logs, "No se encontro el archivo, por ende no se lo puede borrar");
+	}
+
 	return -ENOENT;
 }
 
 int obtenerDatos(char* path, off_t offset, size_t size){
+	if(validar(path) == 1){
+		//hago las cosas
+	}
+	else{
+		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
+	}
 	return -ENOENT;
 }
 
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer){
+	if(validar(path) == 1){
+		//hago las cosas
+	}
+	else{
+		log_info(logs, "No se encontro el archivo, por ende no se le puede guardar datos");
+	}
 	return -ENOENT;
 }
