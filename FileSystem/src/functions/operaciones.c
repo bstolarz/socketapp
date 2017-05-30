@@ -13,9 +13,11 @@
 int validar(char* path){
 	int resultado = access(path, F_OK);
 	if(resultado == 0){
+		log_info(logs, "Se encontro el archivo para el path: %s", path);
 		return 1;
 	}
 
+	log_info(logs, "No se encontro el archivo para el path: %s", path);
 	//No encontro el archivo
 	return -ENOENT;
 }
@@ -24,10 +26,14 @@ int crear(char* path){
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	if (posBloqueLibre >= 0){
 		ocuparBloqueLibre(posBloqueLibre);
+		log_info(logs, "Se ocupo el bloque libre %d del bitmap", posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
-		crearBloqueDatos(posBloqueLibre);
+		log_info(logs, "Se crea el archivo");
+		//crearBloqueDatos(posBloqueLibre);
+
 	}
 	else{
+		log_info("No se encontro un bloque libre en el bitmap");
 		return -ENOENT;
 	}
 	return 0;
