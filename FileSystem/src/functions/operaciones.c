@@ -31,22 +31,21 @@ int crear(char* path){
 		log_info(logs, "Se crea el archivo");
 	}
 	else{
-		log_info("No se encontro un bloque libre en el bitmap");
+		log_info(logs, "No se encontro un bloque libre en el bitmap");
 		return -ENOENT;
 	}
 	return 0;
 }
 
+void funcion(int bloque){
+
+}
 int borrar(char* path){
 	t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 	read_fileMetadata(path, archivo);
 
-	int i;
-	for(i=0; i<list_size(archivo->bloques); i++){
-		int* bloque = list_get(archivo->bloques, i);
-		liberarBloqueDelBitmap(*bloque);
-		eliminarMetadataArchivo(path);
-	}
+	list_iterate(archivo->bloques, (void*)liberarBloqueDelBitmap);
+	eliminarMetadataArchivo(path);
 
 	list_destroy(archivo->bloques);
 	free(archivo);

@@ -17,6 +17,7 @@
 #include "libSockets/server.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
+#include "functions/config.h"
 
 
 void crearArchivos()
