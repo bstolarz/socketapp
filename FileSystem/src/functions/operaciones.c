@@ -36,9 +36,6 @@ int crear(char* path){
 	return 0;
 }
 
-void funcion(int bloque){
-
-}
 int borrar(char* path){
 	t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 	read_fileMetadata(path, archivo);
