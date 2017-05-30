@@ -67,10 +67,10 @@ int main(int arg, char* argv[]) {
 	char* mensajeDeOperacion = "";
 	while (1) {
 		if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
-			printf("Recibi el mensaje de operacion: %s", mensajeDeOperacion);
+			log_info(logs, "Se recibio el mensaje de kernel: %s", mensajeDeOperacion);
 			hacerLoQueCorresponda(mensajeDeOperacion);
 		} else {
-			printf("Se desconecto el kernel.\n");
+			log_info(logs, "Se desconecto el kernel.");
 			close(socketKernel);
 			config_free();
 			return EXIT_FAILURE;
@@ -89,33 +89,37 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	int size;
 	int resultado;
 
+	socket_recv_string(serverSocket, &path);
+	log_info(logs, "Recibi el path: %s", path);
+
 	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
-		socket_recv_string(serverSocket, &path);
-		printf("Recibi el path: %s", path);
+		log_info(logs, "Llamo a la funcion validar");
 		resultado = validar(path);
 	} else if (string_equals_ignore_case(unMensajeDeOperacion, "CREAR")) {
-		socket_recv_string(serverSocket, &path);
+		log_info(logs, "Llamo a la funcion crear");
 		resultado = crear(path);
 	} else if (string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")) {
-		socket_recv_string(serverSocket, &path);
+		log_info(logs, "Llamo a la funcion borrar");
 		resultado = borrar(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion,
-			"OBTENERDATOS")) {
-		socket_recv_string(serverSocket, &path);
+	} else if (string_equals_ignore_case(unMensajeDeOperacion,"OBTENERDATOS")) {
 		socket_recv_int(serverSocket, &offset);
 		socket_recv_int(serverSocket, &size);
-		resultado = obtenerDatos(path, (off_t) offset, (size_t) size);
+		log_info(logs, "Recibi el offset: %d", offset);
+		log_info(logs, "Recibi el size: %d", size);
 
-	} else if (string_equals_ignore_case(unMensajeDeOperacion,
-			"GUARDARDATOS")) {
+		log_info(logs, "Llamo a la funcion obtenerDatos");
+		resultado = obtenerDatos(path, (off_t) offset, (size_t) size);
+	} else if (string_equals_ignore_case(unMensajeDeOperacion,"GUARDARDATOS")) {
 		void* buffer;
 
-		socket_recv_string(serverSocket, &path);
 		socket_recv_int(serverSocket, &offset);
 		socket_recv_int(serverSocket, &size);
-
 		socket_recv(serverSocket, &buffer, 1);
+		log_info(logs, "Recibi el offset: %d", offset);
+		log_info(logs, "Recibi el size: %d", size);
+		log_info(logs, "Recibi el buffer: %s", buffer);
 
+		log_info(logs, "Llamo a la funcion guardarDatos");
 		resultado = guardarDatos(path, (off_t) offset, (size_t) size, buffer);
 	}
 
