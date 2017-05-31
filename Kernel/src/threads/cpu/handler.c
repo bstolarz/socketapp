@@ -282,6 +282,7 @@ void handle_cpu_signal(t_cpu* cpu){
 
 	//TODO avisarle a los bloqueados que se levanto este semaforo
 }
+
 void handle_cpu_alocar(t_cpu* cpu){
 	//Obtengo el tamaño a alocar
 	int size = 0;
@@ -322,54 +323,8 @@ t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
 	}
 	return pointerToGlobalFile;
 }
-int filesystem_validar(char* path, t_cpu* cpu){
-	//Le pido el file descriptor a FS
-	if (socket_send_string(fileSystemServer.socket,"VALIDAR")>0){
-		log_info(logKernel, "Le indico a FS que quiero validar una path");
-	}else{
-		log_info(logKernel, "Error al indicarle a FS que quiero validar una path");
-	}
-	//Envio el path a FS
-	if (socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Le envio a FS la path: %s",path);
-	}else{
-		log_info(logKernel, "Error al enviarle a FS la path: %s", path);
-	}
-	int respuesta;
-	if (socket_recv_int(cpu->socket,&respuesta)>0){
-		log_info(logKernel, "Recibo la validacion del FS");
-		if (respuesta>0){
-			log_info(logKernel, "Existe el archivo en FS");
-		}else{
-			log_info(logKernel, "No existe el archivo en FS");
-			EXIT_FAILURE;
-		}
-	}
-	return respuesta;
-}
-int filesystem_create(char* flags,char* path){
-	//Le envio al FS la orden de crear
-	if(socket_send_string(fileSystemServer.socket,"CREAR")>0){
-		log_info(logKernel, "Le informo al FS que cree un archivo");
-	}else{
-		log_info(logKernel, "Error al informar as FS que cree un archivo");
-	}
-	//Le envio al FS el path
-	if(socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Le envio al FS la path: %s",path);
-	}else{
-		log_info(logKernel, "Error al enviar al FS el archivo: %s", path);
-	}
 
-	//Recibo exito o fail de FS
-	int resp;
-	if(socket_recv_int(fileSystemServer.socket,&resp)>0){
-		log_info(logKernel, "Recibo con exito la respuesta de creacion de un archivo de FS");
-	}else{
-		log_info(logKernel, "Error al informar al FS que cree un archivo");
-	}
-	return resp;
-}
+
 void handle_cpu_abrir(t_cpu* cpu){
 	//Me llega la ruta del archivo
 	char* path=string_new();
@@ -396,7 +351,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 		fd->global=pointer;
 		list_add(cpu->program->fileDescriptors,fd);
 	}else{   //No existe, la agrego
-		int respuesta= filesystem_validar(path,cpu);
+		int respuesta= filesystem_validar(path);
 		if (respuesta==1){
 			//Agrego a la tabla global una entrada
 			t_gobal_fd* newFD=(t_gobal_fd*)malloc(sizeof(t_gobal_fd));
@@ -468,13 +423,7 @@ int program_has_permission_to_delete(t_cpu* cpu,t_descriptor_archivo d){
 	}
 	return result;
 }
-void filesystem_delete(){
-	if(socket_send_string(fileSystemServer.socket,"BORRAR")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero borrar");
-	}
-}
+
 void handle_cpu_borrar(t_cpu* cpu){
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 	int dAux;
@@ -527,13 +476,7 @@ int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
 	}
 	return exists;
 }
-void filesystem_close(){
-	if(socket_send_string(fileSystemServer.socket,"CERRAR")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero borrar");
-	}
-}
+
 void handle_cpu_cerrar(t_cpu* cpu){
 	//Recibo el file descriptor
 	int dAux;
@@ -589,30 +532,7 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 	get_filename_with_filedescriptor(cpu,FD,nombre);
 	update_cursor_of_file(cpu,f,bytesToMove);
 }
-void filesystem_escribir(char* path, int offset, int size){
-	if(socket_send_string(fileSystemServer.socket,"GUARDARDATOS")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero escribir el archivo '%s'",path);
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero escribir el archivo '%s'",path);
-	}
-	if(socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Envio correctamente a FS la path '%s' que quiero escribir",path);
-	}else{
-		log_info(logKernel, "Error al enviar a FS la path '%s' que quiero escribir",path);
-	}
-	if(socket_send_int(fileSystemServer.socket,offset)>0){
-		log_info(logKernel, "Envio correctamente a FS el offset: %d",offset);
-	}else{
-		log_info(logKernel, "Error al enviar a FS el offset: %d", offset);
-	}
-	if(socket_send_int(fileSystemServer.socket,size)>0){
-		log_info(logKernel, "Envio correctamente a FS el tamanio a escribir: %d",size);
-	}else{
-		log_info(logKernel, "Error al enviar a FS el tamanio a escribir: %d", size);
-	}
 
-
-}
 void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
 	int FD = 0;
