@@ -16,16 +16,26 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo _fd, char* path){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if(fd->value==_fd){
-			strcpy(path,fd->global->path);
-		}
+t_fd* file_descriptor_get_by_path(t_program* program, char* path){
+	bool _findFileDescriptor(t_fd* fd){
+		return strcmp(fd->global->path, path)==0;
 	}
+	return (t_fd*)list_find(program->fileDescriptors, (void*)_findFileDescriptor);
 }
+t_fd* file_descriptor_get_by_number(t_program* program, t_descriptor_archivo nFD){
+	bool _findFileDescriptor(t_fd* fd){
+		return fd->value==nFD;
+	}
+	return (t_fd*)list_find(program->fileDescriptors, (void*)_findFileDescriptor);
+}
+
+int file_descriptor_check_permission(t_fd* fd, char* permission){
+	return strstr(fd->permissions, permission) != NULL;
+}
+
+
+
+
 
 int get_cursor_of_file(t_cpu* cpu, char* path){
 	int tamanio=list_size(cpu->program->fileDescriptors);
@@ -34,7 +44,7 @@ int get_cursor_of_file(t_cpu* cpu, char* path){
 	for (i=0;i!=tamanio;i++){
 		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
 		if (fd->global->path==path){
-			if(string_contains(fd->flags,string_from_format("%c",'r'))){
+			if(string_contains(fd->permissions,string_from_format("%c",'r'))){
 				cursor=fd->cursor;
 			}
 		}
@@ -68,33 +78,8 @@ int delete_file_from_global_file_table(t_descriptor_archivo d, t_cpu* cpu){
 	return result;
 }
 
-int program_has_permission_to_write(t_cpu* cpu,t_descriptor_archivo d){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	int permission=0;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (string_contains(fd->flags,string_from_format("%c",'w'))){
-			permission=1;
-		}
-	}
-	return permission;
-}
 
-int program_has_permission_to_delete(t_cpu* cpu,t_descriptor_archivo d){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	int result=0;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if(fd->value==d){
-			if(string_contains(fd->flags,string_from_format("%c",'w'))){
-				result=1;
-			}
-		}
-	}
-	return result;
-}
+
 
 int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
 	int size=(int)list_size(cpu->program->fileDescriptors);
@@ -120,20 +105,4 @@ void update_cursor_of_file(t_cpu* cpu, t_descriptor_archivo f, int c){
 			fd->cursor=c;
 		}
 	}
-}
-
-int get_permission_on_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
-	int tamanio=list_size(cpu->program->fileDescriptors);
-	int i;
-	int permiso=0;
-	for (i=0;i!=tamanio;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->value==d){
-			strcpy(path,fd->global->path);
-			if(string_contains(fd->flags,string_from_format("%c",'r'))){
-				permiso=1;
-			}
-		}
-	}
-	return permiso;
 }

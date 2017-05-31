@@ -310,7 +310,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 	if (pointer!=NULL){ //Existe
 		pointer->open++;
 		t_fd* fd=(t_fd*)malloc(sizeof(t_fd));
-		strcpy(fd->flags,flags);
+		strcpy(fd->permissions,flags);
 		fd->value++;
 		descriptorToCPU=fd->value;
 		fd->global=pointer;
@@ -326,13 +326,13 @@ void handle_cpu_abrir(t_cpu* cpu){
 
 			//Agrego a la tabla del proceso
 			t_fd* newFD_to_file=(t_fd*)malloc(sizeof(t_fd));
-			strcpy(newFD_to_file->flags,flags);
+			strcpy(newFD_to_file->permissions,flags);
 			newFD_to_file->value++;
 			descriptorToCPU=newFD_to_file->value;
 			newFD_to_file->global=newFD;
 			newFD_to_file->cursor=0;
 			log_info(logKernel, "Entrada en tabla de archivos del proceso:");
-			log_info(logKernel, "FD: %d|Flags: %s|Cursor: %d",newFD_to_file->value, newFD_to_file->flags,newFD_to_file->cursor);
+			log_info(logKernel, "FD: %d|Flags: %s|Cursor: %d",newFD_to_file->value, newFD_to_file->permissions,newFD_to_file->cursor);
 			list_add(cpu->program->fileDescriptors,newFD_to_file);
 		}else{
 			//Verifico si tengo permiso de creacion
@@ -358,7 +358,8 @@ void handle_cpu_borrar(t_cpu* cpu){
 	if (socket_recv_int(cpu->socket,&dAux)>0){
 		d=(t_descriptor_archivo)dAux;
 		log_info(logKernel, "CPU quiere borrar el archivo con file descriptor %d",d);
-		if(program_has_permission_to_delete(cpu,d)){
+		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, d);
+		if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
 			int resultado=delete_file_from_global_file_table(d, cpu);
 			if(resultado==1){
 				//Comunico a FS que borre el archivo
@@ -432,15 +433,12 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
 		return;
 	}
-	char* nombre=string_new();
-	get_filename_with_filedescriptor(cpu,FD,nombre);
 	update_cursor_of_file(cpu,f,bytesToMove);
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
 	int FD = 0;
-	char* path=string_new();
 	//Recibo de CPU el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
 		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
@@ -475,10 +473,12 @@ void handle_cpu_escribir(t_cpu* cpu){
 
 	else{
 		//Verifico que tenga los permisos
-		if(program_has_permission_to_write(cpu,FD)){
+		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+		if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
 			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Informo a FS que quiero escribir
-			get_filename_with_filedescriptor(cpu,FD,path);
+			t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+			char* path=string_duplicate(filedescriptor->global->path);
 			int cursorToFS=get_cursor_of_file(cpu,path);
 			filesystem_write(path, cursorToFS, nbytes);
 			int respuestaFromFS;
@@ -491,6 +491,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			}else{
 				log_info(logKernel, "Error recibiendo respuesta del FS al escribir archivo");
 			}
+			free(path);
 		}else{
 			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Le nofitico a CPU el error de escritura por permisos
@@ -502,7 +503,6 @@ void handle_cpu_escribir(t_cpu* cpu){
 		}
 
 	}
-	free(path);
 }
 
 void handle_cpu_leer(t_cpu* cpu){
@@ -518,9 +518,9 @@ void handle_cpu_leer(t_cpu* cpu){
 		log_info(logKernel, "Error recibiendo el file descriptor del programa %d que esta en la CPU [socket: %d]", cpu->program->pcb->pid,cpu->socket);
 	}
 	descriptor=(t_descriptor_archivo)d;
-	char* path=string_new();
+	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, descriptor);
+	char* path=string_duplicate(filedescriptor->global->path);
 	//Busco el path
-	get_filename_with_filedescriptor(cpu,descriptor,path);
 	//Recibo el tamanio a leer
 	if(socket_recv_int(cpu->socket,&tamanioALeer)>0){
 		log_info(logKernel, "CPU necesita leer %d bytes",tamanioALeer);
@@ -529,7 +529,8 @@ void handle_cpu_leer(t_cpu* cpu){
 	}
 
 	//Reviso los permisos de lectura
-	int puedeLeer=get_permission_on_file(descriptor, cpu,path);
+	int puedeLeer=file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_READ);
+
 
 	//Verifico si se puede leer y en ese caso le pido a FS leer el archivo
 	if(puedeLeer){

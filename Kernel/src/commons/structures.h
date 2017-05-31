@@ -117,7 +117,6 @@ typedef struct{
 }t_socket;
 
 typedef struct{
-//	int value;
 	char* path;
 	int open;
 }t_gobal_fd;
@@ -125,7 +124,7 @@ typedef struct{
 typedef struct{
 	int value;
 	int cursor;
-	char* flags;
+	char* permissions;
 	t_gobal_fd* global;
 }t_fd;
 
