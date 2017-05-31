@@ -9,12 +9,12 @@
 #define INTERFACE_FILESYSTEM_H_
 
 void filesystem_connect();
-void filesystem_leer(char* path, size_t offset, int size);
-void filesystem_escribir(char* path, int offset, int size);
-void filesystem_close();
-void filesystem_delete();
+int filesystem_read(char* path, size_t offset, int size);
+int filesystem_write(char* path, int offset, int size);
+int filesystem_close();
+int filesystem_delete();
 int filesystem_create(char* flags,char* path);
-int filesystem_validar(char* path);
+int filesystem_validate(char* path);
 
 #endif /* INTERFACE_FILESYSTEM_H_ */
 

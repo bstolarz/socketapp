@@ -351,7 +351,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 		fd->global=pointer;
 		list_add(cpu->program->fileDescriptors,fd);
 	}else{   //No existe, la agrego
-		int respuesta= filesystem_validar(path);
+		int respuesta= filesystem_validate(path);
 		if (respuesta==1){
 			//Agrego a la tabla global una entrada
 			t_gobal_fd* newFD=(t_gobal_fd*)malloc(sizeof(t_gobal_fd));
@@ -576,7 +576,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			//Informo a FS que quiero escribir
 			get_filename_with_filedescriptor(cpu,FD,path);
 			int cursorToFS=get_cursor_of_file(cpu,path);
-			filesystem_escribir(path, cursorToFS, nbytes);
+			filesystem_write(path, cursorToFS, nbytes);
 			int respuestaFromFS;
 			if(socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0){
 				if(respuestaFromFS>0){
@@ -651,7 +651,7 @@ void handle_cpu_leer(t_cpu* cpu){
 			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
 			//Le pido a FS leer el archivo
 			int cursorToFS=get_cursor_of_file(cpu,path);
-			filesystem_leer(path,cursorToFS,tamanioALeer);
+			filesystem_read(path,cursorToFS,tamanioALeer);
 			//Recibo la respuesta de FS de la lectura efectuada
 			int resp;
 			if (socket_recv_int(fileSystemServer.socket,&resp)>0){
