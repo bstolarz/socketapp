@@ -80,7 +80,7 @@ int filesystem_delete(){
 	return 0;
 }
 
-int filesystem_create(char* flags,char* path){
+int filesystem_create(char* path){
 	//Le envio al FS la orden de crear
 	if(socket_send_string(fileSystemServer.socket,"CREAR")>0){
 		log_info(logKernel, "Le informo al FS que cree un archivo");

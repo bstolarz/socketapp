@@ -13,7 +13,7 @@ int filesystem_read(char* path, size_t offset, int size);
 int filesystem_write(char* path, int offset, int size);
 int filesystem_close();
 int filesystem_delete();
-int filesystem_create(char* flags,char* path);
+int filesystem_create(char* path);
 int filesystem_validate(char* path);
 
 #endif /* INTERFACE_FILESYSTEM_H_ */

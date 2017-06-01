@@ -16,12 +16,14 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+//Operaciones sobre file descriptors
 t_fd* file_descriptor_get_by_path(t_program* program, char* path){
 	bool _findFileDescriptor(t_fd* fd){
 		return strcmp(fd->global->path, path)==0;
 	}
 	return (t_fd*)list_find(program->fileDescriptors, (void*)_findFileDescriptor);
 }
+
 t_fd* file_descriptor_get_by_number(t_program* program, t_descriptor_archivo nFD){
 	bool _findFileDescriptor(t_fd* fd){
 		return fd->value==nFD;
@@ -33,18 +35,54 @@ int file_descriptor_check_permission(t_fd* fd, char* permission){
 	return strstr(fd->permissions, permission) != NULL;
 }
 
+t_fd* file_descriptor_create(t_program* program, t_global_fd* gFD, char* permissions){
+	t_fd* fd=(t_fd*)malloc(sizeof(t_fd));
+	fd->permissions = string_duplicate(permissions);
+	fd->value = program->incrementalFD;
+	fd->global=gFD;
+
+	gFD->open++;
+	program->incrementalFD++;
+
+	list_add(program->fileDescriptors,fd);
+
+	return fd;
+}
+
+
+//Operaciones sobre global file descriptors
+t_global_fd* file_descriptor_global_get_by_path(char* path){
+	bool _findGlobalFileDescriptor(t_global_fd* fd){
+		return strcmp(fd->path, path)==0;
+	}
+
+	pthread_mutex_lock(&globalFileDescriptors->mutex);
+	t_global_fd* ret = (t_global_fd*)list_find(globalFileDescriptors->list, (void*)_findGlobalFileDescriptor);
+	pthread_mutex_unlock(&globalFileDescriptors->mutex);
+
+	return ret;
+}
+
+t_global_fd* file_descriptor_global_create(char* path){
+	t_global_fd* gFD = malloc(sizeof(t_global_fd));
+	gFD->path = string_duplicate(path);
+
+	pthread_mutex_lock(&globalFileDescriptors->mutex);
+	list_add(globalFileDescriptors->list,gFD);
+	pthread_mutex_unlock(&globalFileDescriptors->mutex);
+
+	return gFD;
+}
 
 
 
-
-
-
-t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
+//Otros
+t_global_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
 	int tamanio=list_size(l);
 	int i;
-	t_gobal_fd* pointerToGlobalFile=NULL;
+	t_global_fd* pointerToGlobalFile=NULL;
 	for (i=0;i!=tamanio;i++){
-		t_gobal_fd* globalFD=(t_gobal_fd*)list_get(l,i);
+		t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
 		if(strcmp(globalFD->path,path)==0){
 			pointerToGlobalFile=globalFD;
 		}

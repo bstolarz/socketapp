@@ -291,64 +291,49 @@ void handle_cpu_liberar(t_cpu* cpu){
 }
 
 void handle_cpu_abrir(t_cpu* cpu){
-	//Me llega la ruta del archivo
+	//Recibo el path
 	char* path=string_new();
-	char* flags=string_new();
-	if(socket_recv_string(cpu->socket,&path)>0){
-		log_info(logKernel, "Recibi el path %s", path);
-	}else{
+	if(socket_recv_string(cpu->socket,&path)<=0){
 		log_info(logKernel, "Error recibiendo path");
+		return;
 	}
-	if (socket_recv_string(cpu->socket,&flags)>0){
-		log_info(logKernel, "Recibo los flags '%s'",flags);
-	}else{
-		log_info(logKernel, "Error recibiendo los flags");
-	}
-	//Chequeo si el archivo existe en la tabla global de archivos
-	t_gobal_fd* pointer=existeArchivoEnTablaGlobalDeArchivos(globalFileDescriptors->list,path);
-	int descriptorToCPU;
-	if (pointer!=NULL){ //Existe
-		pointer->open++;
-		t_fd* fd=(t_fd*)malloc(sizeof(t_fd));
-		strcpy(fd->permissions,flags);
-		fd->value++;
-		descriptorToCPU=fd->value;
-		fd->global=pointer;
-		list_add(cpu->program->fileDescriptors,fd);
-	}else{   //No existe, la agrego
-		int respuesta= filesystem_validate(path);
-		if (respuesta==1){
-			//Agrego a la tabla global una entrada
-			t_gobal_fd* newFD=(t_gobal_fd*)malloc(sizeof(t_gobal_fd));
-			newFD->open=1;
-			strcpy(newFD->path,path);
-			list_add(globalFileDescriptors->list,newFD);
 
-			//Agrego a la tabla del proceso
-			t_fd* newFD_to_file=(t_fd*)malloc(sizeof(t_fd));
-			strcpy(newFD_to_file->permissions,flags);
-			newFD_to_file->value++;
-			descriptorToCPU=newFD_to_file->value;
-			newFD_to_file->global=newFD;
-			newFD_to_file->cursor=0;
-			log_info(logKernel, "Entrada en tabla de archivos del proceso:");
-			log_info(logKernel, "FD: %d|Flags: %s|Cursor: %d",newFD_to_file->value, newFD_to_file->permissions,newFD_to_file->cursor);
-			list_add(cpu->program->fileDescriptors,newFD_to_file);
-		}else{
-			//Verifico si tengo permiso de creacion
-			if(string_contains(flags,string_from_format("%c",'c'))){
-				int creation=filesystem_create(flags,path);
-				if (creation==1){
-					log_info(logKernel, "El archivo fue creado con exito");
-				}else{
-					log_info(logKernel, "Error creando el archivo");
+	//Recibo los permisos
+	char* flags=string_new();
+	if (socket_recv_string(cpu->socket,&flags)<=0){
+		log_info(logKernel, "Error recibiendo los flags");
+		return;
+	}
+
+	t_global_fd* gFD = file_descriptor_global_get_by_path(path);
+	t_fd* fd = NULL;
+	if (gFD!=NULL){ //Existe
+		fd = file_descriptor_create(cpu->program, gFD, flags);
+	}else{//No existe
+		if (filesystem_validate(path)==1){ //El archivo existe. Creo gFd y fd
+			gFD = file_descriptor_global_create(path);
+			fd = file_descriptor_create(cpu->program, gFD, flags);
+		}else{ //No existe el archivo. Si tengo permiso, lo creo
+			if(strstr(flags, FILE_DESCRIPTOR_PERMISSION_CREATE) != NULL){
+				if (filesystem_create(path)==1){
+					gFD = file_descriptor_global_create(path);
+					fd = file_descriptor_create(cpu->program, gFD, flags);
 				}
 			}
 		}
 	}
+
 	free(path);
 	free(flags);
-	socket_send_int(cpu->socket,descriptorToCPU);
+
+	int ret = -ENOENT;
+	if(fd != NULL){
+		ret = fd->value;
+	}
+
+	if (socket_send_int(cpu->socket,ret)<=0){
+		log_info(logKernel, "Error enviando FD");
+	}
 }
 
 void handle_cpu_borrar(t_cpu* cpu){
