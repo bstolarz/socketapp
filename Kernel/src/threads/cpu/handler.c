@@ -19,32 +19,11 @@
 #include "../../planner/dispatcher.h"
 
 #include "../../functions/cpu.h"
+#include "../../functions/file_descriptor.h"
+
 #include "../../interface/memory.h"
 #include "../../interface/filesystem.h"
-void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo _fd, char* path){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if(fd->value==_fd){
-			strcpy(path,fd->global->path);
-		}
-	}
-}
-int get_cursor_of_file(t_cpu* cpu, char* path){
-	int tamanio=list_size(cpu->program->fileDescriptors);
-	int i;
-	int cursor=0;
-	for (i=0;i!=tamanio;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->global->path==path){
-			if(string_contains(fd->flags,string_from_format("%c",'r'))){
-				cursor=fd->cursor;
-			}
-		}
-	}
-	return cursor;
-}
+
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
@@ -282,6 +261,7 @@ void handle_cpu_signal(t_cpu* cpu){
 
 	//TODO avisarle a los bloqueados que se levanto este semaforo
 }
+
 void handle_cpu_alocar(t_cpu* cpu){
 	//Obtengo el tamaño a alocar
 	int size = 0;
@@ -310,171 +290,52 @@ void handle_cpu_liberar(t_cpu* cpu){
 	memory_heap_free(cpu->program, pos.quot, pos.rem);
 }
 
-t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
-	int tamanio=list_size(l);
-	int i;
-	t_gobal_fd* pointerToGlobalFile=NULL;
-	for (i=0;i!=tamanio;i++){
-		t_gobal_fd* globalFD=(t_gobal_fd*)list_get(l,i);
-		if(strcmp(globalFD->path,path)==0){
-			pointerToGlobalFile=globalFD;
-		}
-	}
-	return pointerToGlobalFile;
-}
-int filesystem_validar(char* path, t_cpu* cpu){
-	//Le pido el file descriptor a FS
-	if (socket_send_string(fileSystemServer.socket,"VALIDAR")>0){
-		log_info(logKernel, "Le indico a FS que quiero validar una path");
-	}else{
-		log_info(logKernel, "Error al indicarle a FS que quiero validar una path");
-	}
-	//Envio el path a FS
-	if (socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Le envio a FS la path: %s",path);
-	}else{
-		log_info(logKernel, "Error al enviarle a FS la path: %s", path);
-	}
-	int respuesta;
-	if (socket_recv_int(cpu->socket,&respuesta)>0){
-		log_info(logKernel, "Recibo la validacion del FS");
-		if (respuesta>0){
-			log_info(logKernel, "Existe el archivo en FS");
-		}else{
-			log_info(logKernel, "No existe el archivo en FS");
-			EXIT_FAILURE;
-		}
-	}
-	return respuesta;
-}
-int filesystem_create(char* flags,char* path){
-	//Le envio al FS la orden de crear
-	if(socket_send_string(fileSystemServer.socket,"CREAR")>0){
-		log_info(logKernel, "Le informo al FS que cree un archivo");
-	}else{
-		log_info(logKernel, "Error al informar as FS que cree un archivo");
-	}
-	//Le envio al FS el path
-	if(socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Le envio al FS la path: %s",path);
-	}else{
-		log_info(logKernel, "Error al enviar al FS el archivo: %s", path);
-	}
-
-	//Recibo exito o fail de FS
-	int resp;
-	if(socket_recv_int(fileSystemServer.socket,&resp)>0){
-		log_info(logKernel, "Recibo con exito la respuesta de creacion de un archivo de FS");
-	}else{
-		log_info(logKernel, "Error al informar al FS que cree un archivo");
-	}
-	return resp;
-}
 void handle_cpu_abrir(t_cpu* cpu){
-	//Me llega la ruta del archivo
+	//Recibo el path
 	char* path=string_new();
-	char* flags=string_new();
-	if(socket_recv_string(cpu->socket,&path)>0){
-		log_info(logKernel, "Recibi el path %s", path);
-	}else{
+	if(socket_recv_string(cpu->socket,&path)<=0){
 		log_info(logKernel, "Error recibiendo path");
+		return;
 	}
-	if (socket_recv_string(cpu->socket,&flags)>0){
-		log_info(logKernel, "Recibo los flags '%s'",flags);
-	}else{
-		log_info(logKernel, "Error recibiendo los flags");
-	}
-	//Chequeo si el archivo existe en la tabla global de archivos
-	t_gobal_fd* pointer=existeArchivoEnTablaGlobalDeArchivos(globalFileDescriptors->list,path);
-	int descriptorToCPU;
-	if (pointer!=NULL){ //Existe
-		pointer->open++;
-		t_fd* fd=(t_fd*)malloc(sizeof(t_fd));
-		strcpy(fd->flags,flags);
-		fd->value++;
-		descriptorToCPU=fd->value;
-		fd->global=pointer;
-		list_add(cpu->program->fileDescriptors,fd);
-	}else{   //No existe, la agrego
-		int respuesta= filesystem_validar(path,cpu);
-		if (respuesta==1){
-			//Agrego a la tabla global una entrada
-			t_gobal_fd* newFD=(t_gobal_fd*)malloc(sizeof(t_gobal_fd));
-			newFD->open=1;
-			strcpy(newFD->path,path);
-			list_add(globalFileDescriptors->list,newFD);
 
-			//Agrego a la tabla del proceso
-			t_fd* newFD_to_file=(t_fd*)malloc(sizeof(t_fd));
-			strcpy(newFD_to_file->flags,flags);
-			newFD_to_file->value++;
-			descriptorToCPU=newFD_to_file->value;
-			newFD_to_file->global=newFD;
-			newFD_to_file->cursor=0;
-			log_info(logKernel, "Entrada en tabla de archivos del proceso:");
-			log_info(logKernel, "FD: %d|Flags: %s|Cursor: %d",newFD_to_file->value, newFD_to_file->flags,newFD_to_file->cursor);
-			list_add(cpu->program->fileDescriptors,newFD_to_file);
-		}else{
-			//Verifico si tengo permiso de creacion
-			if(string_contains(flags,string_from_format("%c",'c'))){
-				int creation=filesystem_create(flags,path);
-				if (creation==1){
-					log_info(logKernel, "El archivo fue creado con exito");
-				}else{
-					log_info(logKernel, "Error creando el archivo");
+	//Recibo los permisos
+	char* flags=string_new();
+	if (socket_recv_string(cpu->socket,&flags)<=0){
+		log_info(logKernel, "Error recibiendo los flags");
+		return;
+	}
+
+	t_global_fd* gFD = file_descriptor_global_get_by_path(path);
+	t_fd* fd = NULL;
+	if (gFD!=NULL){ //Existe
+		fd = file_descriptor_create(cpu->program, gFD, flags);
+	}else{//No existe
+		if (filesystem_validate(path)==1){ //El archivo existe. Creo gFd y fd
+			gFD = file_descriptor_global_create(path);
+			fd = file_descriptor_create(cpu->program, gFD, flags);
+		}else{ //No existe el archivo. Si tengo permiso, lo creo
+			if(strstr(flags, FILE_DESCRIPTOR_PERMISSION_CREATE) != NULL){
+				if (filesystem_create(path)==1){
+					gFD = file_descriptor_global_create(path);
+					fd = file_descriptor_create(cpu->program, gFD, flags);
 				}
 			}
 		}
 	}
+
 	free(path);
 	free(flags);
-	socket_send_int(cpu->socket,descriptorToCPU);
-}
-int delete_file_from_global_file_table(t_descriptor_archivo d, t_cpu* cpu){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	int result=0;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if(fd->global==NULL){
-			result=1;
-		}
+
+	int ret = -ENOENT;
+	if(fd != NULL){
+		ret = fd->value;
 	}
-	return result;
-}
-int program_has_permission_to_write(t_cpu* cpu,t_descriptor_archivo d){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	int permission=0;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (string_contains(fd->flags,string_from_format("%c",'w'))){
-			permission=1;
-		}
-	}
-	return permission;
-}
-int program_has_permission_to_delete(t_cpu* cpu,t_descriptor_archivo d){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	int result=0;
-	for(i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if(fd->value==d){
-			if(string_contains(fd->flags,string_from_format("%c",'w'))){
-				result=1;
-			}
-		}
-	}
-	return result;
-}
-void filesystem_delete(){
-	if(socket_send_string(fileSystemServer.socket,"BORRAR")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero borrar");
+
+	if (socket_send_int(cpu->socket,ret)<=0){
+		log_info(logKernel, "Error enviando FD");
 	}
 }
+
 void handle_cpu_borrar(t_cpu* cpu){
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 	int dAux;
@@ -482,7 +343,8 @@ void handle_cpu_borrar(t_cpu* cpu){
 	if (socket_recv_int(cpu->socket,&dAux)>0){
 		d=(t_descriptor_archivo)dAux;
 		log_info(logKernel, "CPU quiere borrar el archivo con file descriptor %d",d);
-		if(program_has_permission_to_delete(cpu,d)){
+		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, d);
+		if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
 			int resultado=delete_file_from_global_file_table(d, cpu);
 			if(resultado==1){
 				//Comunico a FS que borre el archivo
@@ -513,27 +375,7 @@ void handle_cpu_borrar(t_cpu* cpu){
 	}
 
 }
-int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
-	int size=(int)list_size(cpu->program->fileDescriptors);
-	int i;
-	int exists=-1;
-	for(i=0;i!=size;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->value==d){
-			exists=i;
-			//Decremento la cantidad de veces abierto el archivo en la tabla global de archivos
-			fd->global->open--;
-		}
-	}
-	return exists;
-}
-void filesystem_close(){
-	if(socket_send_string(fileSystemServer.socket,"CERRAR")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero borrar");
-	}
-}
+
 void handle_cpu_cerrar(t_cpu* cpu){
 	//Recibo el file descriptor
 	int dAux;
@@ -561,16 +403,7 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		}
 	}
 }
-void update_cursor_of_file(t_cpu* cpu, t_descriptor_archivo f, int c){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	for (i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->value==f){
-			fd->cursor=c;
-		}
-	}
-}
+
 void handle_cpu_mover_cursor(t_cpu* cpu){
 	//Recibo el descriptor de archivo
 	int FD;
@@ -578,45 +411,21 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 			log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
 			return;
 	}
-	t_descriptor_archivo f=(t_descriptor_archivo)FD;
+
 	//Recibo la cantidad de bytes a moverme
 	int bytesToMove;
 	if (socket_recv_int(cpu->socket,&bytesToMove)<=0){
 		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
 		return;
 	}
-	char* nombre=string_new();
-	get_filename_with_filedescriptor(cpu,FD,nombre);
-	update_cursor_of_file(cpu,f,bytesToMove);
-}
-void filesystem_escribir(char* path, int offset, int size){
-	if(socket_send_string(fileSystemServer.socket,"GUARDARDATOS")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero escribir el archivo '%s'",path);
-	}else{
-		log_info(logKernel, "Error al enviar a FS que quiero escribir el archivo '%s'",path);
-	}
-	if(socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Envio correctamente a FS la path '%s' que quiero escribir",path);
-	}else{
-		log_info(logKernel, "Error al enviar a FS la path '%s' que quiero escribir",path);
-	}
-	if(socket_send_int(fileSystemServer.socket,offset)>0){
-		log_info(logKernel, "Envio correctamente a FS el offset: %d",offset);
-	}else{
-		log_info(logKernel, "Error al enviar a FS el offset: %d", offset);
-	}
-	if(socket_send_int(fileSystemServer.socket,size)>0){
-		log_info(logKernel, "Envio correctamente a FS el tamanio a escribir: %d",size);
-	}else{
-		log_info(logKernel, "Error al enviar a FS el tamanio a escribir: %d", size);
-	}
 
-
+	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+	filedescriptor->cursor=bytesToMove;
 }
+
 void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
 	int FD = 0;
-	char* path=string_new();
 	//Recibo de CPU el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
 		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
@@ -651,12 +460,13 @@ void handle_cpu_escribir(t_cpu* cpu){
 
 	else{
 		//Verifico que tenga los permisos
-		if(program_has_permission_to_write(cpu,FD)){
+		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+		if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
 			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Informo a FS que quiero escribir
-			get_filename_with_filedescriptor(cpu,FD,path);
-			int cursorToFS=get_cursor_of_file(cpu,path);
-			filesystem_escribir(path, cursorToFS, nbytes);
+			t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+			char* path=string_duplicate(filedescriptor->global->path);
+			filesystem_write(path, filedescriptor->cursor, nbytes);
 			int respuestaFromFS;
 			if(socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0){
 				if(respuestaFromFS>0){
@@ -667,6 +477,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			}else{
 				log_info(logKernel, "Error recibiendo respuesta del FS al escribir archivo");
 			}
+			free(path);
 		}else{
 			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
 			//Le nofitico a CPU el error de escritura por permisos
@@ -678,25 +489,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 		}
 
 	}
-	free(path);
 }
-int get_permission_on_file(t_descriptor_archivo d, t_cpu* cpu, char* path){
-	int tamanio=list_size(cpu->program->fileDescriptors);
-	int i;
-	int permiso=0;
-	for (i=0;i!=tamanio;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->value==d){
-			strcpy(path,fd->global->path);
-			if(string_contains(fd->flags,string_from_format("%c",'r'))){
-				permiso=1;
-			}
-		}
-	}
-	return permiso;
-}
-
-
 
 void handle_cpu_leer(t_cpu* cpu){
 	t_descriptor_archivo descriptor;
@@ -711,9 +504,9 @@ void handle_cpu_leer(t_cpu* cpu){
 		log_info(logKernel, "Error recibiendo el file descriptor del programa %d que esta en la CPU [socket: %d]", cpu->program->pcb->pid,cpu->socket);
 	}
 	descriptor=(t_descriptor_archivo)d;
-	char* path=string_new();
+	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, descriptor);
+	char* path=string_duplicate(filedescriptor->global->path);
 	//Busco el path
-	get_filename_with_filedescriptor(cpu,descriptor,path);
 	//Recibo el tamanio a leer
 	if(socket_recv_int(cpu->socket,&tamanioALeer)>0){
 		log_info(logKernel, "CPU necesita leer %d bytes",tamanioALeer);
@@ -722,7 +515,8 @@ void handle_cpu_leer(t_cpu* cpu){
 	}
 
 	//Reviso los permisos de lectura
-	int puedeLeer=get_permission_on_file(descriptor, cpu,path);
+	int puedeLeer=file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_READ);
+
 
 	//Verifico si se puede leer y en ese caso le pido a FS leer el archivo
 	if(puedeLeer){
@@ -730,8 +524,7 @@ void handle_cpu_leer(t_cpu* cpu){
 		if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido)>0){
 			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
 			//Le pido a FS leer el archivo
-			int cursorToFS=get_cursor_of_file(cpu,path);
-			filesystem_leer(path,cursorToFS,tamanioALeer);
+			filesystem_read(path,filedescriptor->cursor,tamanioALeer);
 			//Recibo la respuesta de FS de la lectura efectuada
 			int resp;
 			if (socket_recv_int(fileSystemServer.socket,&resp)>0){

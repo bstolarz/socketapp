@@ -29,6 +29,7 @@ void program_process_new(fd_set* master, int socket){
 	program->waiting=0;
 	program->waitingReason = string_new();
 	program->fileDescriptors =  list_create();
+	program->incrementalFD = 1;
 	program->heapPages = list_create();
 	program->quantum = 0;
 
