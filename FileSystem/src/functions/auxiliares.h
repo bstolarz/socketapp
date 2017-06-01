@@ -12,7 +12,7 @@ void crearArchivo(char* path, int posBloqueLibre);
 void crearBloqueDatos(int posBloqueLibre);
 void eliminarMetadataArchivo(char* path);
 char* armarPathArchivo(char* pathDelKernel);
-char* armarPathBloqueDatos(char** path, int numeroBloque);
+char* armarPathBloqueDatos(int numeroBloque);
 void actualizarBytesEscritos (int* acum, int bytes);
 
 

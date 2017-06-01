@@ -91,6 +91,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 
 	socket_recv_string(serverSocket, &path);
 	log_info(logs, "Recibi el path: %s", path);
+	path = armarPathArchivo(path);
 
 	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
 		log_info(logs, "Llamo a la funcion validar");

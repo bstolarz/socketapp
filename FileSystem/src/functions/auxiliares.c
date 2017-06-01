@@ -18,7 +18,7 @@ char* armarPathArchivo(char* pathDelKernel){
 	return pathTotal;
 }
 
-char* armarPathBloqueDatos(char* pathDelKernel, int numeroBloque) {
+char* armarPathBloqueDatos(int numeroBloque) {
 	char* pathTotal = "";
 	string_append(&pathTotal, configFileSystem->punto_montaje);
 	string_append(&pathTotal, "Bloques/");
@@ -31,7 +31,6 @@ char* armarPathBloqueDatos(char* pathDelKernel, int numeroBloque) {
 }
 
 void crearArchivo(char* path, int posBloqueLibre){
-
 	FILE* archivo = fopen(path, "w");
 	//Cuando creo el bloque de datos va a tener 0 bytes o 1 byte?
 	fprintf(archivo, "TAMANIO=0\n");
@@ -52,11 +51,11 @@ void crearArchivo(char* path, int posBloqueLibre){
 void eliminarMetadataArchivo(char* path){
 	remove(path);
 }
-void crearBloqueDatos(int posBloqueLibre){
-	char* path = "";
-	armarPathBloqueDatos(&path, posBloqueLibre);
 
-	FILE* archivoBloqueDatos = fopen(path, "w");
+void crearBloqueDatos(int posBloqueLibre){
+	char* pathBloqueDato = armarPathBloqueDatos(posBloqueLibre);
+
+	FILE* archivoBloqueDatos = fopen(pathBloqueDato, "w");
 	fclose(archivoBloqueDatos);
 }
 
