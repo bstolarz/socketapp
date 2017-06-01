@@ -9,15 +9,13 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-char* armarPathBloqueDatos(char** path, int numeroBloque) {
+void armarPathBloqueDatos(char** path, int numeroBloque) {
 	*path = configFileSystem->punto_montaje;
 	string_append(path, "Bloques/");
 
 	char* bloqueDato = "";
 	sprintf(bloqueDato, "%d.bin", numeroBloque);
 	string_append(path, bloqueDato);
-
-	return *path;
 }
 
 void crearArchivo(char* path, int posBloqueLibre){
@@ -48,4 +46,16 @@ void crearBloqueDatos(int posBloqueLibre){
 
 	FILE* archivoBloqueDatos = fopen(path, "w");
 	fclose(archivoBloqueDatos);
+}
+
+int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite){
+	int i;
+	for (i=0;i<desplazamientoLimite;i++){
+		bloqueInicial=osada_drive.asignaciones[bloqueInicial];
+	}
+	return bloqueInicial;
+}
+
+void actualizarBytesEscritos (int* acum, int bytes){
+	*acum += bytes;
 }

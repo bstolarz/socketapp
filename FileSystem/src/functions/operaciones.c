@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
+#include <string.h>
 #include <errno.h>
 #include <commons/config.h>
 #include "bitmap.h"
 #include "config.h"
-#include <math.h>
+
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 #include "auxiliares.h"
@@ -43,13 +45,13 @@ int borrar(char* path) {
 		read_fileMetadata(path, archivo);
 
 		list_iterate(archivo->bloques, (void*) liberarBloqueDelBitmap);
+		//Falta vaciar los bloques fisicos
 		eliminarMetadataArchivo(path);
 
 		list_destroy(archivo->bloques);
 		free(archivo);
 	} else {
-		log_info(logs,
-				"No se encontro el archivo, por ende no se lo puede borrar");
+		log_info(logs, "No se encontro el archivo, por ende no se lo puede borrar");
 	}
 
 	return -ENOENT;
@@ -59,8 +61,7 @@ int obtenerDatos(char* path, off_t offset, size_t size) {
 	if (validar(path) == 1) {
 		//hago las cosas
 	} else {
-		log_info(logs,
-				"No se encontro el archivo, por ende no se le puede obtener datos");
+		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
 	}
 	return -ENOENT;
 }
@@ -69,21 +70,58 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 	if (validar(path) == 1) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
-		int tamanioArchivo = archivo->tamanio;
-		//double cantBloques = ceil((double)(offset / tamanioArchivo));
+		double bloqueArranque = offset / configMetadata->tamanioBloques;
+		int bytesAEscribirEnElBloque = (bloqueArranque * configMetadata->tamanioBloques) - offset;
+		int byteComienzoEscritura = configMetadata->tamanioBloques - bytesAEscribirEnElBloque;
+		int bytesEscritos = 0;
+		int sizeAux = size;
 
-		//int ultimoBloque = getUltimoBloqueDeDatosDelArchivo(path);
-		//size_t bytesEnUltimoBloque = getBytesUltimoBloque(ultimoBloque);
-		//Si faltan bytes por llenar
-		//if (bytesEnUltimoBloque < configMetadata->tamanioBloques) {
-		//	size_t bytesALlenar = configMetadata->tamanioBloques - bytesEnUltimoBloque;
-		//}
+		while (bytesEscritos < sizeAux) {
+			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
+				memcpy(bloqueArranque+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
+			}else{
+				memcpy(bloqueArranque+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
+			}
+
+			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
+				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
+				actualizarBytesEscritos(&bytesEscritos,configMetadata->tamanioBloques-byteComienzoEscritura);
+			}else{
+				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
+				actualizarBytesEscritos(&bytesEscritos,sizeAux);
+			}
+			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
+
+			log_info(logs, "Se han escrito %d bytes\n",bytesEscritos);
+			byteComienzoEscritura=0;
+			bloqueArranque=avanzarBloquesParaEscribir(bloqueArranque,1);
+
+
+
+
+			//----------------------------------------------------------------------------------------------
+			char* pathBloqueDato = "";
+			if()
+			int posBloqueLibre = encontrarUnBloqueLibre();
+			//Si encontro bloque libre
+			if (posBloqueLibre >= 0) {
+				ocuparBloqueLibre(posBloqueLibre);
+				armarPathBloqueDatos(&pathBloqueDato, posBloqueLibre);
+				FILE* bloqueFisico = fopen(pathBloqueDato, "w");
+				memcpy(bloqueFisico + byteComienzoEscritura, buffer + bytesEscritos, bytesAEscribirEnElBloque);
+				bytesEscritos += bytesAEscribirEnElBloque;
+			} else {
+				log_info(logs,
+						"No se encontro bloque libre en el bitmap para guardar datos");
+				break;
+			}
+
+		}
 
 		list_destroy(archivo->bloques);
 		free(archivo);
 	} else {
-		log_info(logs,
-				"No se encontro el archivo, por ende no se le puede guardar datos");
+		log_info(logs, "No se encontro el archivo, por ende no se le puede guardar datos");
 	}
 	return -ENOENT;
 }
