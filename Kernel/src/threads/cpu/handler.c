@@ -426,14 +426,16 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 			log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
 			return;
 	}
-	t_descriptor_archivo f=(t_descriptor_archivo)FD;
+
 	//Recibo la cantidad de bytes a moverme
 	int bytesToMove;
 	if (socket_recv_int(cpu->socket,&bytesToMove)<=0){
 		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
 		return;
 	}
-	update_cursor_of_file(cpu,f,bytesToMove);
+
+	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+	filedescriptor->cursor=bytesToMove;
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
@@ -479,8 +481,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			//Informo a FS que quiero escribir
 			t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
 			char* path=string_duplicate(filedescriptor->global->path);
-			int cursorToFS=get_cursor_of_file(cpu,path);
-			filesystem_write(path, cursorToFS, nbytes);
+			filesystem_write(path, filedescriptor->cursor, nbytes);
 			int respuestaFromFS;
 			if(socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0){
 				if(respuestaFromFS>0){
@@ -538,8 +539,7 @@ void handle_cpu_leer(t_cpu* cpu){
 		if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido)>0){
 			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
 			//Le pido a FS leer el archivo
-			int cursorToFS=get_cursor_of_file(cpu,path);
-			filesystem_read(path,cursorToFS,tamanioALeer);
+			filesystem_read(path,filedescriptor->cursor,tamanioALeer);
 			//Recibo la respuesta de FS de la lectura efectuada
 			int resp;
 			if (socket_recv_int(fileSystemServer.socket,&resp)>0){

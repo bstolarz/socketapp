@@ -37,20 +37,7 @@ int file_descriptor_check_permission(t_fd* fd, char* permission){
 
 
 
-int get_cursor_of_file(t_cpu* cpu, char* path){
-	int tamanio=list_size(cpu->program->fileDescriptors);
-	int i;
-	int cursor=0;
-	for (i=0;i!=tamanio;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->global->path==path){
-			if(string_contains(fd->permissions,string_from_format("%c",'r'))){
-				cursor=fd->cursor;
-			}
-		}
-	}
-	return cursor;
-}
+
 
 t_gobal_fd* existeArchivoEnTablaGlobalDeArchivos(t_list * l, char* path){
 	int tamanio=list_size(l);
@@ -78,9 +65,6 @@ int delete_file_from_global_file_table(t_descriptor_archivo d, t_cpu* cpu){
 	return result;
 }
 
-
-
-
 int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
 	int size=(int)list_size(cpu->program->fileDescriptors);
 	int i;
@@ -94,15 +78,4 @@ int process_had_opened_file(t_cpu* cpu,t_descriptor_archivo d){
 		}
 	}
 	return exists;
-}
-
-void update_cursor_of_file(t_cpu* cpu, t_descriptor_archivo f, int c){
-	int tam=list_size(cpu->program->fileDescriptors);
-	int i;
-	for (i=0;i!=tam;i++){
-		t_fd* fd=(t_fd*)list_get(cpu->program->fileDescriptors,i);
-		if (fd->value==f){
-			fd->cursor=c;
-		}
-	}
 }
