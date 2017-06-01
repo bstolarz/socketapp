@@ -14,6 +14,6 @@ void eliminarMetadataArchivo(char* path);
 char* armarPathArchivo(char* pathDelKernel);
 char* armarPathBloqueDatos(int numeroBloque);
 void actualizarBytesEscritos (int* acum, int bytes);
-
+int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite);
 
 #endif /* FUNCTIONS_AUXILIARES_H_ */
