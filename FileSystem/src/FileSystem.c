@@ -97,13 +97,13 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
 		log_info(logs, "Llamo a la funcion validar");
 		resultado = validar(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion, "CREAR")) {
+	} else if (strcmp(unMensajeDeOperacion, "CREAR") == 0) {
 		log_info(logs, "Llamo a la funcion crear");
 		resultado = crear(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")) {
+	} else if (strcmp(unMensajeDeOperacion, "BORRAR") == 0) {
 		log_info(logs, "Llamo a la funcion borrar");
 		resultado = borrar(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion,"OBTENERDATOS")) {
+	} else if (strcmp(unMensajeDeOperacion,"OBTENERDATOS") == 0) {
 		socket_recv_int(serverSocket, &offset);
 		socket_recv_int(serverSocket, &size);
 		log_info(logs, "Recibi el offset: %d", offset);
@@ -111,7 +111,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 
 		log_info(logs, "Llamo a la funcion obtenerDatos");
 		resultado = obtenerDatos(path, (off_t) offset, (size_t) size);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion,"GUARDARDATOS")) {
+	} else if (strcmp(unMensajeDeOperacion,"GUARDARDATOS") == 0) {
 		void* buffer;
 
 		socket_recv_int(serverSocket, &offset);
