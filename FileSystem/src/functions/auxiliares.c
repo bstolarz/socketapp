@@ -49,11 +49,7 @@ void crearBloqueDatos(int posBloqueLibre){
 }
 
 int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite){
-	int i;
-	for (i=0;i<desplazamientoLimite;i++){
-		bloqueInicial=osada_drive.asignaciones[bloqueInicial];
-	}
-	return bloqueInicial;
+
 }
 
 void actualizarBytesEscritos (int* acum, int bytes){

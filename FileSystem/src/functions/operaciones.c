@@ -70,17 +70,20 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 	if (validar(path) == 1) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
-		double bloqueArranque = offset / configMetadata->tamanioBloques;
+		int bloqueArranque = ceil(offset / configMetadata->tamanioBloques);
 		int bytesAEscribirEnElBloque = (bloqueArranque * configMetadata->tamanioBloques) - offset;
 		int byteComienzoEscritura = configMetadata->tamanioBloques - bytesAEscribirEnElBloque;
 		int bytesEscritos = 0;
 		int sizeAux = size;
 
 		while (bytesEscritos < sizeAux) {
+			char* path = "";
+			armarPathBloqueDatos(&path, bloqueArranque);
+			FILE* bloqueFisico = fopen(path, "w");
 			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
-				memcpy(bloqueArranque+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
+				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
 			}else{
-				memcpy(bloqueArranque+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
+				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
 			}
 
 			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
@@ -96,26 +99,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			byteComienzoEscritura=0;
 			bloqueArranque=avanzarBloquesParaEscribir(bloqueArranque,1);
 
-
-
-
-			//----------------------------------------------------------------------------------------------
-			char* pathBloqueDato = "";
-			if()
-			int posBloqueLibre = encontrarUnBloqueLibre();
-			//Si encontro bloque libre
-			if (posBloqueLibre >= 0) {
-				ocuparBloqueLibre(posBloqueLibre);
-				armarPathBloqueDatos(&pathBloqueDato, posBloqueLibre);
-				FILE* bloqueFisico = fopen(pathBloqueDato, "w");
-				memcpy(bloqueFisico + byteComienzoEscritura, buffer + bytesEscritos, bytesAEscribirEnElBloque);
-				bytesEscritos += bytesAEscribirEnElBloque;
-			} else {
-				log_info(logs,
-						"No se encontro bloque libre en el bitmap para guardar datos");
-				break;
-			}
-
+			close(bloqueFisico);
 		}
 
 		list_destroy(archivo->bloques);
