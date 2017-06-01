@@ -14,6 +14,7 @@
 #include "libSockets/server.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
+#include "functions/auxiliares.h"
 
 void hacerLoQueCorresponda(char* mensajeDeOperacion);
 
