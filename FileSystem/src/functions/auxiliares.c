@@ -9,13 +9,25 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-void armarPathBloqueDatos(char** path, int numeroBloque) {
-	*path = configFileSystem->punto_montaje;
-	string_append(path, "Bloques/");
+char* armarPathArchivo(char* pathDelKernel){
+	char* pathTotal = "";
+	string_append(&pathTotal, configFileSystem->punto_montaje);
+	string_append(&pathTotal, "Archivos/");
+	string_append(&pathTotal, pathDelKernel);
+
+	return pathTotal;
+}
+
+char* armarPathBloqueDatos(char* pathDelKernel, int numeroBloque) {
+	char* pathTotal = "";
+	string_append(&pathTotal, configFileSystem->punto_montaje);
+	string_append(&pathTotal, "Bloques/");
 
 	char* bloqueDato = "";
 	sprintf(bloqueDato, "%d.bin", numeroBloque);
-	string_append(path, bloqueDato);
+	string_append(&pathTotal, bloqueDato);
+
+	return pathTotal;
 }
 
 void crearArchivo(char* path, int posBloqueLibre){
@@ -49,7 +61,8 @@ void crearBloqueDatos(int posBloqueLibre){
 }
 
 int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite){
-
+	//Implementarla
+	return 0;
 }
 
 void actualizarBytesEscritos (int* acum, int bytes){

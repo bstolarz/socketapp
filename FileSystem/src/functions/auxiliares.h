@@ -11,7 +11,9 @@
 void crearArchivo(char* path, int posBloqueLibre);
 void crearBloqueDatos(int posBloqueLibre);
 void eliminarMetadataArchivo(char* path);
-void armarPathBloqueDatos(char** path, int numeroBloque);
+char* armarPathArchivo(char* pathDelKernel);
+char* armarPathBloqueDatos(char** path, int numeroBloque);
 void actualizarBytesEscritos (int* acum, int bytes);
+
 
 #endif /* FUNCTIONS_AUXILIARES_H_ */
