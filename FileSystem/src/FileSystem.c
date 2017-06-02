@@ -106,10 +106,11 @@ void soloParaProbarLasOperaciones(){
 		size_t cantLeida = getline(&comando, &cantidad, stdin);
 		comando[cantLeida-1]='\0';
 
-		printf("Ingrese el path completo:\n");
+		printf("Ingrese el path del archivo como lo mandaria el kernel:\n");
 		size_t cantLeidaPath = getline(&path, &cantidadPath, stdin);
 		path[cantLeidaPath-1]='\0';
 
+		path = armarPathArchivo(path);
 		if(strcmp(comando, "VALIDAR") == 0){
 			log_info(logs, "Llamo al validar");
 			resultado = validar(path);

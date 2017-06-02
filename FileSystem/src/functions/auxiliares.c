@@ -33,6 +33,7 @@ char* armarPathBloqueDatos(int numeroBloque) {
 }
 
 void crearArchivo(char* path, int posBloqueLibre){
+	log_info(logs, "Antes del fopen para el path: %s", path);
 	FILE* archivo = fopen(path, "w");
 	log_info(logs, "Hice fopen del path: %s", path);
 	fprintf(archivo, "TAMANIO=0\n");
