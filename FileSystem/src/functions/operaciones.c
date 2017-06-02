@@ -1,76 +1,127 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
+#include <string.h>
 #include <errno.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 #include "bitmap.h"
 #include "config.h"
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 #include "auxiliares.h"
 
-//Implementacion de operaciones, por ahora son dummies
-int validar(char* path){
+
+int validar(char* path) {
+	log_info(logs, "Antes del access");
 	int resultado = access(path, F_OK);
-	if(resultado == 0){
+	log_info(logs, "Despues del access");
+	if (resultado == 0) {
 		log_info(logs, "Se encontro el archivo para el path: %s", path);
 		return 1;
+	}else{
+		log_info(logs, "No se encontro el archivo para el path: %s", path);
+		return -ENOENT;
 	}
-
-	log_info(logs, "No se encontro el archivo para el path: %s", path);
-	//No encontro el archivo
-	return -ENOENT;
 }
 
-int crear(char* path){
+int crear(char* path) {
 	int posBloqueLibre = encontrarUnBloqueLibre();
-	if (posBloqueLibre >= 0){
+	if (posBloqueLibre >= 0) {
 		ocuparBloqueLibre(posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
 		log_info(logs, "Se creo el archivo");
-	}
-	else{
+		return 1;
+	} else {
 		log_info(logs, "No se encontro un bloque libre en el bitmap");
 		return -ENOENT;
 	}
-	return 0;
+
 }
 
-int borrar(char* path){
+//Falta vaciar los bloques fisicos
+int borrar(char* path) {
 	//Valido que exista el archivo
-	if(validar(path) == 1){
+	if (validar(path) == 1) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
-			read_fileMetadata(path, archivo);
+		read_fileMetadata(path, archivo);
 
-			list_iterate(archivo->bloques, (void*)liberarBloqueDelBitmap);
-			eliminarMetadataArchivo(path);
+		list_iterate(archivo->bloques, (void*) liberarBloqueDelBitmap);
+		//Falta vaciar los bloques fisicos
+		eliminarMetadataArchivo(path);
 
-			list_destroy(archivo->bloques);
-			free(archivo);
-	}
-	else{
+		list_destroy(archivo->bloques);
+		free(archivo);
+		return 1;
+	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se lo puede borrar");
+		return -ENOENT;
 	}
 
-	return -ENOENT;
 }
 
-int obtenerDatos(char* path, off_t offset, size_t size){
-	if(validar(path) == 1){
+//Falta
+int obtenerDatos(char* path, off_t offset, size_t size) {
+	if (validar(path) == 1) {
 		//hago las cosas
-	}
-	else{
+		return 1;
+	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
+		return -ENOENT;
 	}
-	return -ENOENT;
+
 }
 
-int guardarDatos(char* path, off_t offset, size_t size, void* buffer){
-	if(validar(path) == 1){
-		//hago las cosas
-	}
-	else{
+//Falta
+int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
+	if (validar(path) == 1) {
+		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
+		read_fileMetadata(path, archivo);
+
+		int posBloqueArranque = ceil(offset / configMetadata->tamanioBloques);
+		int bytesAEscribirEnElBloque = (posBloqueArranque * configMetadata->tamanioBloques) - offset;
+		int byteComienzoEscritura = configMetadata->tamanioBloques - bytesAEscribirEnElBloque;
+		int bytesEscritos = 0;
+		int sizeAux = size;
+
+		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
+		while (sizeAux > 0) {
+			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque - 1);
+
+			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
+			FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
+
+			//Si lo que me queda por escribir (sizeAux) es mayor a lo que tengo que escribir en el bloque
+			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
+				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
+			}else{
+				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
+			}
+
+			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
+				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
+				actualizarBytesEscritos(&bytesEscritos,configMetadata->tamanioBloques-byteComienzoEscritura);
+			}else{
+				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
+				actualizarBytesEscritos(&bytesEscritos,sizeAux);
+			}
+			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
+
+			log_info(logs, "Se han escrito %d bytes\n",bytesEscritos);
+			byteComienzoEscritura=0;
+			posBloqueArranque+=1;
+
+			fclose(bloqueFisico);
+		}
+
+		list_destroy(archivo->bloques);
+		free(archivo);
+		return 1;
+	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede guardar datos");
+		return -ENOENT;
 	}
-	return -ENOENT;
+
+
 }

@@ -14,8 +14,10 @@
 #include "libSockets/server.h"
 #include "libSockets/send.h"
 #include "libSockets/recv.h"
+#include "functions/auxiliares.h"
+#include "functions/handler.h"
 
-void hacerLoQueCorresponda(char* mensajeDeOperacion);
+void soloParaProbarLasOperaciones();
 
 int main(int arg, char* argv[]) {
 	if (arg != 2) {
@@ -34,7 +36,9 @@ int main(int arg, char* argv[]) {
 	config_print();
 	log_info(logs, "antes de initSadica");
 
-	initSadica();
+	soloParaProbarLasOperaciones();
+
+	/*initSadica();
 
 
 	serverSocket = 0;
@@ -77,53 +81,52 @@ int main(int arg, char* argv[]) {
 		}
 	}
 
-	unmountSadica();
+	unmountSadica();*/
 	log_destroy(logs);
 	return EXIT_SUCCESS;
 }
 
-//Falta hacer las condiciones de que si el path no se encontro para obtener y guardar, que retorne un error de archivo no encontrado
-void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
-	char* path = "";
-	int offset;
-	int size;
-	int resultado;
+void soloParaProbarLasOperaciones(){
+	size_t cantidad = 10;
+	char* comando = malloc(sizeof(char)*cantidad);
 
-	socket_recv_string(serverSocket, &path);
-	log_info(logs, "Recibi el path: %s", path);
+	size_t cantidadPath = 10;
+	char* path = malloc(sizeof(char)*cantidad);
 
-	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
-		log_info(logs, "Llamo a la funcion validar");
-		resultado = validar(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion, "CREAR")) {
-		log_info(logs, "Llamo a la funcion crear");
-		resultado = crear(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion, "BORRAR")) {
-		log_info(logs, "Llamo a la funcion borrar");
-		resultado = borrar(path);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion,"OBTENERDATOS")) {
-		socket_recv_int(serverSocket, &offset);
-		socket_recv_int(serverSocket, &size);
-		log_info(logs, "Recibi el offset: %d", offset);
-		log_info(logs, "Recibi el size: %d", size);
+	int resultado = -1;
+	while(1){
+		printf("----------------------------------------------\n");
+		printf("[Filesystem] - Los comandos permitidos son:\n");
+		printf("[Filesystem] - 	VALIDAR		Valida si existe un archivo.\n");
+		printf("[Filesystem] - 	CREAR		Crea un archivo y le asigna un bloque.\n");
+		printf("[Filesystem] - 	BORRAR 		Borra un archivo y libera sus bloques.\n");
+		printf("[Filesystem] - 	exit 		Salir del programa.\n");
 
-		log_info(logs, "Llamo a la funcion obtenerDatos");
-		resultado = obtenerDatos(path, (off_t) offset, (size_t) size);
-	} else if (string_equals_ignore_case(unMensajeDeOperacion,"GUARDARDATOS")) {
-		void* buffer;
+		printf("Ingrese un comando:\n");
+		size_t cantLeida = getline(&comando, &cantidad, stdin);
+		comando[cantLeida-1]='\0';
 
-		socket_recv_int(serverSocket, &offset);
-		socket_recv_int(serverSocket, &size);
-		socket_recv(serverSocket, &buffer, 1);
-		log_info(logs, "Recibi el offset: %d", offset);
-		log_info(logs, "Recibi el size: %d", size);
-		log_info(logs, "Recibi el buffer: %s", buffer);
+		printf("Ingrese el path completo:\n");
+		size_t cantLeidaPath = getline(&path, &cantidadPath, stdin);
+		path[cantLeidaPath-1]='\0';
 
-		log_info(logs, "Llamo a la funcion guardarDatos");
-		resultado = guardarDatos(path, (off_t) offset, (size_t) size, buffer);
+		if(strcmp(comando, "VALIDAR") == 0){
+			log_info(logs, "Llamo al validar");
+			resultado = validar(path);
+		}else if(strcmp(comando, "CREAR") == 0){
+			log_info(logs, "Llamo al crear");
+			resultado = crear(path);
+		}else if(strcmp(comando, "BORRAR") == 0){
+			log_info(logs, "Llamo al borrar");
+			resultado = borrar(path);
+		}else if(strcmp(comando, "exit") == 0){
+			break;
+		}
+
+		if(resultado == 1){
+			printf("Se pudo %s archivo satisfactoriamente\n", comando);
+		}else{
+			printf("El archivo no existe\n");
+		}
 	}
-
-	socket_send_int(serverSocket, resultado);
-
-	free(path);
 }
