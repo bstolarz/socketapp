@@ -37,7 +37,7 @@ int crear(char* path) {
 		log_info(logs, "No se encontro un bloque libre en el bitmap");
 		return -ENOENT;
 	}
-	return 0;
+	return 1;
 }
 
 //Falta vaciar los bloques fisicos
@@ -55,9 +55,9 @@ int borrar(char* path) {
 		free(archivo);
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se lo puede borrar");
+		return -ENOENT;
 	}
-
-	return -ENOENT;
+	return 1;
 }
 
 //Falta

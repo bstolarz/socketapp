@@ -17,6 +17,7 @@
 #include "functions/auxiliares.h"
 #include "functions/handler.h"
 
+void soloParaProbarLasOperaciones();
 
 int main(int arg, char* argv[]) {
 	if (arg != 2) {
@@ -35,7 +36,9 @@ int main(int arg, char* argv[]) {
 	config_print();
 	log_info(logs, "antes de initSadica");
 
-	initSadica();
+	soloParaProbarLasOperaciones();
+
+	/*initSadica();
 
 
 	serverSocket = 0;
@@ -78,7 +81,47 @@ int main(int arg, char* argv[]) {
 		}
 	}
 
-	unmountSadica();
+	unmountSadica();*/
 	log_destroy(logs);
 	return EXIT_SUCCESS;
+}
+
+void soloParaProbarLasOperaciones(){
+	size_t cantidad = 10;
+	char* comando = malloc(sizeof(char)*cantidad);
+
+	size_t cantidadPath = 10;
+	char* path = malloc(sizeof(char)*cantidad);
+
+	int resultado;
+	while(1){
+		printf("----------------------------------------------\n");
+		printf("[Filesystem] - Los comandos permitidos son:\n");
+		printf("[Filesystem] - 	VALIDAR			Valida si existe un archivo.\n");
+		printf("[Filesystem] - 	CREAR			Crea un archivo y le asigna un bloque.\n");
+		printf("[Filesystem] - 	BORRAR 			Borra un archivo y libera sus bloques.\n");
+		printf("[Filesystem] - 	exit 			Salir del programa.\n");
+
+		printf("Ingrese un comando:\n");
+		size_t cantLeida = getline(&comando, &cantidad, stdin);
+		comando[cantLeida-1]='\0';
+
+		printf("Ingrese el path (como lo manda el kernel):\n");
+		size_t cantLeidaPath = getline(&path, &cantidadPath, stdin);
+		path[cantLeidaPath-1]='\0';
+
+		if(strcmp(comando, "VALIDAR")){
+			resultado = validar(path);
+		}else if(strcmp(comando, "CREAR")){
+			resultado = crear(path);
+		}else if(strcmp(comando, "BORRAR")){
+			resultado = borrar(path);
+		}else if(strcmp(comando, "exit")){
+			break;
+		}
+
+		if(resultado == 1){
+			printf("Se pudo %s archivo satisfactoriamente\n", comando);
+		}
+	}
 }
