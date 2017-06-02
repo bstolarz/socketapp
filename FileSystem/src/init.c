@@ -119,18 +119,18 @@ void initSadica(){
 	metadataFS_print();
 	log_info(logs, "Imprimio metadata OK");
 
-	crearArchivos(); /*Por ahora solo creo el Bitmap*/
+	//crearArchivos(); /*Por ahora solo creo el Bitmap*/
 
-	//int bitmapArchive = open(strcat(configFileSystem->punto_montaje, "/Metadata/Bitmap.bin"), O_RDWR);
+	int bitmapArchive = open(strcat(configFileSystem->punto_montaje, "/Metadata/Bitmap.bin"), O_RDWR);
 
 	//el file con metadata del archivo, se lee y se escribe con bloques si se agrega info al archivo
 	//FILE *md = open(strcat(configFileSystem->punto_montaje, "/Archivos/passwords/alumnosSIGA.bin"), O_RDWR);
 
 	//Mapeo bitmap.bin
-	//char* bitmapMapped = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapArchive, 0);
+	char* bitmapMapped = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapArchive, 0);
 
 	//Crear bit array
-	//bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
+	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
 
 	//Liberar strings
 }

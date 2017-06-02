@@ -36,10 +36,10 @@ int main(int arg, char* argv[]) {
 	config_print();
 	log_info(logs, "antes de initSadica");
 
+	initSadica();
+
 	soloParaProbarLasOperaciones();
-
-	/*initSadica();
-
+/*
 
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);

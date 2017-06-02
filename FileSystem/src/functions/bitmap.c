@@ -25,11 +25,11 @@ int encontrarUnBloqueLibre(){
 }
 
 void ocuparBloqueLibre(int posBloqueLibre){
-	log_info(logs, "Se ocupa el bloque %d del bitmap", posBloqueLibre);
 	bitarray_set_bit(bitarray, posBloqueLibre);
+	log_info(logs, "Se ocupo el bloque %d del bitmap", posBloqueLibre);
 }
 
 void liberarBloqueDelBitmap(int bloque){
-	log_info(logs, "Se libera el bloque %d del bitmap", bloque);
 	bitarray_clean_bit(bitarray, bloque);
+	log_info(logs, "Se libera el bloque %d del bitmap", bloque);
 }

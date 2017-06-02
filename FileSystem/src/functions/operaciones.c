@@ -28,10 +28,11 @@ int validar(char* path) {
 
 int crear(char* path) {
 	int posBloqueLibre = encontrarUnBloqueLibre();
+	log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
 	if (posBloqueLibre >= 0) {
 		ocuparBloqueLibre(posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
-		log_info(logs, "Se creo el archivo");
+		log_info(logs, "Se creo el archivo, se le asigno el bloque: %d", posBloqueLibre);
 		return 1;
 	} else {
 		log_info(logs, "No se encontro un bloque libre en el bitmap");

@@ -34,6 +34,7 @@ char* armarPathBloqueDatos(int numeroBloque) {
 
 void crearArchivo(char* path, int posBloqueLibre){
 	FILE* archivo = fopen(path, "w");
+	log_info(logs, "Hice fopen del path: %s", path);
 	fprintf(archivo, "TAMANIO=0\n");
 
 	char* lineaBloques = "BLOQUES=[";
