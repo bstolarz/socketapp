@@ -93,35 +93,40 @@ void soloParaProbarLasOperaciones(){
 	size_t cantidadPath = 10;
 	char* path = malloc(sizeof(char)*cantidad);
 
-	int resultado;
+	int resultado = -1;
 	while(1){
 		printf("----------------------------------------------\n");
 		printf("[Filesystem] - Los comandos permitidos son:\n");
-		printf("[Filesystem] - 	VALIDAR			Valida si existe un archivo.\n");
-		printf("[Filesystem] - 	CREAR			Crea un archivo y le asigna un bloque.\n");
-		printf("[Filesystem] - 	BORRAR 			Borra un archivo y libera sus bloques.\n");
-		printf("[Filesystem] - 	exit 			Salir del programa.\n");
+		printf("[Filesystem] - 	VALIDAR		Valida si existe un archivo.\n");
+		printf("[Filesystem] - 	CREAR		Crea un archivo y le asigna un bloque.\n");
+		printf("[Filesystem] - 	BORRAR 		Borra un archivo y libera sus bloques.\n");
+		printf("[Filesystem] - 	exit 		Salir del programa.\n");
 
 		printf("Ingrese un comando:\n");
 		size_t cantLeida = getline(&comando, &cantidad, stdin);
 		comando[cantLeida-1]='\0';
 
-		printf("Ingrese el path (como lo manda el kernel):\n");
+		printf("Ingrese el path completo:\n");
 		size_t cantLeidaPath = getline(&path, &cantidadPath, stdin);
 		path[cantLeidaPath-1]='\0';
 
-		if(strcmp(comando, "VALIDAR")){
+		if(strcmp(comando, "VALIDAR") == 0){
+			log_info(logs, "Llamo al validar");
 			resultado = validar(path);
-		}else if(strcmp(comando, "CREAR")){
+		}else if(strcmp(comando, "CREAR") == 0){
+			log_info(logs, "Llamo al crear");
 			resultado = crear(path);
-		}else if(strcmp(comando, "BORRAR")){
+		}else if(strcmp(comando, "BORRAR") == 0){
+			log_info(logs, "Llamo al borrar");
 			resultado = borrar(path);
-		}else if(strcmp(comando, "exit")){
+		}else if(strcmp(comando, "exit") == 0){
 			break;
 		}
 
 		if(resultado == 1){
 			printf("Se pudo %s archivo satisfactoriamente\n", comando);
+		}else{
+			printf("El archivo no existe\n");
 		}
 	}
 }

@@ -15,13 +15,16 @@
 
 //En teoria ya estaria
 int validar(char* path) {
+	log_info(logs, "Antes del access");
 	int resultado = access(path, F_OK);
+	log_info(logs, "Despues del access");
 	if (resultado == 0) {
 		log_info(logs, "Se encontro el archivo para el path: %s", path);
 		return 1;
+	}else{
+		log_info(logs, "El acceso no es permitido. El resultado de access es: %d", resultado);
 	}
 
-	log_info(logs, "No se encontro el archivo para el path: %s", path);
 	//No encontro el archivo
 	return -ENOENT;
 }
