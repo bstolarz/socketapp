@@ -76,6 +76,7 @@ void crearArchivos()
 	close(bitmapFD);
 
 	munmap(&bitarray, configMetadata->cantidadBloques-1);
+	free(strPath);
 
 	/*** c r e o  m e t a  d a t a  p o r  a r c h i v o ***/
 	/*

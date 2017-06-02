@@ -14,9 +14,7 @@
 
 //Falta validar que sea solo archivo posta, NO directorio. Si es directorio entonces tiene que devolver que no existe
 int validar(char* path) {
-	log_info(logs, "Antes del access");
 	int resultado = access(path, F_OK);
-	log_info(logs, "Despues del access");
 	if (resultado == 0 && is_regular_file(path)) {
 		log_info(logs, "Se encontro el archivo para el path: %s", path);
 		return 1;
@@ -41,14 +39,21 @@ int crear(char* path) {
 
 }
 
+void loguearBloque(int bloque){
+	log_info(logs, "%d", bloque);
+}
+
 //Falta vaciar los bloques fisicos
 int borrar(char* path) {
-	//Valido que exista el archivo
 	if (validar(path) == 1) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
+		log_info(logs, "Se leyo el metadata del archivo: %s", path);
+		log_info(logs, "Los bloques asignados al archivo son:");
+		list_iterate(archivo->bloques, (void*)loguearBloque);
 
 		list_iterate(archivo->bloques, (void*) liberarBloqueDelBitmap);
+		log_info(logs, "Se liberaron todos los bloques del bitmap asignados al archivo");
 		//Falta vaciar los bloques fisicos
 		eliminarMetadataArchivo(path);
 

@@ -46,7 +46,7 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 	while (*s != NULL) {
 		int bloque = atoi(*s);
 
-		list_add(archivo->bloques, &bloque);
+		list_add(archivo->bloques, bloque);
 
 		s++;
 	}
