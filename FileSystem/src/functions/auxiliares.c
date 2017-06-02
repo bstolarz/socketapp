@@ -12,7 +12,7 @@
 #include "../commons/declarations.h"
 
 char* armarPathArchivo(char* pathDelKernel){
-	char* pathTotal = "";
+	char* pathTotal = string_new();
 	string_append(&pathTotal, configFileSystem->punto_montaje);
 	string_append(&pathTotal, "Archivos/");
 	string_append(&pathTotal, pathDelKernel);
@@ -21,11 +21,11 @@ char* armarPathArchivo(char* pathDelKernel){
 }
 
 char* armarPathBloqueDatos(int numeroBloque) {
-	char* pathTotal = "";
+	char* pathTotal = string_new();
 	string_append(&pathTotal, configFileSystem->punto_montaje);
 	string_append(&pathTotal, "Bloques/");
 
-	char* bloqueDato = "";
+	char* bloqueDato = string_new();
 	sprintf(bloqueDato, "%d.bin", numeroBloque);
 	string_append(&pathTotal, bloqueDato);
 
@@ -33,19 +33,23 @@ char* armarPathBloqueDatos(int numeroBloque) {
 }
 
 void crearArchivo(char* path, int posBloqueLibre){
-	log_info(logs, "Antes del fopen para el path: %s", path);
-	FILE* archivo = fopen(path, "w");
+	FILE* archivo = fopen(path, "w+");
 	log_info(logs, "Hice fopen del path: %s", path);
 	fprintf(archivo, "TAMANIO=0\n");
+	log_info(logs, "Hice fprintf de tamanio");
 
-	char* lineaBloques = "BLOQUES=[";
-	char* bloque = "";
+	char* bloque = string_new();
 	sprintf(bloque, "%d", posBloqueLibre);
 
+	char* lineaBloques = string_new();
+	string_append(&lineaBloques, "BLOQUES=[");
 	string_append(&lineaBloques, bloque);
 	string_append(&lineaBloques, "]");
 
-	fprintf(archivo, "%s", lineaBloques);
+	fprintf(archivo, lineaBloques);
+
+	free(bloque);
+	free(lineaBloques);
 	fclose(archivo);
 }
 

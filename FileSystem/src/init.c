@@ -105,23 +105,13 @@ void initSadica(){
 
 	log_info(logs, "entro a initSadica");
 
-
-	/***** Abro Metadata ******/
-	char * strPath = string_new();
-	string_append(&strPath, configFileSystem->punto_montaje);
-	string_append(&strPath, "Metadata/Metadata.bin");
-
-	log_info(logs, "%s", strPath);
-
-	metadataFS_read(strPath);
-
-	log_info(logs, "Leyo metadata OK");
-	metadataFS_print();
-	log_info(logs, "Imprimio metadata OK");
-
 	//crearArchivos(); /*Por ahora solo creo el Bitmap*/
 
-	int bitmapArchive = open(strcat(configFileSystem->punto_montaje, "/Metadata/Bitmap.bin"), O_RDWR);
+	char* pathBitmap = string_new();
+	string_append(&pathBitmap, configFileSystem->punto_montaje);
+	string_append(&pathBitmap, "Metadata/Bitmap.bin");
+
+	int bitmapArchive = open(pathBitmap, O_RDWR);
 
 	//el file con metadata del archivo, se lee y se escribe con bloques si se agrega info al archivo
 	//FILE *md = open(strcat(configFileSystem->punto_montaje, "/Archivos/passwords/alumnosSIGA.bin"), O_RDWR);

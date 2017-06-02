@@ -32,9 +32,10 @@ int main(int arg, char* argv[]) {
 	configMetadata = malloc(sizeof(t_metadata));
 
 	config_read(argv[1]);
-	log_info(logs, "antes de config_print");
 	config_print();
-	log_info(logs, "antes de initSadica");
+
+	metadataFS_read("./mnt/SADICA_FS/Metadata/Metadata.bin");
+	metadataFS_print();
 
 	initSadica();
 
