@@ -29,6 +29,7 @@ char* armarPathBloqueDatos(int numeroBloque) {
 	sprintf(bloqueDato, "%d.bin", numeroBloque);
 	string_append(&pathTotal, bloqueDato);
 
+	free(bloqueDato);
 	return pathTotal;
 }
 
@@ -47,6 +48,7 @@ void crearArchivo(char* path, int posBloqueLibre){
 	string_append(&lineaBloques, "]");
 
 	fprintf(archivo, lineaBloques);
+	log_info(logs, "Hice fprintf de la linea de bloques");
 
 	free(bloque);
 	free(lineaBloques);
@@ -55,13 +57,6 @@ void crearArchivo(char* path, int posBloqueLibre){
 
 void eliminarMetadataArchivo(char* path){
 	remove(path);
-}
-
-void crearBloqueDatos(int posBloqueLibre){
-	char* pathBloqueDato = armarPathBloqueDatos(posBloqueLibre);
-
-	FILE* archivoBloqueDatos = fopen(pathBloqueDato, "w");
-	fclose(archivoBloqueDatos);
 }
 
 int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite){
