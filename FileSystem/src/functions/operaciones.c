@@ -12,12 +12,12 @@
 #include "../commons/declarations.h"
 #include "auxiliares.h"
 
-
+//Falta validar que sea solo archivo posta, NO directorio. Si es directorio entonces tiene que devolver que no existe
 int validar(char* path) {
 	log_info(logs, "Antes del access");
 	int resultado = access(path, F_OK);
 	log_info(logs, "Despues del access");
-	if (resultado == 0) {
+	if (resultado == 0 && is_regular_file(path)) {
 		log_info(logs, "Se encontro el archivo para el path: %s", path);
 		return 1;
 	}else{

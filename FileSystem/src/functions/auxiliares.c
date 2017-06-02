@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include <string.h>
@@ -63,4 +65,11 @@ int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite){
 
 void actualizarBytesEscritos (int* acum, int bytes){
 	*acum += bytes;
+}
+
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
 }
