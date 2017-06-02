@@ -70,14 +70,21 @@ int filesystem_close(){
 	return 0;
 }
 
-int filesystem_delete(){
-	if(socket_send_string(fileSystemServer.socket,"BORRAR")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
+int filesystem_delete(char* path){
+	if(socket_send_string(fileSystemServer.socket,"BORRAR")<=0){
 		log_info(logKernel, "Error al enviar a FS que quiero borrar");
 	}
 
-	return 0;
+	if(socket_send_string(fileSystemServer.socket,path)<=0){
+		log_info(logKernel, "Error al enviar a FS el path que quiero borrar");
+	}
+
+	int resp;
+	if(socket_recv_int(fileSystemServer.socket,&resp)>0){
+		log_info(logKernel, "Error al obtener la respuesta del borrado");
+	}
+
+	return resp;
 }
 
 int filesystem_create(char* path){
