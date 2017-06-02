@@ -70,14 +70,21 @@ int filesystem_close(){
 	return 0;
 }
 
-int filesystem_delete(){
-	if(socket_send_string(fileSystemServer.socket,"BORRAR")>0){
-		log_info(logKernel, "Envio correctamente a FS que quiero borrar");
-	}else{
+int filesystem_delete(char* path){
+	if(socket_send_string(fileSystemServer.socket,"BORRAR")<=0){
 		log_info(logKernel, "Error al enviar a FS que quiero borrar");
 	}
 
-	return 0;
+	if(socket_send_string(fileSystemServer.socket,path)<=0){
+		log_info(logKernel, "Error al enviar a FS el path que quiero borrar");
+	}
+
+	int resp;
+	if(socket_recv_int(fileSystemServer.socket,&resp)>0){
+		log_info(logKernel, "Error al obtener la respuesta del borrado");
+	}
+
+	return resp;
 }
 
 int filesystem_create(char* path){
@@ -106,26 +113,21 @@ int filesystem_create(char* path){
 
 int filesystem_validate(char* path){
 	//Le pido el file descriptor a FS
-	if (socket_send_string(fileSystemServer.socket,"VALIDAR")>0){
-		log_info(logKernel, "Le indico a FS que quiero validar una path");
-	}else{
+	if (socket_send_string(fileSystemServer.socket,"VALIDAR")<=0){
 		log_info(logKernel, "Error al indicarle a FS que quiero validar una path");
+		return 0;
 	}
+
 	//Envio el path a FS
-	if (socket_send_string(fileSystemServer.socket,path)>0){
-		log_info(logKernel, "Le envio a FS la path: %s",path);
-	}else{
+	if (socket_send_string(fileSystemServer.socket,path)<=0){
 		log_info(logKernel, "Error al enviarle a FS la path: %s", path);
+		return 0;
 	}
+
 	int respuesta;
-	if (socket_recv_int(fileSystemServer.socket,&respuesta)>0){
-		log_info(logKernel, "Recibo la validacion del FS");
-		if (respuesta>0){
-			log_info(logKernel, "Existe el archivo en FS");
-		}else{
-			log_info(logKernel, "No existe el archivo en FS");
-			EXIT_FAILURE;
-		}
+	if (socket_recv_int(fileSystemServer.socket,&respuesta)<=0){
+		log_info(logKernel, "Error al obtener respuesta del FS");
+		return 0;
 	}
 	return respuesta;
 }
