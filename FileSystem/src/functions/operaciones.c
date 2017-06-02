@@ -8,12 +8,11 @@
 #include <commons/collections/list.h>
 #include "bitmap.h"
 #include "config.h"
-
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 #include "auxiliares.h"
 
-//En teoria ya estaria
+
 int validar(char* path) {
 	log_info(logs, "Antes del access");
 	int resultado = access(path, F_OK);
@@ -23,24 +22,22 @@ int validar(char* path) {
 		return 1;
 	}else{
 		log_info(logs, "No se encontro el archivo para el path: %s", path);
+		return -ENOENT;
 	}
-
-	//No encontro el archivo
-	return -ENOENT;
 }
 
-//En teoria ya estaria
 int crear(char* path) {
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	if (posBloqueLibre >= 0) {
 		ocuparBloqueLibre(posBloqueLibre);
 		crearArchivo(path, posBloqueLibre);
 		log_info(logs, "Se creo el archivo");
+		return 1;
 	} else {
 		log_info(logs, "No se encontro un bloque libre en el bitmap");
 		return -ENOENT;
 	}
-	return 1;
+
 }
 
 //Falta vaciar los bloques fisicos
@@ -56,21 +53,24 @@ int borrar(char* path) {
 
 		list_destroy(archivo->bloques);
 		free(archivo);
+		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se lo puede borrar");
 		return -ENOENT;
 	}
-	return 1;
+
 }
 
 //Falta
 int obtenerDatos(char* path, off_t offset, size_t size) {
 	if (validar(path) == 1) {
 		//hago las cosas
+		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
+		return -ENOENT;
 	}
-	return -ENOENT;
+
 }
 
 //Falta
@@ -117,9 +117,11 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
 		list_destroy(archivo->bloques);
 		free(archivo);
+		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede guardar datos");
+		return -ENOENT;
 	}
 
-	return -ENOENT;
+
 }

@@ -32,7 +32,6 @@ char* armarPathBloqueDatos(int numeroBloque) {
 
 void crearArchivo(char* path, int posBloqueLibre){
 	FILE* archivo = fopen(path, "w");
-	//Cuando creo el bloque de datos va a tener 0 bytes o 1 byte?
 	fprintf(archivo, "TAMANIO=0\n");
 
 	char* lineaBloques = "BLOQUES=[";
@@ -40,9 +39,7 @@ void crearArchivo(char* path, int posBloqueLibre){
 	sprintf(bloque, "%d", posBloqueLibre);
 
 	string_append(&lineaBloques, bloque);
-	//Me queda BLOQUES=[80
 	string_append(&lineaBloques, "]");
-	//Me queda BLOQUES=[80]
 
 	fprintf(archivo, "%s", lineaBloques);
 	fclose(archivo);
