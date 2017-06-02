@@ -61,21 +61,21 @@ void crearArchivos()
 
 	log_info(logs, "Se mapeo bitarray a memoria");
 
-	t_bitarray * bArray = bitarray_create_with_mode(bitmap, configMetadata->cantidadBloques/8, MSB_FIRST);
+	t_bitarray * bitarray = bitarray_create_with_mode(bitmap, configMetadata->cantidadBloques/8, MSB_FIRST);
 
-	log_info(logs, "hizo el create with mode, tamanio: %i", bitarray_get_max_bit(bArray));
+	log_info(logs, "hizo el create with mode, tamanio: %i", bitarray_get_max_bit(bitarray));
 
 	for(i=0;i<configMetadata->cantidadBloques;i++)
 		if(i==40 || i==21 || i==82 || i==3)
-			bitarray_set_bit(bArray, i);
+			bitarray_set_bit(bitarray, i);
 		else
-			bitarray_clean_bit(bArray, i);
+			bitarray_clean_bit(bitarray, i);
 
 
 	log_info(logs, "cant bloques recorridos: %i", i);
 	close(bitmapFD);
 
-	munmap(&bArray, configMetadata->cantidadBloques-1);
+	munmap(&bitarray, configMetadata->cantidadBloques-1);
 
 	/*** c r e o  m e t a  d a t a  p o r  a r c h i v o ***/
 	/*
