@@ -17,7 +17,7 @@
 // solo varia donde empieza a enumerar las paginas
 // por eso esta funcion toma como parametro la funcion q busca las paginas
 // lo q le manda el kernel es lo mismo (PID, pageCount)
-int handle_page_request(int clientSocket, int (*page_request_handler)(int, int), char* operationName)
+int handle_page_request(int clientSocket, int (*page_request_handler)(int, size_t), char* operationName)
 {
 	//Recivo PID
 	int PID;
@@ -34,7 +34,7 @@ int handle_page_request(int clientSocket, int (*page_request_handler)(int, int),
 	}
 
 	//Proceso la peticion
-	int success = page_request_handler(PID, pageCount);
+	int success = page_request_handler(PID, (size_t) pageCount);
 
 	//Envio el resultado
 	int nBytes = socket_send_int(clientSocket, success);

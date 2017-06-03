@@ -8,7 +8,6 @@
 #ifndef FUNCTIONS_AUXILIARES_H_
 #define FUNCTIONS_AUXILIARES_H_
 
-void vaciarBloqueFisico(int bloque);
 void crearArchivo(char* path, int posBloqueLibre);
 void crearBloqueDatos(int posBloqueLibre);
 void eliminarMetadataArchivo(char* path);

@@ -2,6 +2,6 @@
 #define FUNCTIONS_DEBUG_CONSOLE_H_
 
 void debug_console();
-void dump_che_int();
+void dump_proc_int(int PID);
 
 #endif /* FUNCTIONS_DEBUG_CONSOLE_H_ */

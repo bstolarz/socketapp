@@ -4,6 +4,7 @@
 #include "structures.h"
 #include <commons/log.h>
 #include <pthread.h>
+#include <stddef.h>
 
 t_memory* configMemory;
 
@@ -11,13 +12,10 @@ t_pageTableEntry* pageTable; // la tabla para buscar frames dado un pid y una p�
                                     // la primer entry describiría proccessPage[0]
                                     // (no la page en la que esta este array de entradas que sería la verdadera pag 0)
 
-int freeFrameCount;
-t_pageTableEntry** freeFramesEntries; 	// t_pageTableEntry*[proccessPageCount]
-										// guarda las pageTableEntry disponibles
-										// para que cuando hay que buscar vacios el lockeo sea minimo
+size_t freeFrameCount;
 extern pthread_mutex_t freeFrameMutex;
 
-int proccessPageCount;
+size_t proccessPageCount;
 char* proccessPages; // la memoria RAM donde guardar y buscar datos
 					 // es char* para que se pueda sumar de a 1 byte
 

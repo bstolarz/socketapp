@@ -65,15 +65,6 @@ int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 	}
 }
 
-void vaciarBloqueFisico(int bloque){
-	char* pathBloqueFisico = armarPathBloqueDatos(bloque);
-	//Como el archivo ya existe -> al abrirlo con "w" se sobreescribe
-	FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
-	fclose(bloqueFisico);
-
-	free(pathBloqueFisico);
-}
-
 void eliminarMetadataArchivo(char* path){
 	remove(path);
 }

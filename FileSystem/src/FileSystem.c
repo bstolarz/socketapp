@@ -98,10 +98,11 @@ void soloParaProbarLasOperaciones(){
 	while(1){
 		printf("----------------------------------------------\n");
 		printf("[Filesystem] - Los comandos permitidos son:\n");
-		printf("[Filesystem] - 	VALIDAR			Valida si existe un archivo.\n");
-		printf("[Filesystem] - 	CREAR			Crea un archivo y le asigna un bloque.\n");
-		printf("[Filesystem] - 	BORRAR 			Borra un archivo y libera sus bloques.\n");
-		printf("[Filesystem] - 	exit 			Salir del programa.\n");
+		printf("[Filesystem] - 	VALIDAR\t\tValida si existe un archivo.\n");
+		printf("[Filesystem] - 	CREAR\t\tCrea un archivo y le asigna un bloque.\n");
+		printf("[Filesystem] - 	BORRAR\t\tBorra un archivo y libera sus bloques.\n");
+		printf("[Filesystem] - 	OBTENERDATOS\tLee el contenido de los bloques de un archivo.\n");
+		printf("[Filesystem] - 	exit\t\tSalir del programa.\n");
 
 		printf("Ingrese un comando:\n");
 		size_t cantLeida = getline(&comando, &cantidad, stdin);
@@ -117,26 +118,26 @@ void soloParaProbarLasOperaciones(){
 
 		path = armarPathArchivo(path);
 		if(strcmp(comando, "VALIDAR") == 0){
-			log_info(logs, "Llamo al validar");
 			resultado = validar(path);
 		}else if(strcmp(comando, "CREAR") == 0){
-			log_info(logs, "Llamo al crear");
 			resultado = crear(path);
 		}else if(strcmp(comando, "BORRAR") == 0){
-			log_info(logs, "Llamo al borrar");
 			resultado = borrar(path);
+		}else if(strcmp(comando, "OBTENERDATOS") == 0){
+			printf("Ingrese el offset:\n");
+			int offset;
+			scanf("%d", &offset);
+
+			printf("Ingrese el size:\n");
+			int size;
+			scanf("%d", &size);
+
+			char* buf = malloc(0);
+			resultado = obtenerDatos(path,offset,size,&buf);
+
+			log_info(logs, "Buffer leido:", buf);
+			log_info(logs, "%s", buf);
 		}
-//			else if(strcmp(comando, "OBTENERDATOS") == 0){
-//			printf("Ingrese el offset:\n");
-//			int offset = scanf("%d", &offset);
-//
-//			printf("Ingrese el size:\n");
-//			int size = scanf("%d", &size);
-//
-//			char* buf = malloc(size);
-//			obtenerDatos(path,offset,size,&buf);
-//
-//		}
 
 
 		if(resultado == 1){
@@ -145,4 +146,6 @@ void soloParaProbarLasOperaciones(){
 			printf("El archivo no existe\n");
 		}
 	}
+	free(path);
+	free(comando);
 }

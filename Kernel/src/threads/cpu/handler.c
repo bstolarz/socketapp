@@ -24,6 +24,9 @@
 #include "../../interface/memory.h"
 #include "../../interface/filesystem.h"
 
+#include <parser/parser.h>
+
+
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
@@ -493,7 +496,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 		return;
 	}
 
-	if(FD == 0){ //Por algun motivo cuando es imprimir me llama con 0
+	if(FD == DESCRIPTOR_SALIDA){ //Por algun motivo cuando es imprimir me llama con 0
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';

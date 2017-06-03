@@ -104,8 +104,6 @@ void initSadica(){
 	//3. Metadata (tamanio real del archivo en bytes, array con nro bloques en orden
 		// TAMANIO=250  BLOQUES=[40,21,82,3]
 
-	log_info(logs, "entro a initSadica");
-
 	//crearArchivos(); /*Por ahora solo creo el Bitmap*/
 
 	char* pathBitmap = string_new();
@@ -124,8 +122,6 @@ void initSadica(){
 	//Crear bit array
 	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
 
-	log_info(logs, "Salgo de initSadica");
-	//Liberar strings
 }
 
 void unmountSadica(){
