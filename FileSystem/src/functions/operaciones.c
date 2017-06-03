@@ -40,8 +40,7 @@ int crear(char* path) {
 
 }
 
-
-//Falta vaciar los bloques fisicos
+//Lista
 int borrar(char* path) {
 	if (validar(path) == 1) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
@@ -64,9 +63,19 @@ int borrar(char* path) {
 }
 
 //Falta
-int obtenerDatos(char* path, off_t offset, size_t size) {
+int obtenerDatos(char* path, off_t offset, size_t size, void** buf) {
 	if (validar(path) == 1) {
-		//hago las cosas
+		//Leo el archivo y me lo cargo en la estructura
+		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
+		read_fileMetadata(path, archivo);
+
+		double desplazamientoHastaElBloque=floor(offset/configMetadata->tamanioBloques);
+		int bloqueArranque=list_get(archivo->bloques, desplazamientoHastaElBloque);
+
+
+
+
+
 		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");

@@ -69,11 +69,6 @@ void eliminarMetadataArchivo(char* path){
 	remove(path);
 }
 
-int avanzarBloquesParaEscribir (int bloqueInicial,int desplazamientoLimite){
-	//Implementarla
-	return 0;
-}
-
 void actualizarBytesEscritos (int* acum, int bytes){
 	*acum += bytes;
 }

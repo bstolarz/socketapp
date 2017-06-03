@@ -17,7 +17,7 @@
 
 //Falta hacer las condiciones de que si el path no se encontro para obtener y guardar, que retorne un error de archivo no encontrado
 void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
-	char* path = "";
+	char* path = string_new();
 	int offset;
 	int size;
 	int resultado;
@@ -41,8 +41,9 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		log_info(logs, "Recibi el offset: %d", offset);
 		log_info(logs, "Recibi el size: %d", size);
 
+		void* buffer = malloc(size);
 		log_info(logs, "Llamo a la funcion obtenerDatos");
-		resultado = obtenerDatos(path, (off_t) offset, (size_t) size);
+		resultado = obtenerDatos(path, (off_t) offset, (size_t) size, &buffer);
 	} else if (strcmp(unMensajeDeOperacion,"GUARDARDATOS") == 0) {
 		void* buffer;
 
