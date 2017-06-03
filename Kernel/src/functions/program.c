@@ -29,6 +29,7 @@ void program_process_new(fd_set* master, int socket){
 	program->waiting=0;
 	program->waitingReason = string_new();
 	program->fileDescriptors =  list_create();
+	program->incrementalFD = 1;
 	program->heapPages = list_create();
 	program->quantum = 0;
 
@@ -171,6 +172,23 @@ void program_finish(t_program* program){
 }
 
 void program_interrup(int socket, int interruptionCode, int overrideInterruption){
+	/*
+	 * Interruption codes:
+	 *	-1		No se pudieron reservar recursos para ejecutar el programa
+	 * 	-2		El programa intento leer un archivo que no existe
+	 * 	-3		El programa intento leer un archivo sin permisos
+	 * 	-4		El programa intento escribir un archivo sin permisos
+	 * 	-5		Excepcion de memoria
+	 * 	-6		Finalizado a travez de desconexion de consola
+	 * 	-7		Finalizado a travez del comando finalizar programa de la consola
+	 * 	-8		Se intento reservar mas memoria que el tamaño de una pagina
+	 * 	-9		No se pueden asignar mas paginas al proceso
+	 * 	-10		Se intento borrar un archivo abierto por varios procesos
+	 * 	-11		File descriptor inexistente
+	 * 	-20		Error sin definicion
+	 * */
+
+
 	bool _buscarProgramaSocket(t_program* programa){
 		return programa->socket==socket;
 	}
@@ -194,7 +212,6 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		if(cpu->program->interruptionCode == 0 || overrideInterruption == 1){
 			cpu->program->interruptionCode = interruptionCode;
 		}
-		//TODO enviar interrupcion al cpu para que este lo devuelva con el error y se procese la muerte con la funcion 'program_finish'
 	}
 
 

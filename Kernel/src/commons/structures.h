@@ -86,6 +86,7 @@ typedef struct{
 	int waiting;
 	char* waitingReason;
 	t_list* fileDescriptors;
+	int incrementalFD;
 	int quantum;
 	t_list* heapPages;
 }t_program;
@@ -117,16 +118,15 @@ typedef struct{
 }t_socket;
 
 typedef struct{
-//	int value;
 	char* path;
 	int open;
-}t_gobal_fd;
+}t_global_fd;
 
 typedef struct{
 	int value;
 	int cursor;
-	char* flags;
-	t_gobal_fd* global;
+	char* permissions;
+	t_global_fd* global;
 }t_fd;
 
 

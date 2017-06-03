@@ -33,4 +33,8 @@ t_socket fileSystemServer;
 
 t_secure_list* globalFileDescriptors;
 
+char* FILE_DESCRIPTOR_PERMISSION_READ;
+char* FILE_DESCRIPTOR_PERMISSION_WRITE;
+char* FILE_DESCRIPTOR_PERMISSION_CREATE;
+
 #endif /* COMMONS_DEFINITIONS_H_ */

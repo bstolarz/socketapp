@@ -10,7 +10,11 @@
 
 void crearArchivo(char* path, int posBloqueLibre);
 void crearBloqueDatos(int posBloqueLibre);
-void eliminarBloqueDatos(int bloque);
 void eliminarMetadataArchivo(char* path);
+char* armarPathArchivo(char* pathDelKernel);
+char* armarPathBloqueDatos(int numeroBloque);
+void actualizarBytesEscritos (int* acum, int bytes);
+int is_regular_file(const char *path);
+int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque);
 
 #endif /* FUNCTIONS_AUXILIARES_H_ */

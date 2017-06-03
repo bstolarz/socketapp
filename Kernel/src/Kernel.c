@@ -37,6 +37,10 @@ int main(int argc, char* argv[]) {
 	memory_connect();
 	//filesystem_connect();
 
+	FILE_DESCRIPTOR_PERMISSION_READ = "r";
+	FILE_DESCRIPTOR_PERMISSION_WRITE = "w";
+	FILE_DESCRIPTOR_PERMISSION_CREATE = "c";
+
 	//Inicio lista nueva
 	queueNewPrograms = malloc(sizeof(t_queue));
 	queueNewPrograms->list = list_create();

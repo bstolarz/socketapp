@@ -9,5 +9,6 @@
 #define INIT_H_
 
 void initSadica();
+void unmountSadica();
 
 #endif /* INIT_H_ */

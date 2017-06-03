@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include <string.h>
@@ -9,50 +11,71 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-char* armarPathBloqueDatos(char** path, int numeroBloque) {
-	*path = configFileSystem->punto_montaje;
-	string_append(path, "Bloques/");
 
-	char* bloqueDato = "";
+char* armarPathArchivo(char* pathDelKernel){
+	char* pathTotal = string_new();
+	string_append(&pathTotal, configFileSystem->punto_montaje);
+	string_append(&pathTotal, "Archivos/");
+	string_append(&pathTotal, pathDelKernel);
+
+	return pathTotal;
+}
+
+char* armarPathBloqueDatos(int numeroBloque) {
+	char* pathTotal = string_new();
+	string_append(&pathTotal, configFileSystem->punto_montaje);
+	string_append(&pathTotal, "Bloques/");
+
+	char* bloqueDato = string_new();
 	sprintf(bloqueDato, "%d.bin", numeroBloque);
-	string_append(path, bloqueDato);
+	string_append(&pathTotal, bloqueDato);
 
-	return *path;
+	free(bloqueDato);
+	return pathTotal;
 }
 
 void crearArchivo(char* path, int posBloqueLibre){
-
-	FILE* archivo = fopen(path, "w");
-	//Cuando creo el bloque de datos va a tener 0 bytes o 1 byte?
+	FILE* archivo = fopen(path, "w+");
+	log_info(logs, "Hice fopen del path: %s", path);
 	fprintf(archivo, "TAMANIO=0\n");
+	log_info(logs, "Hice fprintf de tamanio");
 
-	char* lineaBloques = "BLOQUES=[";
-	char* bloque = "";
+	char* bloque = string_new();
 	sprintf(bloque, "%d", posBloqueLibre);
 
+	char* lineaBloques = string_new();
+	string_append(&lineaBloques, "BLOQUES=[");
 	string_append(&lineaBloques, bloque);
-	//Me queda BLOQUES=[80
 	string_append(&lineaBloques, "]");
-	//Me queda BLOQUES=[80]
 
-	fprintf(archivo, "%s", lineaBloques);
+	fprintf(archivo, lineaBloques);
+	log_info(logs, "Hice fprintf de la linea de bloques");
+
+	free(bloque);
+	free(lineaBloques);
 	fclose(archivo);
+}
+
+int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
+	if(list_size(archivo->bloques) > desplazamientoHastaElBloque){
+		return list_get(archivo->bloques, desplazamientoHastaElBloque);
+	}
+	else{
+		return -1;
+	}
 }
 
 void eliminarMetadataArchivo(char* path){
 	remove(path);
 }
-void crearBloqueDatos(int posBloqueLibre){
-	char* path = "";
-	armarPathBloqueDatos(&path, posBloqueLibre);
 
-	FILE* archivoBloqueDatos = fopen(path, "w");
-	fclose(archivoBloqueDatos);
+void actualizarBytesEscritos (int* acum, int bytes){
+	*acum += bytes;
 }
 
-void eliminarBloqueDatos(int bloque){
-	char* path = "";
-	armarPathBloqueDatos(&path, bloque);
-
-	remove(path);
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
 }

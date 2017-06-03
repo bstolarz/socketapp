@@ -59,21 +59,21 @@ void console_process_list(){
 }
 
 void console_get_process_stats(){
-
+	//TODO
 }
 
 void console_get_global_file_table(){
-
+	//TODO
 }
 
 void console_multiprogram_degree(){
-
+	//TODO
 }
 
 void console_finish_process(){
-
+	//TODO
 }
 
 void console_stop_planning(){
-
+	//TODO
 }
