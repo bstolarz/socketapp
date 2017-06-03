@@ -4,6 +4,8 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
 #include "bitmap.h"
@@ -45,7 +47,6 @@ int borrar(char* path) {
 	if (validar(path) == 1) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
-		log_info(logs, "Se leyo el metadata del archivo: %s", path);
 
 		list_iterate(archivo->bloques, (void*) liberarBloqueDelBitmap);
 		list_iterate(archivo->bloques, (void*) vaciarBloqueFisico);
@@ -78,9 +79,10 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 		while (bloqueArranque != -1 && (iSize-desplazamiento)>0 && (fileSize-desplazamiento-offset)>0){
 			char* pathBloqueFisico = armarPathBloqueDatos(bloqueArranque);
-			FILE* bloqueArranqueFisico = fopen(pathBloqueFisico, "r");
-			char* bloqueEntero = string_new();
-			fread(bloqueEntero, configMetadata->tamanioBloques-byteComienzoLectura, configMetadata->tamanioBloques-byteComienzoLectura, bloqueArranqueFisico);
+			int fileDesBF = open(pathBloqueFisico, O_RDWR);
+			void* bloqueArranqueFisico = mmap(0, configMetadata->tamanioBloques, PROT_READ, MAP_SHARED, fileDesBF, 0);
+			log_info(logs, "Hice el mmap");
+
 			if((fileSize-desplazamiento-offset)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
 				if((iSize-desplazamiento)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
 					//*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
@@ -97,15 +99,13 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 				desplazamiento += fileSize-desplazamiento-offset;
 			}
 
-			fclose(bloqueArranqueFisico);
-
 			desplazamientoHastaElBloque++;
 			bloqueArranque = avanzarBloque(archivo, desplazamientoHastaElBloque);
 
 			byteComienzoLectura=0;
 		}
 
-
+		log_info(logs, "Voy a retornar 1");
 		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");

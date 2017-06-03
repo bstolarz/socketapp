@@ -52,6 +52,8 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 	}
 
 	config_destroy(config);
+
+	log_info("Se leyo el metadata del archivo: %s", path);
 }
 
 

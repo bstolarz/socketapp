@@ -98,14 +98,18 @@ void soloParaProbarLasOperaciones(){
 	while(1){
 		printf("----------------------------------------------\n");
 		printf("[Filesystem] - Los comandos permitidos son:\n");
-		printf("[Filesystem] - 	VALIDAR		Valida si existe un archivo.\n");
-		printf("[Filesystem] - 	CREAR		Crea un archivo y le asigna un bloque.\n");
-		printf("[Filesystem] - 	BORRAR 		Borra un archivo y libera sus bloques.\n");
-		printf("[Filesystem] - 	exit 		Salir del programa.\n");
+		printf("[Filesystem] - 	VALIDAR			Valida si existe un archivo.\n");
+		printf("[Filesystem] - 	CREAR			Crea un archivo y le asigna un bloque.\n");
+		printf("[Filesystem] - 	BORRAR 			Borra un archivo y libera sus bloques.\n");
+		printf("[Filesystem] - 	exit 			Salir del programa.\n");
 
 		printf("Ingrese un comando:\n");
 		size_t cantLeida = getline(&comando, &cantidad, stdin);
 		comando[cantLeida-1]='\0';
+
+		if(strcmp(comando, "exit") == 0){
+			break;
+		}
 
 		printf("Ingrese el path del archivo como lo mandaria el kernel:\n");
 		size_t cantLeidaPath = getline(&path, &cantidadPath, stdin);
@@ -121,25 +125,18 @@ void soloParaProbarLasOperaciones(){
 		}else if(strcmp(comando, "BORRAR") == 0){
 			log_info(logs, "Llamo al borrar");
 			resultado = borrar(path);
-		}else if(strcmp(comando, "OBTENERDATOS") == 0){
-			printf("Ingrese el offset:\n");
-			int offset = scanf("%d", &offset);
-
-			printf("Ingrese el size:\n");
-			int size = scanf("%d", &size);
-
-			char* buf = malloc(size);
-			obtenerDatos(path,offset,size,&buf);
-			log_info(logs, "Informacion que se leyo:");
-
-			int i;
-			for(i=0;i<size;i++){
-				log_info(logs, "%c", buf[i]);
-			}
-
-		}else if(strcmp(comando, "exit") == 0){
-			break;
 		}
+//			else if(strcmp(comando, "OBTENERDATOS") == 0){
+//			printf("Ingrese el offset:\n");
+//			int offset = scanf("%d", &offset);
+//
+//			printf("Ingrese el size:\n");
+//			int size = scanf("%d", &size);
+//
+//			char* buf = malloc(size);
+//			obtenerDatos(path,offset,size,&buf);
+//
+//		}
 
 
 		if(resultado == 1){
