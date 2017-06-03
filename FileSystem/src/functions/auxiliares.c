@@ -11,6 +11,7 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+
 char* armarPathArchivo(char* pathDelKernel){
 	char* pathTotal = string_new();
 	string_append(&pathTotal, configFileSystem->punto_montaje);
@@ -53,6 +54,15 @@ void crearArchivo(char* path, int posBloqueLibre){
 	free(bloque);
 	free(lineaBloques);
 	fclose(archivo);
+}
+
+void vaciarBloqueFisico(int bloque){
+	char* pathBloqueFisico = armarPathBloqueDatos(bloque);
+	//Como el archivo ya existe -> al abrirlo con "w" se sobreescribe
+	FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
+	fclose(bloqueFisico);
+
+	free(pathBloqueFisico);
 }
 
 void eliminarMetadataArchivo(char* path){

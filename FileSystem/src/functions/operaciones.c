@@ -12,7 +12,7 @@
 #include "../commons/declarations.h"
 #include "auxiliares.h"
 
-//Falta validar que sea solo archivo posta, NO directorio. Si es directorio entonces tiene que devolver que no existe
+//Lista
 int validar(char* path) {
 	int resultado = access(path, F_OK);
 	if (resultado == 0 && is_regular_file(path)) {
@@ -24,6 +24,7 @@ int validar(char* path) {
 	}
 }
 
+//Lista
 int crear(char* path) {
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
@@ -39,9 +40,6 @@ int crear(char* path) {
 
 }
 
-void loguearBloque(int bloque){
-	log_info(logs, "%d", bloque);
-}
 
 //Falta vaciar los bloques fisicos
 int borrar(char* path) {
@@ -49,12 +47,10 @@ int borrar(char* path) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
 		log_info(logs, "Se leyo el metadata del archivo: %s", path);
-		log_info(logs, "Los bloques asignados al archivo son:");
-		list_iterate(archivo->bloques, (void*)loguearBloque);
 
 		list_iterate(archivo->bloques, (void*) liberarBloqueDelBitmap);
-		log_info(logs, "Se liberaron todos los bloques del bitmap asignados al archivo");
-		//Falta vaciar los bloques fisicos
+		list_iterate(archivo->bloques, (void*) vaciarBloqueFisico);
+
 		eliminarMetadataArchivo(path);
 
 		list_destroy(archivo->bloques);
