@@ -128,10 +128,15 @@ void soloParaProbarLasOperaciones(){
 			printf("Ingrese el size:\n");
 			int size = scanf("%d", &size);
 
-			void* buf = malloc(size);
+			char* buf = malloc(size);
 			obtenerDatos(path,offset,size,&buf);
 			log_info(logs, "Informacion que se leyo:");
-			log_info(logs, "%s", buf);
+
+			int i;
+			for(i=0;i<size;i++){
+				log_info(logs, "%c", buf[i]);
+			}
+
 		}else if(strcmp(comando, "exit") == 0){
 			break;
 		}

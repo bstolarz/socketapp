@@ -63,7 +63,7 @@ int borrar(char* path) {
 }
 
 //Falta
-int obtenerDatos(char* path, off_t offset, size_t size, void** buf) {
+int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 	if (validar(path) == 1) {
 		//Leo el archivo y me lo cargo en la estructura
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
@@ -79,7 +79,8 @@ int obtenerDatos(char* path, off_t offset, size_t size, void** buf) {
 		while (bloqueArranque != -1 && (iSize-desplazamiento)>0 && (fileSize-desplazamiento-offset)>0){
 			char* pathBloqueFisico = armarPathBloqueDatos(bloqueArranque);
 			FILE* bloqueArranqueFisico = fopen(pathBloqueFisico, "r");
-
+			char* bloqueEntero = string_new();
+			fread(bloqueEntero, configMetadata->tamanioBloques-byteComienzoLectura, configMetadata->tamanioBloques-byteComienzoLectura, bloqueArranqueFisico);
 			if((fileSize-desplazamiento-offset)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
 				if((iSize-desplazamiento)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
 					//*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
