@@ -466,6 +466,13 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 	}
 
 	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+	if(filedescriptor == NULL){
+		cpu->program->interruptionCode = -11;
+		log_info(logKernel, "File descriptor inexistente");
+
+		return;
+	}
+
 	filedescriptor->cursor=bytesToMove;
 }
 
