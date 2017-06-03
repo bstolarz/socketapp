@@ -30,15 +30,11 @@
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
+	cpu->disconnected = 0;
 	list_add(queueCPUs->list,cpu);
-	log_info(logKernel,"New CPU added to list\n");
-	if(list_size(queueReadyPrograms->list)>0){
-		cpu->program = planificar();
-		if(cpu->program != NULL){
-			cpu_send_pcb(cpu);
-		}
-	}else{
-		cpu->program=NULL;
+	cpu->program = planificar();
+	if(cpu->program != NULL){
+		cpu_send_pcb(cpu);
 	}
 }
 
@@ -297,14 +293,16 @@ void handle_cpu_abrir(t_cpu* cpu){
 	//Recibo el path
 	char* path=string_new();
 	if(socket_recv_string(cpu->socket,&path)<=0){
-		log_info(logKernel, "Error recibiendo path");
+		log_warning(logKernel, "[handle_cpu_abrir/path] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	//Recibo los permisos
 	char* flags=string_new();
 	if (socket_recv_string(cpu->socket,&flags)<=0){
-		log_info(logKernel, "Error recibiendo los flags");
+		log_warning(logKernel, "[handle_cpu_abrir/flags] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -315,12 +313,16 @@ void handle_cpu_abrir(t_cpu* cpu){
 	}else{//No existe
 		if (filesystem_validate(path)==1){ //El archivo existe. Creo gFd y fd
 			gFD = file_descriptor_global_create(path);
-			fd = file_descriptor_create(cpu->program, gFD, flags);
+			if(gFD != NULL){
+				fd = file_descriptor_create(cpu->program, gFD, flags);
+			}
 		}else{ //No existe el archivo. Si tengo permiso, lo creo
 			if(strstr(flags, FILE_DESCRIPTOR_PERMISSION_CREATE) != NULL){
 				if (filesystem_create(path)==1){
 					gFD = file_descriptor_global_create(path);
-					fd = file_descriptor_create(cpu->program, gFD, flags);
+					if(gFD != NULL){
+						fd = file_descriptor_create(cpu->program, gFD, flags);
+					}
 				}
 			}
 		}
@@ -332,18 +334,33 @@ void handle_cpu_abrir(t_cpu* cpu){
 	int ret = -ENOENT;
 	if(fd != NULL){
 		ret = fd->value;
+
+		if (socket_send_int(cpu->socket,ret)<=0){
+			log_warning(logKernel, "[handle_cpu_abrir/respuesta=FD] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
+		}
+	}else{
+		cpu->program->interruptionCode = -12;
+
+		if(socket_send_int(cpu->socket,0)<=0){
+			log_warning(logKernel, "[handle_cpu_abrir/respuesta=0] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
+		}
+
+		return;
 	}
 
-	if (socket_send_int(cpu->socket,ret)<=0){
-		log_info(logKernel, "Error enviando FD");
-	}
+
 }
 
 void handle_cpu_borrar(t_cpu* cpu){
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 	int nFD;
 	if (socket_recv_int(cpu->socket,&nFD)<=0){
-		log_info(logKernel, "Error recibiendo el file descriptor del archivo");
+		log_warning(logKernel, "[handle_cpu_abrir/respuesta=0] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -353,10 +370,11 @@ void handle_cpu_borrar(t_cpu* cpu){
 	//Verifico que existe el FD
 	if(filedescriptor == NULL){
 		cpu->program->interruptionCode = -11;
-		log_info(logKernel, "File descriptor inexistente");
 
 		if(socket_send_int(cpu->socket,0)<=0){
-			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+			log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/FD=NULL] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 
 		return;
@@ -365,10 +383,11 @@ void handle_cpu_borrar(t_cpu* cpu){
 	//Verifico que sea el unico que abrio el file descriptor
 	if(filedescriptor->global->open>1){
 		cpu->program->interruptionCode = -10;
-		log_info(logKernel, "Se intento borrar un archivo abierto por mas procesos");
 
 		if(socket_send_int(cpu->socket,0)<=0){
-			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+			log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/OPEN>1] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 
 		return;
@@ -394,15 +413,23 @@ void handle_cpu_borrar(t_cpu* cpu){
 			free(filedescriptor);
 
 			if(socket_send_int(cpu->socket,1)<=0){
-				log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d, se puedo hacerlo", cpu->program->pcb->pid, nFD);
+				log_warning(logKernel, "[handle_cpu_borrar/respuesta=1] CPU desconectado");
+				cpu->disconnected = 1;
+				return;
 			}
 
 			return;
+		}else{
+			cpu->program->interruptionCode = -13;
 		}
+	}else{
+		cpu->program->interruptionCode = -4;
 	}
 
 	if(socket_send_int(cpu->socket,0)<=0){
-		log_info(logKernel, "Error al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+		log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/FIN] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
@@ -410,7 +437,8 @@ void handle_cpu_cerrar(t_cpu* cpu){
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 		int nFD;
 		if (socket_recv_int(cpu->socket,&nFD)<=0){
-			log_info(logKernel, "Error recibiendo el file descriptor del archivo");
+			log_warning(logKernel, "[handle_cpu_cerrar/nFD] CPU desconectado");
+			cpu->disconnected = 1;
 			return;
 		}
 
@@ -420,10 +448,11 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		//Verifico que existe el FD
 		if(filedescriptor == NULL){
 			cpu->program->interruptionCode = -11;
-			log_info(logKernel, "File descriptor inexistente");
 
 			if(socket_send_int(cpu->socket,0)<=0){
-				log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+				log_warning(logKernel, "[handle_cpu_cerrar/resultado=0/FD=NULL] CPU desconectado");
+				cpu->disconnected = 1;
+				return;
 			}
 
 			return;
@@ -449,7 +478,9 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		free(filedescriptor);
 
 		if(socket_send_int(cpu->socket,1)<=0){
-			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d, se puedo hacerlo", cpu->program->pcb->pid, nFD);
+			log_warning(logKernel, "[handle_cpu_cerrar/resultado=1] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 }
 
@@ -457,22 +488,22 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 	//Recibo el descriptor de archivo
 	int FD;
 	if (socket_recv_int(cpu->socket,&FD)<=0){
-		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_mover_cursor/FD] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	//Recibo la cantidad de bytes a moverme
 	int bytesToMove;
 	if (socket_recv_int(cpu->socket,&bytesToMove)<=0){
-		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_mover_cursor/Bytes] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
 	if(filedescriptor == NULL){
 		cpu->program->interruptionCode = -11;
-		log_info(logKernel, "File descriptor inexistente");
-
 		return;
 	}
 
@@ -495,8 +526,9 @@ void handle_cpu_escribir(t_cpu* cpu){
 		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
 		return;
 	}
-
-	if(FD == DESCRIPTOR_SALIDA){ //Por algun motivo cuando es imprimir me llama con 0
+	log_info(logKernel, "FS %i", FD);
+	//if(FD == DESCRIPTOR_SALIDA){ //Por algun motivo cuando es imprimir me llama con 0
+	if(FD == 0){
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';

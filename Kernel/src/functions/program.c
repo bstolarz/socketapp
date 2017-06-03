@@ -182,6 +182,8 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	 * 	-9		No se pueden asignar mas paginas al proceso
 	 * 	-10		Se intento borrar un archivo abierto por varios procesos
 	 * 	-11		File descriptor inexistente
+	 * 	-12		Se intento abrir un archivo inexistente
+	 * 	-13		No se pudo borrar un archivo en FS
 	 * 	-20		Error sin definicion
 	 * */
 

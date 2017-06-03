@@ -34,6 +34,8 @@ void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 }
 
 void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
+	pthread_mutex_lock(&queueCPUs->mutex);
+
 	log_info(logKernel,"[CPU] %s", package);
 	if(strcmp(package, "NewCPU") == 0){
 		handle_new_cpu(socket);
@@ -86,6 +88,8 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 		log_warning(logKernel, "[CPU] %s", package);
 	}
 	log_info(logKernel,"[CPU] fin %s", package);
+
+	pthread_mutex_unlock(&queueCPUs->mutex);
 }
 
 void* select_cpu_thread_launcher(void* arg){
