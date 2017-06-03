@@ -94,6 +94,7 @@ typedef struct{
 typedef struct{
 	int socket;
 	t_program* program;
+	int disconnected;
 }t_cpu;
 
 typedef struct{
