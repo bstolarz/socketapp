@@ -101,6 +101,7 @@ void soloParaProbarLasOperaciones(){
 		printf("[Filesystem] - 	VALIDAR			Valida si existe un archivo.\n");
 		printf("[Filesystem] - 	CREAR			Crea un archivo y le asigna un bloque.\n");
 		printf("[Filesystem] - 	BORRAR 			Borra un archivo y libera sus bloques.\n");
+		printf("[Filesystem] - 	OBTENERDATOS	Lee el contenido de los bloques de un archivo.\n");
 		printf("[Filesystem] - 	exit 			Salir del programa.\n");
 
 		printf("Ingrese un comando:\n");
@@ -126,17 +127,17 @@ void soloParaProbarLasOperaciones(){
 			log_info(logs, "Llamo al borrar");
 			resultado = borrar(path);
 		}
-//			else if(strcmp(comando, "OBTENERDATOS") == 0){
-//			printf("Ingrese el offset:\n");
-//			int offset = scanf("%d", &offset);
-//
-//			printf("Ingrese el size:\n");
-//			int size = scanf("%d", &size);
-//
-//			char* buf = malloc(size);
-//			obtenerDatos(path,offset,size,&buf);
-//
-//		}
+			else if(strcmp(comando, "OBTENERDATOS") == 0){
+			printf("Ingrese el offset:\n");
+			int offset = scanf("%d", &offset);
+
+			printf("Ingrese el size:\n");
+			int size = scanf("%d", &size);
+
+			char* buf = malloc(0);
+			resultado = obtenerDatos(path,offset,size,&buf);
+
+		}
 
 
 		if(resultado == 1){

@@ -49,8 +49,6 @@ int borrar(char* path) {
 		read_fileMetadata(path, archivo);
 
 		list_iterate(archivo->bloques, (void*) liberarBloqueDelBitmap);
-		list_iterate(archivo->bloques, (void*) vaciarBloqueFisico);
-
 		eliminarMetadataArchivo(path);
 
 		list_destroy(archivo->bloques);
@@ -103,9 +101,11 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 			bloqueArranque = avanzarBloque(archivo, desplazamientoHastaElBloque);
 
 			byteComienzoLectura=0;
+
+			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 		}
 
-		log_info(logs, "Voy a retornar 1");
+
 		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
