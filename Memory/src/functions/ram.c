@@ -14,7 +14,7 @@
 
 
 pthread_mutex_t freeFrameMutex = PTHREAD_MUTEX_INITIALIZER;
-hash_function hash = bernstein_hash;
+hash_function hash = ayudante_hash;
 
 int ram_init()
 {

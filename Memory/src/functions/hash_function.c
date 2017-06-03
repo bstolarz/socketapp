@@ -1,19 +1,20 @@
 #include <string.h>
 #include "hash_function.h"
+#include "../commons/declarations.h"
 
-const size_t PIDPageCharCount = (sizeof(int) + sizeof(int)) / sizeof(char);
-unsigned char PIDPageChars[(sizeof(int) + sizeof(int)) / sizeof(char)];
+const size_t PIDPageCharCount = (sizeof(int) + sizeof(size_t)) / sizeof(char);
+unsigned char PIDPageChars[(sizeof(int) + sizeof(size_t)) / sizeof(char)];
 
-unsigned char* PIDPageToChar(int PID, int page)
+unsigned char* PIDPageToChar(int PID, size_t page)
 {
 	memcpy(PIDPageChars, &PID, sizeof(int));
-	memcpy(PIDPageChars + sizeof(int), &page, sizeof(int));
+	memcpy(PIDPageChars + sizeof(int), &page, sizeof(size_t));
 
 	//printf("PID: %d, page: %d, chars: %s\n", PID, page, PIDPageChars);
 	return PIDPageChars;
 }
 
-size_t xor_hash(int PID, int page)
+size_t xor_hash(int PID, size_t page)
 {
 	unsigned char *p = PIDPageToChar(PID, page);
 	size_t hash = 0;
@@ -27,7 +28,7 @@ size_t xor_hash(int PID, int page)
 	return hash;
 }
 
-size_t rot_hash(int PID, int page)
+size_t rot_hash(int PID, size_t page)
 {
 	unsigned char *p = PIDPageToChar(PID, page);
 	size_t hash = 0;
@@ -41,7 +42,7 @@ size_t rot_hash(int PID, int page)
 	return hash;
 }
 
-size_t bernstein_hash(int PID, int page)
+size_t bernstein_hash(int PID, size_t page)
 {
 	unsigned char *p = PIDPageToChar(PID, page);
 	size_t hash = 0;
@@ -53,4 +54,10 @@ size_t bernstein_hash(int PID, int page)
     }
 
     return hash;
+}
+
+size_t ayudante_hash(int PID, size_t page)
+{
+	return ((size_t) PID * proccessPageCount + page * configMemory->frameSize) /
+			proccessPageCount;
 }
