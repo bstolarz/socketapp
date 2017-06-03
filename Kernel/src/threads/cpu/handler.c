@@ -21,6 +21,9 @@
 #include "../../functions/cpu.h"
 #include "../../interface/memory.h"
 #include "../../interface/filesystem.h"
+
+#include <parser/parser.h>
+
 void get_filename_with_filedescriptor(t_cpu* cpu, t_descriptor_archivo _fd, char* path){
 	int tam=list_size(cpu->program->fileDescriptors);
 	int i;
@@ -628,7 +631,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 		return;
 	}
 
-	if(FD == 0){ //Por algun motivo cuando es imprimir me llama con 0
+	if(FD == DESCRIPTOR_SALIDA){ //Por algun motivo cuando es imprimir me llama con 0
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';
