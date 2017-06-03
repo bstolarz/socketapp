@@ -136,7 +136,7 @@ void soloParaProbarLasOperaciones(){
 			resultado = obtenerDatos(path,offset,size,&buf);
 
 			log_info(logs, "Buffer leido:", buf);
-			log_info(logs, "%s\0", buf);
+			log_info(logs, "%s", buf);
 		}
 
 

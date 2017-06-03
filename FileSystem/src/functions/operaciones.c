@@ -94,16 +94,17 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 					desplazamiento += iSize-desplazamiento;
 				}
 			}else{
-				//El ejemplo mio viene por aca
-				*buf = realloc(*buf, fileSize-offset);
-				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,fileSize-desplazamiento-offset);
-				desplazamiento += fileSize-desplazamiento-offset;
+				*buf = realloc(*buf, iSize-offset);
+				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento-offset);
+				desplazamiento += iSize-desplazamiento-offset;
 			}
 
 			desplazamientoHastaElBloque++;
 			bloqueArranque = avanzarBloque(archivo, desplazamientoHastaElBloque);
+			log_info(logs, "Proximo bloque arranque: %d", bloqueArranque);
 
 			byteComienzoLectura=0;
+			log_info(logs, "Proximo byteComienzoLectura: %d", byteComienzoLectura);
 
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 		}
