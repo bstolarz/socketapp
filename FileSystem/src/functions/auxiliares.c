@@ -56,6 +56,15 @@ void crearArchivo(char* path, int posBloqueLibre){
 	fclose(archivo);
 }
 
+int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
+	if(list_size(archivo->bloques) > desplazamientoHastaElBloque){
+		return list_get(archivo->bloques, desplazamientoHastaElBloque);
+	}
+	else{
+		return -1;
+	}
+}
+
 void vaciarBloqueFisico(int bloque){
 	char* pathBloqueFisico = armarPathBloqueDatos(bloque);
 	//Como el archivo ya existe -> al abrirlo con "w" se sobreescribe

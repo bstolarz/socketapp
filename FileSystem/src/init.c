@@ -111,6 +111,7 @@ void initSadica(){
 	char* pathBitmap = string_new();
 	string_append(&pathBitmap, configFileSystem->punto_montaje);
 	string_append(&pathBitmap, "Metadata/Bitmap.bin");
+	log_info(logs, "Termino de appendear el path para el bitmap");
 
 	int bitmapArchive = open(pathBitmap, O_RDWR);
 
@@ -123,6 +124,7 @@ void initSadica(){
 	//Crear bit array
 	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
 
+	log_info(logs, "Salgo de initSadica");
 	//Liberar strings
 }
 

@@ -70,10 +70,39 @@ int obtenerDatos(char* path, off_t offset, size_t size, void** buf) {
 		read_fileMetadata(path, archivo);
 
 		double desplazamientoHastaElBloque=floor(offset/configMetadata->tamanioBloques);
-		int bloqueArranque=list_get(archivo->bloques, desplazamientoHastaElBloque);
+		int bloqueArranque=avanzarBloque(archivo, desplazamientoHastaElBloque);
+		int byteComienzoLectura = offset-(desplazamientoHastaElBloque*configMetadata->tamanioBloques);
+		int desplazamiento = 0;
+		int iSize = size;
+		int fileSize = archivo->tamanio;
 
+		while (bloqueArranque != -1 && (iSize-desplazamiento)>0 && (fileSize-desplazamiento-offset)>0){
+			char* pathBloqueFisico = armarPathBloqueDatos(bloqueArranque);
+			FILE* bloqueArranqueFisico = fopen(pathBloqueFisico, "r");
 
+			if((fileSize-desplazamiento-offset)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
+				if((iSize-desplazamiento)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
+					//*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
+					memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,configMetadata->tamanioBloques-byteComienzoLectura);
+					desplazamiento += configMetadata->tamanioBloques-byteComienzoLectura;
+				}else{
+					//*buf = realloc(*buf, iSize);
+					memcpy(*buf+desplazamiento, bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento);
+					desplazamiento += iSize-desplazamiento;
+				}
+			}else{
+				//*buf = realloc(*buf, fileSize-offset);
+				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,fileSize-desplazamiento-offset);
+				desplazamiento += fileSize-desplazamiento-offset;
+			}
 
+			fclose(bloqueArranqueFisico);
+
+			desplazamientoHastaElBloque++;
+			bloqueArranque = avanzarBloque(archivo, desplazamientoHastaElBloque);
+
+			byteComienzoLectura=0;
+		}
 
 
 		return 1;

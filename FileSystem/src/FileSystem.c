@@ -121,9 +121,21 @@ void soloParaProbarLasOperaciones(){
 		}else if(strcmp(comando, "BORRAR") == 0){
 			log_info(logs, "Llamo al borrar");
 			resultado = borrar(path);
+		}else if(strcmp(comando, "OBTENERDATOS") == 0){
+			printf("Ingrese el offset:\n");
+			int offset = scanf("%d", &offset);
+
+			printf("Ingrese el size:\n");
+			int size = scanf("%d", &size);
+
+			void* buf = malloc(size);
+			obtenerDatos(path,offset,size,&buf);
+			log_info(logs, "Informacion que se leyo:");
+			log_info(logs, "%s", buf);
 		}else if(strcmp(comando, "exit") == 0){
 			break;
 		}
+
 
 		if(resultado == 1){
 			printf("Se pudo %s archivo satisfactoriamente\n", comando);
