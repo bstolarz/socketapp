@@ -150,8 +150,7 @@ void ram_program_end(int PID)
 	pthread_mutex_unlock(&freeFrameMutex);
 }
 
-// returna una pagina o nulo
-char* ram_frame_lookup(int PID, int page)
+size_t ram_frame_index_lookup(int PID, int page, int* result)
 {
 	size_t frameIndex = hash(PID, page) % proccessPageCount;
 	size_t collisionCount = 0;
@@ -166,7 +165,8 @@ char* ram_frame_lookup(int PID, int page)
 
 	if (collisionCount < proccessPageCount)
 	{
-		return get_frame(frameIndex);
+		*result = 0;
+		return frameIndex;
 	}
 	else
 	{
@@ -177,9 +177,42 @@ char* ram_frame_lookup(int PID, int page)
 			assert(	pageTable[i].PID != PID || pageTable[i].page != page);
 		}
 
+		*result = -1;
 		log_error(logMemory, "[frame_lookup] no encontr frame para proceso [%d] pag %d", PID, page);
-		return NULL;
-	}   																		// que sume de 1 byte al puntero
+		return proccessPageCount;
+	}
+}
+
+// returna una pagina o nulo
+char* ram_frame_lookup(int PID, size_t page)
+{
+	int result;
+	size_t frameIndex = ram_frame_index_lookup(PID, page, &result);
+
+	if (result == 0)
+		return get_frame(frameIndex);
+	else
+		return NULL;																	// que sume de 1 byte al puntero
+}
+
+int ram_free_page(int PID, size_t page)
+{
+	int result;
+	size_t frameIndex = ram_frame_index_lookup(PID, page, &result);
+
+	if (result == 0)
+	{
+		pthread_spin_lock(&pageTable[frameIndex].lock);// hacer esperar para que tengas mas chances de encontrar vacia
+		pageTable[frameIndex].page = -1;
+		pageTable[frameIndex].PID = -1;
+		pthread_spin_unlock(&pageTable[frameIndex].lock);// hacer esperar para que tengas mas chances de encontrar vacia
+
+		pthread_mutex_lock(&freeFrameMutex);
+		++freeFrameCount;
+		pthread_mutex_unlock(&freeFrameMutex);
+	}
+
+	return result;
 }
 
 size_t frame_count(_Bool (*framePredicate)(t_pageTableEntry*))
