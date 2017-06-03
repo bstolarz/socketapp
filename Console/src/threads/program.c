@@ -32,12 +32,13 @@ void thread_program_destroy(t_program* program, int insideThread){
 	}
 
 	if(insideThread == 0){
-		pthread_cancel(program->thread);
 		log_info(logConsole,"[%i] - El programa fue abortado.", program->pid);
-	}
 
-	if(socket_send_string(program->socketKernel, "Finished")<=0){
-		log_info(logConsole,"[%i] - El programa informa que fue finalizado desde la consola.", program->pid);
+		if(socket_send_string(program->socketKernel, "Finished")<=0){
+			log_info(logConsole,"[%i] - El programa informa que fue finalizado desde la consola.", program->pid);
+		}
+
+		pthread_cancel(program->thread);
 	}
 	
 	// BEGIN - Imprimo estadisticas
@@ -123,7 +124,8 @@ void* thread_program(void * params){
 		}
 
 		if(strcmp(printMessage, "FinEjecucion")==0){
-			//TODO Aca va a ir la info al finalizar la ejecucion.
+			thread_program_destroy(program, 1);
+			return params;
 		}else if(strcmp(printMessage, "imprimir")==0){
 			if(socket_recv_string(program->socketKernel,&printMessage)<=0){
 				log_info(logConsole,"[%i] - Fallo recepcion de mensaje a imprimir.", program->pid);

@@ -23,18 +23,23 @@
 
 
 void select_program_socket_connection_lost(fd_set* master, int socket, int nbytes){
+	log_info(logKernel, "[PROGRAMA] desconexion consola");
 	program_interrup(socket, -6, 0);
 	FD_CLR(socket, master);
+	log_info(logKernel, "[PROGRAMA] fin desconexion consola");
 }
 
 void select_program_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
 	if(strcmp(package, "NewProgram") == 0){
+		log_info(logKernel, "[PROGRAMA] %s", package);
 		program_process_new(master, socket);
+		log_info(logKernel, "[PROGRAMA FIN] %s", package);
 	}else if(strcmp(package, "Finished") == 0){
+		log_info(logKernel, "[PROGRAMA] %s", package);
 		program_interrup(socket, -7, 0);
+		log_info(logKernel, "[PROGRAMA FIN] %s", package);
 	}else{
-		log_info(logKernel, "Error, mensaje no identificado: %s", package);
-		printf("Error, mensaje no identificado: %s\n", package);
+		log_warning(logKernel, "[PROGRAMA error] %s", package);
 	}
 }
 
