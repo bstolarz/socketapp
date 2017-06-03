@@ -404,31 +404,50 @@ void handle_cpu_borrar(t_cpu* cpu){
 }
 
 void handle_cpu_cerrar(t_cpu* cpu){
-	//Recibo el file descriptor
-	int dAux;
-	t_descriptor_archivo d;
-	if(socket_recv_int(cpu->socket,&dAux)>0){
-		d=(t_descriptor_archivo)dAux;
-		int position=process_had_opened_file(cpu,d);
-		if(position!=-1){
-			//Borro de la tabla de archivos por proceso la entrada correspondiente al file descriptor que recibi de CPU
-			list_remove(cpu->program->fileDescriptors,position);
-			log_info(logKernel, "Se borro de la tabla de archivos por proceso el indice %d que tenía al file descriptor %d",position, d);
-			//Le digo a FS que cierre el archivo
-			filesystem_close();
-			if(socket_send_int(cpu->socket,1)>0){
-				log_info(logKernel, "Notifico al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
-			}else{
-				log_info(logKernel, "Error al notificar al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
-			}
-		}else{
-			if(socket_send_int(cpu->socket,-ENOENT)>0){
-				log_info(logKernel, "Notifico al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
-			}else{
-				log_info(logKernel, "Error al notificar al programa con pid: %d que se cerro el archivo con exito", cpu->program->pcb->pid);
-			}
+	//Recibo el file descriptor del archivo que CPU quiere borrar
+		int nFD;
+		if (socket_recv_int(cpu->socket,&nFD)<=0){
+			log_info(logKernel, "Error recibiendo el file descriptor del archivo");
+			return;
 		}
-	}
+
+		//Obtengo el file descriptor
+		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, nFD);
+
+		//Verifico que existe el FD
+		if(filedescriptor == NULL){
+			cpu->program->interruptionCode = -11;
+			log_info(logKernel, "File descriptor inexistente");
+
+			if(socket_send_int(cpu->socket,0)<=0){
+				log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+			}
+
+			return;
+		}
+
+		//Borro el global file descriptor de la lista
+		if(filedescriptor->global->open == 1){
+			bool _findGlobalFD(t_global_fd* gFD){
+				return strcmp(gFD->path, filedescriptor->global->path)==0;
+			}
+			list_remove_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD);
+		}else{
+			filedescriptor->global->open = filedescriptor->global->open - 1;
+		}
+
+		//Borro el file descriptor de la lista
+		bool _findFD(t_fd* fd){
+			return fd->value == filedescriptor->value;
+		}
+		list_remove_by_condition(cpu->program->fileDescriptors, (void*)_findFD);
+
+		free(filedescriptor->permissions);
+		free(filedescriptor);
+
+		if(socket_send_int(cpu->socket,1)<=0){
+			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d, se puedo hacerlo", cpu->program->pcb->pid, nFD);
+		}
 }
 
 void handle_cpu_mover_cursor(t_cpu* cpu){
