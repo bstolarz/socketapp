@@ -141,7 +141,7 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 		}
 
-		return 1;
+		return iSize;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
 		return -ENOENT;

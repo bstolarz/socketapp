@@ -150,8 +150,9 @@ void soloParaProbarLasOperaciones(){
 			char* buf = malloc(0);
 			resultado = obtenerDatos(path,offset,size,&buf);
 
-			if(resultado == 1){
+			if(resultado > 0){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
+				log_info(logs, "Bytes leidos: %d", resultado);
 				log_info(logs, "Buffer leido:");
 				log_info(logs, "%s", buf);
 			}else if (resultado == -1){
