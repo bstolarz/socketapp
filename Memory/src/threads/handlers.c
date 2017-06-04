@@ -55,6 +55,35 @@ int handle_get_pages(int clientSocket)
 	return handle_page_request(clientSocket, ram_get_pages, "get_pages");
 }
 
+int handle_free_page(int clientSocket)
+{
+	//Recivo PID
+	int PID;
+	if(socket_recv_int(clientSocket, &PID) <= 0){
+		log_error(logMemory, "[free page] request: problema recviendo PID (socket %d)", clientSocket);
+		return -1;
+	}
+
+	//Recivo page num
+	int page;
+	if(socket_recv_int(clientSocket, &page) <= 0){
+		log_error(logMemory, "[free page] request: problema recviendo page (socket %d)", clientSocket);
+		return -1;
+	}
+
+	//Proceso la peticion
+	int success = ram_free_page(PID, (size_t) page);
+
+	//Envio el resultado
+	int nBytes = socket_send_int(clientSocket, success);
+	if (nBytes <= 0){
+		log_error(logMemory, "[free page] request: problema send result (PID: %d, page: %d, success: %d, socket: %d)", PID, page, success, clientSocket);
+		return -1;
+	}
+
+	return 0;
+}
+
 int handle_end(int clientSocket){
 	//Recivo PID
 	int PID;
