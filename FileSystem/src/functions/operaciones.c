@@ -163,8 +163,10 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
 		int cantBloquesLibresNuevosQueNecesito = ceil(size-(archivo->bloques->elements_count*configMetadata->tamanioBloques)/configMetadata->tamanioBloques);
 
+		log_info(logs, "Necesito %i bloques libres", cantBloquesLibresNuevosQueNecesito);
 		if(cantBloquesLibresNuevosQueNecesito > 0){
 			if(!hayNBloquesLibres(cantBloquesLibresNuevosQueNecesito)){
+				log_info(logs, "No hay espacio para guardar los cambios");
 				return 0; // No hay espacio para guardar la nueva data
 			}
 		}
@@ -172,7 +174,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			//escribe sobre el espacio ya previamente reservado
 
 		}
-
+		log_info(logs, "SI hay espacio para guardar los cambios");
 
 		int posBloqueArranque = ceil(offset / configMetadata->tamanioBloques);
 		int bytesAEscribirEnElBloque = (posBloqueArranque * configMetadata->tamanioBloques) - offset;
@@ -182,6 +184,11 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
 
 		while (sizeAux > 0) {
+
+			int posPrimerBloqueLibre = encontrarUnBloqueLibre();
+			ocuparBloqueLibre(posPrimerBloqueLibre);
+			list_add(archivo->bloques, posPrimerBloqueLibre);
+
 			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque - 1);
 
 			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
@@ -203,13 +210,15 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			}
 			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
 
-			log_info(logs, "Se han escrito %d bytes\n",bytesEscritos);
+			log_info(logs, "Se han escrito %d bytes en el bloque %d\n",bytesEscritos, posBloqueArranque-1);
 			byteComienzoEscritura=0;
 			posBloqueArranque+=1;
 
 			munmap(bloqueFisicoMapped, configMetadata->tamanioBloques);
 			fclose(bloqueFisico);
 		}
+		archivo->tamanio+=size;
+		write_metadataFS(path, archivo);
 
 		list_destroy(archivo->bloques);
 		free(archivo);

@@ -118,6 +118,7 @@ void soloParaProbarLasOperaciones(){
 		path[cantLeidaPath-1]='\0';
 
 		path = armarPathArchivo(path);
+
 		if(strcmp(comando, "VALIDAR") == 0){
 			resultado = validar(path);
 			if(resultado > 0){
@@ -171,10 +172,19 @@ void soloParaProbarLasOperaciones(){
 				printf("Ingrese el contenido a escribir:\n");
 
 				size_t cantContenidoLeido = getline(&contenido, &cantContenidoLeido, stdin);
+
+				log_info(logs, "leyo el contenido a guardar en archivo");
 				contenido[cantContenidoLeido-1]='\0';
 
-				//llamo a GuardarDatos
 
+				resultado = guardarDatos(path, offset, size, contenido);
+
+				if(resultado == 1){
+					printf("Se pudo %s archivo satisfactoriamente\n", comando);
+					log_info(logs, "Buffer grabado:");
+					log_info(logs, "%s", contenido);
+				}
+				free(contenido);
 
 			}else if (resultado == -1){
 				printf("Pusiste un offset mayor al tamanioArchivo => no leo nada\n");

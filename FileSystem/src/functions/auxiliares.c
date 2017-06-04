@@ -56,6 +56,7 @@ void crearArchivo(char* path, int posBloqueLibre){
 	fclose(archivo);
 }
 
+
 int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 	if(list_size(archivo->bloques) > desplazamientoHastaElBloque){
 		return list_get(archivo->bloques, desplazamientoHastaElBloque);
@@ -64,6 +65,8 @@ int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 		return -1;
 	}
 }
+
+
 
 void eliminarMetadataArchivo(char* path){
 	remove(path);
