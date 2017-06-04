@@ -185,15 +185,18 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque - 1);
 
 			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
-			FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
+			int bloqueFisico = open(pathBloqueFisico, O_WRONLY);
+
+			char* bloqueFisicoMapped = mmap(0, configMetadata->tamanioBloques, PROT_WRITE, MAP_SHARED, bloqueFisico, 0);
+
 
 			//Si lo que me queda por escribir (sizeAux) es mayor al espacio libre en el bloque
 			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
+				memcpy(bloqueFisicoMapped+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
 				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
 				actualizarBytesEscritos(&bytesEscritos,configMetadata->tamanioBloques-byteComienzoEscritura);
 			}else{
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
+				memcpy(bloqueFisicoMapped+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
 				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
 				actualizarBytesEscritos(&bytesEscritos,sizeAux);
 
@@ -204,6 +207,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			byteComienzoEscritura=0;
 			posBloqueArranque+=1;
 
+			munmap(bloqueFisicoMapped, configMetadata->tamanioBloques);
 			fclose(bloqueFisico);
 		}
 
