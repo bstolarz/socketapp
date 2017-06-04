@@ -28,6 +28,11 @@ int validar(char* path) {
 
 //Lista
 int crear(char* path) {
+	if(validar(path) == 1){
+	 	log_info(logs, "Intentaste crear un archivo y este ya existe, devuelvo error");
+	 	return -ENOENT;
+	}
+
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
 	if (posBloqueLibre >= 0) {
@@ -141,7 +146,7 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 		}
 
-		return 1;
+		return iSize;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
 		return -ENOENT;
@@ -159,11 +164,9 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		int cantBloquesLibresNuevosQueNecesito = ceil(size-(archivo->bloques->elements_count*configMetadata->tamanioBloques)/configMetadata->tamanioBloques);
 
 		if(cantBloquesLibresNuevosQueNecesito > 0){
-			//Chequear si hay espacio para nuevos bloques
 			if(!hayNBloquesLibres(cantBloquesLibresNuevosQueNecesito)){
-				return 0;
+				return 0; // No hay espacio para guardar la nueva data
 			}
-
 		}
 		else{
 			//escribe sobre el espacio ya previamente reservado
@@ -178,26 +181,22 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		int sizeAux = size;
 
 
-
 		while (sizeAux > 0) {
 			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque - 1);
 
 			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
 			FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
 
-			//Si lo que me queda por escribir (sizeAux) es mayor a lo que tengo que escribir en el bloque
+			//Si lo que me queda por escribir (sizeAux) es mayor al espacio libre en el bloque
 			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
 				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
-			}else{
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
-			}
-
-			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
 				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
 				actualizarBytesEscritos(&bytesEscritos,configMetadata->tamanioBloques-byteComienzoEscritura);
 			}else{
+				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
 				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
 				actualizarBytesEscritos(&bytesEscritos,sizeAux);
+
 			}
 			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
 

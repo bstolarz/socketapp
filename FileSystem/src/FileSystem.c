@@ -102,7 +102,7 @@ void soloParaProbarLasOperaciones(){
 		printf("[Filesystem] - 	CREAR\t\tCrea un archivo y le asigna un bloque.\n");
 		printf("[Filesystem] - 	BORRAR\t\tBorra un archivo y libera sus bloques.\n");
 		printf("[Filesystem] - 	OBTENERDATOS\tLee el contenido de los bloques de un archivo.\n");
-		printf("[Filesystem] - 	GUARDARDATOS\tGuarda informacion en un archivo.\n");
+		printf("[Filesystem] - 	GUARDARDATOS\tGuarda contenido en un archivo.\n");
 		printf("[Filesystem] - 	exit\t\tSalir del programa.\n");
 
 		printf("Ingrese un comando:\n");
@@ -120,7 +120,7 @@ void soloParaProbarLasOperaciones(){
 		path = armarPathArchivo(path);
 		if(strcmp(comando, "VALIDAR") == 0){
 			resultado = validar(path);
-			if(resultado == 1){
+			if(resultado > 0){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
 			}else{
 				printf("El archivo no existe\n");
@@ -153,6 +153,7 @@ void soloParaProbarLasOperaciones(){
 
 			if(resultado == 1){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
+				log_info(logs, "Bytes leidos: %d", resultado);
 				log_info(logs, "Buffer leido:");
 				log_info(logs, "%s", buf);
 			}
@@ -181,9 +182,10 @@ void soloParaProbarLasOperaciones(){
 			else{
 				printf("El archivo no existe\n");
 			}
-
 		free(path);
 		free(comando);
+
 	}
+
 
 }

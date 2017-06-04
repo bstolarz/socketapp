@@ -24,11 +24,19 @@ int encontrarUnBloqueLibre(){
 	return -1;
 }
 
-int hayNBloquesLibres(int n){
+int hayNBloquesLibres(int cantBloquesNecesitados){
 
-	//Devuelvo la posicion del primer bloque libre con n-1 bloques contiguos
-	//Si no hay espacio para n bloques contiguos, devuelvo 0
-	return 0;
+	//Devuelve la cantidad de Bloques Libres
+
+	int cantBloquesLibres = 0, i=0;
+
+	while(cantBloquesLibres<cantBloquesNecesitados && i<bitarray_get_max_bit(bitarray)){
+		if (!bitarray_test_bit(bitarray,i)){
+			cantBloquesLibres++;
+		}
+		i++;
+	}
+	return cantBloquesLibres;
 
 }
 void ocuparBloqueLibre(int posBloqueLibre){
