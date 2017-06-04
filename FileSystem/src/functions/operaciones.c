@@ -28,6 +28,10 @@ int validar(char* path) {
 
 //Lista
 int crear(char* path) {
+	if(validar(path) == 1){
+		log_info(logs, "Intentaste crear un archivo y este ya existe, devuelvo error");
+		return -ENOENT;
+	}
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
 	if (posBloqueLibre >= 0) {
@@ -155,41 +159,11 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
 
-		int posBloqueArranque = ceil(offset / configMetadata->tamanioBloques);
-		int bytesAEscribirEnElBloque = (posBloqueArranque * configMetadata->tamanioBloques) - offset;
-		int byteComienzoEscritura = configMetadata->tamanioBloques - bytesAEscribirEnElBloque;
-		int bytesEscritos = 0;
-		int sizeAux = size;
+		int desplazamientoHastaElBloque=floor(offset/configMetadata->tamanioBloques);
+		int bloqueArranque=avanzarBloque(archivo, desplazamientoHastaElBloque);
+		int byteComienzoEscritura = offset-(desplazamientoHastaElBloque*configMetadata->tamanioBloques);
 
-		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
-		while (sizeAux > 0) {
-			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque - 1);
 
-			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
-			FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
-
-			//Si lo que me queda por escribir (sizeAux) es mayor a lo que tengo que escribir en el bloque
-			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
-			}else{
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
-			}
-
-			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
-				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
-				actualizarBytesEscritos(&bytesEscritos,configMetadata->tamanioBloques-byteComienzoEscritura);
-			}else{
-				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
-				actualizarBytesEscritos(&bytesEscritos,sizeAux);
-			}
-			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
-
-			log_info(logs, "Se han escrito %d bytes\n",bytesEscritos);
-			byteComienzoEscritura=0;
-			posBloqueArranque+=1;
-
-			fclose(bloqueFisico);
-		}
 
 		list_destroy(archivo->bloques);
 		free(archivo);
