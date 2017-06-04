@@ -164,6 +164,8 @@ void program_finish(t_program* program){
 		return;
 	}
 
+	//TODO cerrar los archivos abiertos
+
 	close(program->socket);
 
 }
@@ -184,6 +186,9 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	 * 	-11		File descriptor inexistente
 	 * 	-12		Se intento abrir un archivo inexistente
 	 * 	-13		No se pudo borrar un archivo en FS
+	 * 	-14		Semaforo inexistente
+	 * 	-15		Shared variable inexistente
+	 * 	-16		El cpu se desconecto y dejo el programa en un estado inconsistente
 	 * 	-20		Error sin definicion
 	 * */
 
@@ -260,3 +265,6 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	pthread_mutex_unlock(&(queueCPUs->mutex));
 }
 
+void program_unblock(t_semaforo* sem){
+	//TODO
+}

@@ -24,13 +24,25 @@
 #include "handler.h"
 
 void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
-	if (nbytes == 0) {
-		printf("selectserver: socket %d hung up\n", socket);
-	} else {
-		perror("recv");
+	pthread_mutex_lock(&queueCPUs->mutex);
+
+	t_cpu* cpu = cpu_find(socket);
+
+	bool _removeCPUBySocket(t_cpu* cpu){
+		return cpu->socket==socket;
 	}
-	close(socket);
-	FD_CLR(socket, master); // eliminar del conjunto maestro
+	list_remove_by_condition(queueCPUs->list, (void*)_removeCPUBySocket);
+
+	cpu->program->interruptionCode = -16;
+	cpu->program->pcb->exitCode = -16;
+	program_finish(cpu->program);
+	FD_CLR(cpu->socket, master);
+	close(cpu->socket);
+	free(cpu);
+
+	FD_CLR(socket, master);
+
+	pthread_mutex_unlock(&queueCPUs->mutex);
 }
 
 void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
@@ -88,6 +100,21 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 		log_warning(logKernel, "[CPU] %s", package);
 	}
 	log_info(logKernel,"[CPU] fin %s", package);
+
+
+	bool _findDisconnectedCPUs(t_cpu* cpu){
+		return cpu->disconnected==1;
+	}
+	void _destroyDisconnectedCPU(t_cpu* cpu){
+		cpu->program->interruptionCode = -16;
+		cpu->program->pcb->exitCode = -16;
+		program_finish(cpu->program);
+		FD_CLR(cpu->socket, master);
+		close(cpu->socket);
+		free(cpu);
+		log_info(logKernel, "Murio el CPU");
+	}
+	list_remove_and_destroy_by_condition(queueCPUs->list, (void*)_findDisconnectedCPUs,(void*)_destroyDisconnectedCPU);
 
 	pthread_mutex_unlock(&queueCPUs->mutex);
 }
