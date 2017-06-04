@@ -69,46 +69,69 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 		read_fileMetadata(path, archivo);
 
 		int desplazamientoHastaElBloque=floor(offset/configMetadata->tamanioBloques);
-		log_info(logs, "DesplazamientoHastaElBloque: %d", desplazamientoHastaElBloque);
 		int bloqueArranque=avanzarBloque(archivo, desplazamientoHastaElBloque);
-		log_info(logs, "Bloque de arranque: %d", bloqueArranque);
 		int byteComienzoLectura = offset-(desplazamientoHastaElBloque*configMetadata->tamanioBloques);
-		log_info(logs, "ByteComienzoLectura: %d", byteComienzoLectura);
+
 		int desplazamiento = 0;
 		int iSize = size;
 		int fileSize = archivo->tamanio;
 
+		//Reallocs
+		if(offset == 0 && iSize<=fileSize){
+			*buf=realloc(*buf, iSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
+		}
+		else if(offset == 0 && iSize>fileSize){
+			*buf=realloc(*buf, fileSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", fileSize);
+			iSize=fileSize;
+		}
+		else if(offset>0 && iSize+offset == fileSize){
+			*buf=realloc(*buf, iSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
+		}
+		else if(offset>0 && iSize+offset > fileSize){
+			*buf=realloc(*buf, fileSize-offset);
+			log_info(logs, "HAGO REALLOC de %d bytes", fileSize-offset);
+			iSize = fileSize-offset;
+		}
+
+
 		while (bloqueArranque != -1 && (iSize-desplazamiento)>0 && (fileSize-desplazamiento-offset)>0){
+			log_info(logs, "DesplazamientoHastaElBloque: %d", desplazamientoHastaElBloque);
+			log_info(logs, "Bloque de arranque: %d", bloqueArranque);
+			log_info(logs, "ByteComienzoLectura: %d", byteComienzoLectura);
 			char* pathBloqueFisico = armarPathBloqueDatos(bloqueArranque);
 			int fileDesBF = open(pathBloqueFisico, O_RDWR);
 			void* bloqueArranqueFisico = mmap(0, configMetadata->tamanioBloques, PROT_READ, MAP_SHARED, fileDesBF, 0);
 
+
 			if((fileSize-desplazamiento-offset)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
 				if((iSize-desplazamiento)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
-					*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
+					//*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
 					memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,configMetadata->tamanioBloques-byteComienzoLectura);
+					log_info(logs, "Hice memcpy con size: %d", configMetadata->tamanioBloques-byteComienzoLectura);
 					desplazamiento += configMetadata->tamanioBloques-byteComienzoLectura;
 				}else{
-					*buf = realloc(*buf, iSize);
+					//*buf = realloc(*buf, iSize);
 					memcpy(*buf+desplazamiento, bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento);
+					log_info(logs, "Hice memcpy con size: %d", iSize-desplazamiento);
 					desplazamiento += iSize-desplazamiento;
 				}
 			}else{
-				*buf = realloc(*buf, iSize-offset);
-				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento-offset);
+				//*buf = realloc(*buf, archivo->tamanio);
+				//log_info(logs, "Hago realloc de %d bytes", archivo->tamanio);
+				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento);
+				log_info(logs, "Hice memcpy con size: %d", iSize-desplazamiento);
 				desplazamiento += iSize-desplazamiento-offset;
 			}
 
 			desplazamientoHastaElBloque++;
 			bloqueArranque = avanzarBloque(archivo, desplazamientoHastaElBloque);
-			log_info(logs, "Proximo bloque arranque: %d", bloqueArranque);
 
 			byteComienzoLectura=0;
-			log_info(logs, "Proximo byteComienzoLectura: %d", byteComienzoLectura);
-
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 		}
-
 
 		return 1;
 	} else {

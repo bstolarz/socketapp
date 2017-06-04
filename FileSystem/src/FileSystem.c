@@ -88,14 +88,14 @@ int main(int arg, char* argv[]) {
 }
 
 void soloParaProbarLasOperaciones(){
-	size_t cantidad = 10;
-	char* comando = malloc(sizeof(char)*cantidad);
-
-	size_t cantidadPath = 10;
-	char* path = malloc(sizeof(char)*cantidad);
-
 	int resultado = -1;
 	while(1){
+		size_t cantidad = 10;
+		char* comando = malloc(sizeof(char)*cantidad);
+
+		size_t cantidadPath = 10;
+		char* path = malloc(sizeof(char)*cantidad);
+
 		printf("----------------------------------------------\n");
 		printf("[Filesystem] - Los comandos permitidos son:\n");
 		printf("[Filesystem] - 	VALIDAR\t\tValida si existe un archivo.\n");
@@ -135,7 +135,7 @@ void soloParaProbarLasOperaciones(){
 			char* buf = malloc(0);
 			resultado = obtenerDatos(path,offset,size,&buf);
 
-			log_info(logs, "Buffer leido:", buf);
+			log_info(logs, "Buffer leido:");
 			log_info(logs, "%s", buf);
 		}
 
@@ -145,7 +145,9 @@ void soloParaProbarLasOperaciones(){
 		}else{
 			printf("El archivo no existe\n");
 		}
+
+		free(path);
+		free(comando);
 	}
-	free(path);
-	free(comando);
+
 }
