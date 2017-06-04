@@ -61,7 +61,7 @@ int borrar(char* path) {
 
 }
 
-//Falta
+//Lista
 int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 	if (validar(path) == 1) {
 		//Leo el archivo y me lo cargo en la estructura
