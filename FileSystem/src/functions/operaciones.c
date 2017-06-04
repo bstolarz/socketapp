@@ -86,14 +86,22 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 			log_info(logs, "HAGO REALLOC de %d bytes", fileSize);
 			iSize=fileSize;
 		}
-		else if(offset>0 && iSize+offset == fileSize){
+		else if(offset>0 && offset<=fileSize && iSize+offset == fileSize){
 			*buf=realloc(*buf, iSize);
 			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
 		}
-		else if(offset>0 && iSize+offset > fileSize){
+		else if(offset>0 && offset<=fileSize && iSize+offset > fileSize){
 			*buf=realloc(*buf, fileSize-offset);
 			log_info(logs, "HAGO REALLOC de %d bytes", fileSize-offset);
 			iSize = fileSize-offset;
+		}
+		else if(offset>0 && offset<=fileSize && iSize+offset<fileSize){
+			*buf=realloc(*buf, iSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
+		}
+		else{
+			log_info(logs, "Me diste un offset que se pasa del tamanioArchivo, aborto realloc y lectura");
+			return -1;
 		}
 
 
