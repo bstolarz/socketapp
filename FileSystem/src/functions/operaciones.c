@@ -161,9 +161,12 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		read_fileMetadata(path, archivo);
 
 		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
-		int cantBloquesLibresNuevosQueNecesito = ceil(size-(archivo->bloques->elements_count*configMetadata->tamanioBloques)/configMetadata->tamanioBloques);
 
-		log_info(logs, "Necesito %i bloques libres", cantBloquesLibresNuevosQueNecesito);
+		log_info(logs, "elements count: %i \n", archivo->bloques->elements_count);
+		log_info(logs, "size: %i", size);
+		double cantBloquesLibresNuevosQueNecesito = ceil((size-(archivo->bloques->elements_count*configMetadata->tamanioBloques-offset))/configMetadata->tamanioBloques);
+
+		log_info(logs, "Necesito %f bloques libres", cantBloquesLibresNuevosQueNecesito);
 		if(cantBloquesLibresNuevosQueNecesito > 0){
 			if(!hayNBloquesLibres(cantBloquesLibresNuevosQueNecesito)){
 				log_info(logs, "No hay espacio para guardar los cambios");

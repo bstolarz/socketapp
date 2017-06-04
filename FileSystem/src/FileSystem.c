@@ -160,24 +160,28 @@ void soloParaProbarLasOperaciones(){
 			}
 		}else if(strcmp(comando, "GUARDARDATOS") == 0){
 
-				char * contenido = malloc(sizeof(char*)); //reservo para un caracter, despues el getline hace realloc si es necesario
 				printf("Ingrese el offset:\n");
 				int offset;
 				scanf("%d", &offset);
 
+				/*
 				printf("Ingrese el size:\n");
 				int size;
 				scanf("%d", &size);
+				*/
 
+				/*
 				printf("Ingrese el contenido a escribir:\n");
 
-				size_t cantContenidoLeido = getline(&contenido, &cantContenidoLeido, stdin);
-
-				log_info(logs, "leyo el contenido a guardar en archivo");
+				size_t cantContenido = 1;
+				size_t cantContenidoLeido = getline(&contenido, &cantContenido, stdin);
 				contenido[cantContenidoLeido-1]='\0';
+			*/
+				char * contenido = string_new();
+				string_append(&contenido, "CONTENIDO");
+				//log_info(logs, "el size es de %d bytes", sizeof(contenido));
+				resultado = guardarDatos(path, offset, 9, contenido);
 
-
-				resultado = guardarDatos(path, offset, size, contenido);
 
 				if(resultado == 1){
 					printf("Se pudo %s archivo satisfactoriamente\n", comando);
