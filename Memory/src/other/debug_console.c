@@ -49,7 +49,7 @@ char* stringify_admin_structs()
     int maxIntCharCount = string_length(maxIntStr);
     free(maxIntStr);
 
-    int i;
+    size_t i;
 
     char* pageTableStr = string_new();
 
@@ -151,7 +151,7 @@ char* stringify_frame_content_str(char* frame)
 
 char* stringify_frames_content(_Bool (*framePredicate)(t_pageTableEntry*), frame_stringifier frameStringifier)
 {
-	int i;
+	size_t i;
 	char* contents = string_new();
 	
 	for (i = 0; i != proccessPageCount; ++i)
@@ -161,7 +161,7 @@ char* stringify_frames_content(_Bool (*framePredicate)(t_pageTableEntry*), frame
 		// TODO: lock?
 		if (framePredicate(pageEntry))
 		{
-			string_append_with_format(&contents, "frame: %d, PID: %d, page: %d\n", i, pageEntry->PID, pageEntry->page);
+			string_append_with_format(&contents, "frame: %zd, PID: %d, page: %d\n", i, pageEntry->PID, pageEntry->page);
 			char* frameStr = frameStringifier(get_frame(i));
 			string_append(&contents, frameStr);
 			free(frameStr);
@@ -177,6 +177,13 @@ char* stringify_proccess_content(int PID, frame_stringifier frameStringifier)
 	_Bool entryHasPID(t_pageTableEntry* entry) { return entry->PID == PID; };
 	
 	return stringify_frames_content(&entryHasPID, frameStringifier);
+}
+
+void dump_proc_int(int PID)
+{
+	char* dumpazo = stringify_proccess_content(PID, stringify_frame_content_int);
+	printf("%s\n", dumpazo);
+	free(dumpazo);
 }
 
 char* stringify_all_memory_content(frame_stringifier frameStringifier)
@@ -230,11 +237,11 @@ char* memory_size_str()
 
 	string_append(&memorySizeStr, "Memory Size\n");
 	string_append_with_format(&memorySizeStr, "frames totales = %d\n", configMemory->frameCount);
-	string_append_with_format(&memorySizeStr, "frames para procesos = %d\n", proccessPageCount);
+	string_append_with_format(&memorySizeStr, "frames para procesos = %zd\n", proccessPageCount);
 
 	pthread_mutex_lock(&freeFrameMutex);
-	string_append_with_format(&memorySizeStr, "frames libres = %d\n", freeFrameCount);
-	string_append_with_format(&memorySizeStr, "frames okupas = %d\n", proccessPageCount - freeFrameCount);
+	string_append_with_format(&memorySizeStr, "frames libres = %zd\n", freeFrameCount);
+	string_append_with_format(&memorySizeStr, "frames okupas = %zd\n", proccessPageCount - freeFrameCount);
 	pthread_mutex_unlock(&freeFrameMutex);
 
 	return memorySizeStr;
@@ -388,12 +395,6 @@ _Bool handle_dump(char** tokens, char** info)
 	}
 
 	return false;
-}
-
-void dump_che_int()
-{
-	char* info = stringify_cache_contents(stringify_frame_content_int);
-	printf("%s", info);
 }
 
 _Bool handle_size(char** tokens, char** info)

@@ -3,30 +3,33 @@
 #include <string.h>
 #include <pthread.h>
 #include <math.h>
+#include <assert.h>
 
 #include "../commons/declarations.h"
 #include "../commons/structures.h"
 #include "ram.h"
+#include "hash_function.h"
 #include "utils.h"
+#include "frame.h"
+
 
 pthread_mutex_t freeFrameMutex = PTHREAD_MUTEX_INITIALIZER;
+hash_function hash = ayudante_hash;
 
 int ram_init()
 {
 	pageTable = malloc(configMemory->frameCount * configMemory->frameSize);
-	freeFramesEntries = (t_pageTableEntry**)(pageTable + configMemory->frameCount);
 
-    int i;
+    size_t i;
     for (i = 0; i < configMemory->frameCount; ++i){
         pageTable[i].PID = -1;
-        pageTable[i].page = 0;
-        freeFramesEntries[i] = pageTable + i;
+        pageTable[i].page = -1;
+        pthread_spin_init(&pageTable[i].lock, 0);
     }
 
-    int tableSizeInBytes = sizeof(t_pageTableEntry) * configMemory->frameCount;
-    int freeFrameArraySizeInBytes = sizeof(t_pageTableEntry*) * configMemory->frameCount;
-    int adminSizeInBytes = tableSizeInBytes + freeFrameArraySizeInBytes;
-    int adminSizeInPages = bytes_to_pages(adminSizeInBytes);
+    size_t tableSizeInBytes = sizeof(t_pageTableEntry) * configMemory->frameCount;
+    size_t adminSizeInBytes = tableSizeInBytes;
+    size_t adminSizeInPages = bytes_to_pages(adminSizeInBytes);
 
     // como agrego bytes al comienzo del bloque de memoria casteo a char
     // (para que no los tome como 4 a cada uno)
@@ -37,8 +40,35 @@ int ram_init()
     return 0;
 }
 
+int insert_proccess_page(int PID, int page)
+{
+	size_t frameIndex = hash(PID, page) % proccessPageCount;
+	size_t collisionCount = 0;
 
-int ram_get_pages_for_proccess(int PID, int pageCount, int startPage)
+	pthread_spin_lock(&pageTable[frameIndex].lock);
+
+	while (!is_frame_free(&pageTable[frameIndex]))
+	{
+		pthread_spin_unlock(&pageTable[frameIndex].lock);
+
+		frameIndex = (frameIndex + 1) % proccessPageCount;
+		++collisionCount;
+
+		pthread_spin_lock(&pageTable[frameIndex].lock);
+	}
+
+	log_info(logMemory, "[insert] PID: %d, page: %d, hash: %zd, frame = %zd, collisionCount: %d\n", PID, page, hash(PID, page) % proccessPageCount, frameIndex, collisionCount);
+
+	pageTable[frameIndex].PID = PID;
+	pageTable[frameIndex].page = page;
+
+	pthread_spin_unlock(&pageTable[frameIndex].lock);
+
+	return frameIndex;
+}
+
+
+int ram_get_pages_for_proccess(int PID, size_t pageCount, size_t startPage)
 {
 	// puede que el kernel mande pedidos de iniciar proceso al mismo tiempo
 	// lockeo aca para que no traten de usar los mismos frames vacios los 2 procesos
@@ -56,43 +86,42 @@ int ram_get_pages_for_proccess(int PID, int pageCount, int startPage)
 
 	// hay frames para proceso
 	freeFrameCount -= pageCount;
-	int i;
+	pthread_mutex_unlock(&freeFrameMutex);
+
+	size_t i;
 
 	for (i = 0; i != pageCount; ++i)
 	{
-		t_pageTableEntry* freeFrameEntry = freeFramesEntries[freeFrameCount + i];
-		freeFrameEntry->PID = PID;
-		freeFrameEntry->page = startPage + i;
+		insert_proccess_page(PID, startPage + i);
 	}
 
-	pthread_mutex_unlock(&freeFrameMutex);
 
 	return 0;
 }
 
 
 // Operaciones de Memoria (pag 26)
-int ram_program_init(int PID, int pageCount)
+int ram_program_init(int PID, size_t pageCount)
 {
 	return ram_get_pages_for_proccess(PID, pageCount, 0);
 }
 
-int ram_get_pages(int PID, int pageCount)
+int ram_get_pages(int PID, size_t pageCount)
 {
 	_Bool isProccessFrame(t_pageTableEntry* entry)
 	{
 		return PID == entry->PID;
 	};
 
-	int proccessCurrentPageCount = frame_count(isProccessFrame);
+	size_t proccessCurrentPageCount = frame_count(isProccessFrame);
 
 	return ram_get_pages_for_proccess(PID, pageCount, proccessCurrentPageCount);
 }
 
 void ram_program_end(int PID)
 {
-	int i;
-	int pageCount = 0;
+	size_t i;
+	size_t pageCount = 0;
 
 	// si un proceso quiere empezar, mejor que espere que se actualizen los freeFramesEntries
 	// porque asi es mas seguro que encuentre frames para empezar
@@ -103,13 +132,17 @@ void ram_program_end(int PID)
 	// esto no va a pisar ni ser pisado por ningun otro proceso
 	for (i = 0; i != proccessPageCount; ++i)
 	{
+		pthread_spin_lock(&pageTable[i].lock);// hacer esperar para que tengas mas chances de encontrar vacia
+
 		if (pageTable[i].PID == PID)
 		{
+			pageTable[i].page = -1;
 			pageTable[i].PID = -1;
 
-			freeFramesEntries[freeFrameCount + pageCount] = pageTable + i;
 			++pageCount;
 		}
+
+		pthread_spin_unlock(&pageTable[i].lock);
 	}
 
 	freeFrameCount += pageCount;
@@ -117,34 +150,89 @@ void ram_program_end(int PID)
 	pthread_mutex_unlock(&freeFrameMutex);
 }
 
-// returna una pagina o nulo
-char* ram_frame_lookup(int PID, int page)
+size_t ram_frame_index_lookup(int PID, int page, int* result)
 {
-    // TODO: hash function
-    int i;
+	size_t frameIndex = hash(PID, page) % proccessPageCount;
+	size_t collisionCount = 0;
 
-    for (i = 0; i != proccessPageCount; ++i)
-        if (pageTable[i].PID == PID && pageTable[i].page == page)
-            return get_frame(i); // casteo a puntero de char para que sume de 1 byte
-    																		// que sume de 1 byte al puntero
-    log_error(logMemory, "[frame_lookup] no encontr frame para proceso [%d] pag %d", PID, page);
-    return NULL;
+	while (!entry_has_PID_page(&pageTable[frameIndex], PID, page) &&
+			collisionCount < proccessPageCount)
+	{
+		frameIndex = (frameIndex + 1) % proccessPageCount;
+
+		++collisionCount;
+	}
+
+	if (collisionCount < proccessPageCount)
+	{
+		*result = 0;
+		return frameIndex;
+	}
+	else
+	{
+		// solo por las dudas. sacar cuando este estable
+		size_t i;
+		for (i = 0; i != proccessPageCount; ++i)
+		{
+			assert(	pageTable[i].PID != PID || pageTable[i].page != page);
+		}
+
+		*result = -1;
+		log_error(logMemory, "[frame_lookup] no encontr frame para proceso [%d] pag %d", PID, page);
+		return proccessPageCount;
+	}
 }
 
-int frame_count(_Bool (*framePredicate)(t_pageTableEntry*))
+// returna una pagina o nulo
+char* ram_frame_lookup(int PID, size_t page)
 {
-    int i;
-    int count = 0;
+	int result;
+	size_t frameIndex = ram_frame_index_lookup(PID, page, &result);
 
-    // TODO: lockear?
+	if (result == 0)
+		return get_frame(frameIndex);
+	else
+		return NULL;																	// que sume de 1 byte al puntero
+}
+
+int ram_free_page(int PID, size_t page)
+{
+	int result;
+	size_t frameIndex = ram_frame_index_lookup(PID, page, &result);
+
+	if (result == 0)
+	{
+		pthread_spin_lock(&pageTable[frameIndex].lock);// hacer esperar para que tengas mas chances de encontrar vacia
+		pageTable[frameIndex].page = -1;
+		pageTable[frameIndex].PID = -1;
+		pthread_spin_unlock(&pageTable[frameIndex].lock);// hacer esperar para que tengas mas chances de encontrar vacia
+
+		pthread_mutex_lock(&freeFrameMutex);
+		++freeFrameCount;
+		pthread_mutex_unlock(&freeFrameMutex);
+	}
+
+	return result;
+}
+
+size_t frame_count(_Bool (*framePredicate)(t_pageTableEntry*))
+{
+    size_t i;
+    size_t count = 0;
+
     for (i = 0; i != proccessPageCount; ++i)
+    {
+		// TODO: lockear?
         if ((*framePredicate)(pageTable + i))
-            ++count;
+        {
+        	++count;
+        }
+    }
 
     return count;
 }
 
-char* get_frame(int i)
+char* get_frame(size_t i)
 {
 	return proccessPages + (i * configMemory->frameSize);
 }

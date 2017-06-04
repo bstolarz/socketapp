@@ -10,6 +10,7 @@ typedef struct {
 
 	int PID;
 	int page;
+	pthread_spinlock_t lock;
 
 } t_pageTableEntry;
 

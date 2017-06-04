@@ -66,7 +66,7 @@ t_pcb* cpu_recv_pcb(t_cpu* cpu){
 	return NULL;
 }
 
-void cpu_destroy_pcb(t_cpu* cpu){
+void cpu_destroy_pcb(t_program* program){
 	//TODO
 }
 

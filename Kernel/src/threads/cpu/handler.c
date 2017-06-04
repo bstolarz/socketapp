@@ -24,24 +24,25 @@
 #include "../../interface/memory.h"
 #include "../../interface/filesystem.h"
 
+#include <parser/parser.h>
+
+
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
+	cpu->disconnected = 0;
 	list_add(queueCPUs->list,cpu);
-	log_info(logKernel,"New CPU added to list\n");
-	if(list_size(queueReadyPrograms->list)>0){
-		cpu->program = planificar();
-		if(cpu->program != NULL){
-			cpu_send_pcb(cpu);
-		}
-	}else{
-		cpu->program=NULL;
+	cpu->program = planificar();
+	if(cpu->program != NULL){
+		cpu_send_pcb(cpu);
 	}
 }
 
 void handle_interruption(t_cpu * cpu){
 	if(socket_send_int(cpu->socket, cpu->program->interruptionCode)<=0){
-		exit(EXIT_FAILURE);
+		log_warning(logKernel, "[handle_interruption/interruption] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
@@ -60,7 +61,9 @@ void handle_still_burst(t_cpu* cpu){
 	}
 
 	if(socket_send_int(cpu->socket, burst)<=0){
-		exit(EXIT_FAILURE);
+		log_warning(logKernel, "[handle_still_burst/burst] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
@@ -71,8 +74,9 @@ void handle_end_burst(t_cpu* cpu){
 
 	int termino = 0;
 	if(socket_recv_int(cpu->socket, &termino)<=0){
-		//TODO Eliminar cpu de la lista de cpus
-		exit(EXIT_FAILURE);
+		log_warning(logKernel, "[handle_end_burst/termino] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 
 	if(termino == 1){
@@ -100,7 +104,8 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 	//Obtengo el nombre de la shared variable
 	char* sharedVariable=string_new();
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
-		log_info(logKernel,"No se obtuvo el nombre de la shared variable de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_get_shared_variable/shared_variable] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -112,22 +117,27 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sv == NULL){
-		log_info(logKernel,"La shared variable '%s' que solicito %d no existe.\n", sv->nombre, cpu->socket);
+		cpu->program->interruptionCode = -15;
 		if(socket_send_string(cpu->socket, "Failure")<=0){
-			log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+			log_warning(logKernel, "[handle_cpu_get_shared_variable/Failure] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 		return;
 	}
 
 	if(socket_send_string(cpu->socket, "Success")<=0){
-		log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+		log_warning(logKernel, "[handle_cpu_get_shared_variable/Success] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	//Envio el valor de la shared variable
 	pthread_mutex_lock(&sv->mutex);
 	if(socket_send_int(cpu->socket, sv->value)<=0){
-		log_info(logKernel,"Ocurrio un error al enviarle el valor de la shared variable '%s' a %d\n", sv->nombre, cpu->socket);
+		log_warning(logKernel, "[handle_cpu_get_shared_variable/Resultado] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 	pthread_mutex_unlock(&sv->mutex);
 
@@ -137,19 +147,17 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	//Obtengo el nombre de la shared variable
 	char* sharedVariable=string_new();
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
-		log_info(logKernel,"No se obtuvo el nombre de la shared variable de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_set_shared_variable/shared_variable] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
-	}else{
-		log_info(logKernel, "Nombre de variable compartida: %s", sharedVariable);
 	}
 
 	//Obtengo el valor de la shared variable
 	int value = 0;
 	if (socket_recv_int(cpu->socket,&value)<=0){
-		log_info(logKernel,"No se obtuvo el valor de la shared variable de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_set_shared_variable/valor] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
-	}else{
-		log_info(logKernel, "Valor a setear a %s: %d", sharedVariable, value);
 	}
 
 	//Busco la shared variable
@@ -160,11 +168,11 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sv == NULL){
-		log_info(logKernel,"La shared variable '%s' que solicito %d no existe.\n", sv->nombre, cpu->socket);
+		cpu->program->interruptionCode = -15;
 		if(socket_send_string(cpu->socket, "Failure")<=0){
-			log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
-		}else{
-			log_info(logKernel, "Notifique correctamente que no existe la variable compartida");
+			log_warning(logKernel, "[handle_cpu_set_shared_variable/Failure] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 		return;
 	}
@@ -175,7 +183,9 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	pthread_mutex_unlock(&sv->mutex);
 
 	if(socket_send_string(cpu->socket, "Success")<=0){
-		log_info(logKernel,"No se pudo informar el estado a %d\n", sv->nombre, cpu->socket);
+		log_warning(logKernel, "[handle_cpu_set_shared_variable/Success] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
@@ -183,7 +193,8 @@ void handle_cpu_wait(t_cpu* cpu){
 	//Obtengo el nombre de la shared variable
 	char* semaforo=string_new();
 	if (socket_recv_string(cpu->socket,&semaforo)<=0){
-		log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_wait/semaforo] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -193,19 +204,22 @@ void handle_cpu_wait(t_cpu* cpu){
 	}
 	t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
 
-	printf("sem %s %d\n", sem->nombre, sem->value);
-
 	//Verifico que exista
 	if(sem == NULL){
-		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
+		cpu->program->interruptionCode = -14;
+
 		if(socket_send_string(cpu->socket, "Failure")<=0){
-			log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+			log_warning(logKernel, "[handle_cpu_wait/Failure] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 		return;
 	}
 
 	if(socket_send_string(cpu->socket, "Success")<=0){
-		log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+		log_warning(logKernel, "[handle_cpu_wait/Success] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 
 	//Envio el valor de la shared variable
@@ -222,8 +236,11 @@ void handle_cpu_wait(t_cpu* cpu){
 	}
 
 	if(socket_send_int(cpu->socket, resp)<=0){
-		log_info(logKernel,"Ocurrio un error al enviarle el valor del semaforo '%s' a %d\n", sem->nombre, cpu->socket);
+		log_warning(logKernel, "[handle_cpu_wait/Resultado] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
+
 	pthread_mutex_unlock(&sem->mutex);
 }
 
@@ -231,7 +248,8 @@ void handle_cpu_signal(t_cpu* cpu){
 	//Obtengo el nombre de la shared variable
 	char* semaforo=string_new();
 	if (socket_recv_string(cpu->socket,&semaforo)<=0){
-		log_info(logKernel,"No se obtuvo el nombre del semaforo de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_signal/semaforo] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -243,15 +261,20 @@ void handle_cpu_signal(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sem == NULL){
-		log_info(logKernel,"El semaforo '%s' que solicito %d no existe.\n", sem->nombre, cpu->socket);
+		cpu->program->interruptionCode = -14;
+
 		if(socket_send_string(cpu->socket, "Failure")<=0){
-			log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+			log_warning(logKernel, "[handle_cpu_signal/Failure] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 		return;
 	}
 
 	if(socket_send_string(cpu->socket, "Success")<=0){
-		log_info(logKernel,"No se pudo informar el estado a %d\n", sem->nombre, cpu->socket);
+		log_warning(logKernel, "[handle_cpu_signal/Success] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 
 	//Envio el valor de la shared variable
@@ -259,21 +282,24 @@ void handle_cpu_signal(t_cpu* cpu){
 	sem->value = sem->value + 1;
 	pthread_mutex_unlock(&sem->mutex);
 
-	//TODO avisarle a los bloqueados que se levanto este semaforo
+	program_unblock(sem);
 }
 
 void handle_cpu_alocar(t_cpu* cpu){
 	//Obtengo el tamaño a alocar
 	int size = 0;
 	if (socket_recv_int(cpu->socket,&size)<=0){
-		log_info(logKernel,"No se obtuvo el size a alocar de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_alocar/size] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	int puntero = memory_heap_alloc(cpu->program, size);
 
 	if (socket_send_int(cpu->socket, puntero)<=0){
-		log_info(logKernel,"No se pudo enviar el puntero de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_alocar/respuesta] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
@@ -282,7 +308,8 @@ void handle_cpu_liberar(t_cpu* cpu){
 	//Obtengo el tamaño a alocar
 	int posicion = 0;
 	if (socket_recv_int(cpu->socket,&posicion)<=0){
-		log_info(logKernel,"No se obtuvo el size a alocar de %d\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_liberar] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -294,14 +321,16 @@ void handle_cpu_abrir(t_cpu* cpu){
 	//Recibo el path
 	char* path=string_new();
 	if(socket_recv_string(cpu->socket,&path)<=0){
-		log_info(logKernel, "Error recibiendo path");
+		log_warning(logKernel, "[handle_cpu_abrir/path] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	//Recibo los permisos
 	char* flags=string_new();
 	if (socket_recv_string(cpu->socket,&flags)<=0){
-		log_info(logKernel, "Error recibiendo los flags");
+		log_warning(logKernel, "[handle_cpu_abrir/flags] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -312,12 +341,16 @@ void handle_cpu_abrir(t_cpu* cpu){
 	}else{//No existe
 		if (filesystem_validate(path)==1){ //El archivo existe. Creo gFd y fd
 			gFD = file_descriptor_global_create(path);
-			fd = file_descriptor_create(cpu->program, gFD, flags);
+			if(gFD != NULL){
+				fd = file_descriptor_create(cpu->program, gFD, flags);
+			}
 		}else{ //No existe el archivo. Si tengo permiso, lo creo
 			if(strstr(flags, FILE_DESCRIPTOR_PERMISSION_CREATE) != NULL){
 				if (filesystem_create(path)==1){
 					gFD = file_descriptor_global_create(path);
-					fd = file_descriptor_create(cpu->program, gFD, flags);
+					if(gFD != NULL){
+						fd = file_descriptor_create(cpu->program, gFD, flags);
+					}
 				}
 			}
 		}
@@ -329,18 +362,33 @@ void handle_cpu_abrir(t_cpu* cpu){
 	int ret = -ENOENT;
 	if(fd != NULL){
 		ret = fd->value;
+
+		if (socket_send_int(cpu->socket,ret)<=0){
+			log_warning(logKernel, "[handle_cpu_abrir/respuesta=FD] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
+		}
+	}else{
+		cpu->program->interruptionCode = -12;
+
+		if(socket_send_int(cpu->socket,0)<=0){
+			log_warning(logKernel, "[handle_cpu_abrir/respuesta=0] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
+		}
+
+		return;
 	}
 
-	if (socket_send_int(cpu->socket,ret)<=0){
-		log_info(logKernel, "Error enviando FD");
-	}
+
 }
 
 void handle_cpu_borrar(t_cpu* cpu){
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 	int nFD;
 	if (socket_recv_int(cpu->socket,&nFD)<=0){
-		log_info(logKernel, "Error recibiendo el file descriptor del archivo");
+		log_warning(logKernel, "[handle_cpu_abrir/respuesta=0] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
@@ -350,10 +398,11 @@ void handle_cpu_borrar(t_cpu* cpu){
 	//Verifico que existe el FD
 	if(filedescriptor == NULL){
 		cpu->program->interruptionCode = -11;
-		log_info(logKernel, "File descriptor inexistente");
 
 		if(socket_send_int(cpu->socket,0)<=0){
-			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+			log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/FD=NULL] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 
 		return;
@@ -362,10 +411,11 @@ void handle_cpu_borrar(t_cpu* cpu){
 	//Verifico que sea el unico que abrio el file descriptor
 	if(filedescriptor->global->open>1){
 		cpu->program->interruptionCode = -10;
-		log_info(logKernel, "Se intento borrar un archivo abierto por mas procesos");
 
 		if(socket_send_int(cpu->socket,0)<=0){
-			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+			log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/OPEN>1] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 
 		return;
@@ -391,15 +441,23 @@ void handle_cpu_borrar(t_cpu* cpu){
 			free(filedescriptor);
 
 			if(socket_send_int(cpu->socket,1)<=0){
-				log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d, se puedo hacerlo", cpu->program->pcb->pid, nFD);
+				log_warning(logKernel, "[handle_cpu_borrar/respuesta=1] CPU desconectado");
+				cpu->disconnected = 1;
+				return;
 			}
 
 			return;
+		}else{
+			cpu->program->interruptionCode = -13;
 		}
+	}else{
+		cpu->program->interruptionCode = -4;
 	}
 
 	if(socket_send_int(cpu->socket,0)<=0){
-		log_info(logKernel, "Error al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+		log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/FIN] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
@@ -407,7 +465,8 @@ void handle_cpu_cerrar(t_cpu* cpu){
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 		int nFD;
 		if (socket_recv_int(cpu->socket,&nFD)<=0){
-			log_info(logKernel, "Error recibiendo el file descriptor del archivo");
+			log_warning(logKernel, "[handle_cpu_cerrar/nFD] CPU desconectado");
+			cpu->disconnected = 1;
 			return;
 		}
 
@@ -417,10 +476,11 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		//Verifico que existe el FD
 		if(filedescriptor == NULL){
 			cpu->program->interruptionCode = -11;
-			log_info(logKernel, "File descriptor inexistente");
 
 			if(socket_send_int(cpu->socket,0)<=0){
-				log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d,  no puedo hacerlo", cpu->program->pcb->pid, nFD);
+				log_warning(logKernel, "[handle_cpu_cerrar/resultado=0/FD=NULL] CPU desconectado");
+				cpu->disconnected = 1;
+				return;
 			}
 
 			return;
@@ -446,7 +506,9 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		free(filedescriptor);
 
 		if(socket_send_int(cpu->socket,1)<=0){
-			log_info(logKernel, "Errro al notificar a CPU que el programa %d que pedia borrar el archivo con file descriptor %d, se puedo hacerlo", cpu->program->pcb->pid, nFD);
+			log_warning(logKernel, "[handle_cpu_cerrar/resultado=1] CPU desconectado");
+			cpu->disconnected = 1;
+			return;
 		}
 }
 
@@ -454,18 +516,25 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 	//Recibo el descriptor de archivo
 	int FD;
 	if (socket_recv_int(cpu->socket,&FD)<=0){
-		log_info(logKernel, "No se pudo obtener el FD de: %i\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_mover_cursor/FD] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	//Recibo la cantidad de bytes a moverme
 	int bytesToMove;
 	if (socket_recv_int(cpu->socket,&bytesToMove)<=0){
-		log_info(logKernel, "No se pudo obtener el offset de: %i\n", cpu->socket);
+		log_warning(logKernel, "[handle_cpu_mover_cursor/Bytes] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 
 	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
+	if(filedescriptor == NULL){
+		cpu->program->interruptionCode = -11;
+		return;
+	}
+
 	filedescriptor->cursor=bytesToMove;
 }
 
@@ -485,8 +554,9 @@ void handle_cpu_escribir(t_cpu* cpu){
 		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
 		return;
 	}
-
-	if(FD == 0){ //Por algun motivo cuando es imprimir me llama con 0
+	log_info(logKernel, "FS %i", FD);
+	//if(FD == DESCRIPTOR_SALIDA){ //Por algun motivo cuando es imprimir me llama con 0
+	if(FD == 0){
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';

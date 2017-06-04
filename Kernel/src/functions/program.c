@@ -109,7 +109,6 @@ void program_process_new(fd_set* master, int socket){
 	list_add(queueNewPrograms->list, program);
 	pthread_mutex_unlock(&(queueNewPrograms->mutex));
 
-	printf("Se agrego a %i a la lista de programas nuevos\n", program->pcb->pid);
 	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
 
 	planificador_largo_plazo();
@@ -156,19 +155,19 @@ int program_to_ready(t_program* program){
 
 void program_finish(t_program* program){
 	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
-
-	//TODO
-	/*
-	 * Aca deberiamos:
-	 * 		Enviar info estadistico
-	 * 		Informar del fin de ejecucion y su exitCode
-	 * 		Cerrar el socket
-	 * 		Dejar el programa finalizado.
-	 */
-
-	close(program->socket);
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
+
+	if(socket_send_string(program->socket, "FinEjecucion")<=0){
+		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
+		close(program->socket);
+		return;
+	}
+
+	//TODO cerrar los archivos abiertos
+
+	close(program->socket);
+
 }
 
 void program_interrup(int socket, int interruptionCode, int overrideInterruption){
@@ -185,6 +184,11 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	 * 	-9		No se pueden asignar mas paginas al proceso
 	 * 	-10		Se intento borrar un archivo abierto por varios procesos
 	 * 	-11		File descriptor inexistente
+	 * 	-12		Se intento abrir un archivo inexistente
+	 * 	-13		No se pudo borrar un archivo en FS
+	 * 	-14		Semaforo inexistente
+	 * 	-15		Shared variable inexistente
+	 * 	-16		El cpu se desconecto y dejo el programa en un estado inconsistente
 	 * 	-20		Error sin definicion
 	 * */
 
@@ -261,3 +265,6 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	pthread_mutex_unlock(&(queueCPUs->mutex));
 }
 
+void program_unblock(t_semaforo* sem){
+	//TODO
+}
