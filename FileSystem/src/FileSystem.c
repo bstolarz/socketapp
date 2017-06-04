@@ -102,6 +102,7 @@ void soloParaProbarLasOperaciones(){
 		printf("[Filesystem] - 	CREAR\t\tCrea un archivo y le asigna un bloque.\n");
 		printf("[Filesystem] - 	BORRAR\t\tBorra un archivo y libera sus bloques.\n");
 		printf("[Filesystem] - 	OBTENERDATOS\tLee el contenido de los bloques de un archivo.\n");
+		printf("[Filesystem] - 	GUARDARDATOS\tGuarda informacion en un archivo.\n");
 		printf("[Filesystem] - 	exit\t\tSalir del programa.\n");
 
 		printf("Ingrese un comando:\n");
@@ -150,20 +151,36 @@ void soloParaProbarLasOperaciones(){
 			char* buf = malloc(0);
 			resultado = obtenerDatos(path,offset,size,&buf);
 
-			if(resultado > 0){
+			if(resultado == 1){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
-				log_info(logs, "Bytes leidos: %d", resultado);
 				log_info(logs, "Buffer leido:");
 				log_info(logs, "%s", buf);
+			}
+		}else if(strcmp(comando, "GUARDARDATOS") == 0){
+
+				char * contenido = malloc(sizeof(char*)); //reservo para un caracter, despues el getline hace realloc si es necesario
+				printf("Ingrese el offset:\n");
+				int offset;
+				scanf("%d", &offset);
+
+				printf("Ingrese el size:\n");
+				int size;
+				scanf("%d", &size);
+
+				printf("Ingrese el contenido a escribir:\n");
+
+				size_t cantContenidoLeido = getline(&contenido, &cantContenidoLeido, stdin);
+				contenido[cantContenidoLeido-1]='\0';
+
+				//llamo a GuardarDatos
+
+
 			}else if (resultado == -1){
 				printf("Pusiste un offset mayor al tamanioArchivo => no leo nada\n");
 			}
 			else{
 				printf("El archivo no existe\n");
 			}
-
-		}
-
 
 		free(path);
 		free(comando);

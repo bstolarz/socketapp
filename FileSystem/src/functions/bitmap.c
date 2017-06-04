@@ -24,6 +24,13 @@ int encontrarUnBloqueLibre(){
 	return -1;
 }
 
+int hayNBloquesLibres(int n){
+
+	//Devuelvo la posicion del primer bloque libre con n-1 bloques contiguos
+	//Si no hay espacio para n bloques contiguos, devuelvo 0
+	return 0;
+
+}
 void ocuparBloqueLibre(int posBloqueLibre){
 	bitarray_set_bit(bitarray, posBloqueLibre);
 	log_info(logs, "Se ocupo el bloque %d del bitmap", posBloqueLibre);
