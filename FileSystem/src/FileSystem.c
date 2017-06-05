@@ -188,6 +188,7 @@ void soloParaProbarLasOperaciones(){
 					log_info(logs, "Buffer grabado:");
 					log_info(logs, "%s", contenido);
 				}
+
 				free(contenido);
 
 			}else if (resultado == -1){
