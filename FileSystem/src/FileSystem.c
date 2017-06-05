@@ -37,7 +37,7 @@ int main(int arg, char* argv[]) {
 	metadataFS_read("./mnt/SADICA_FS/Metadata/Metadata.bin");
 	metadataFS_print();
 
-	initSadica();
+	//initSadica();
 
 	soloParaProbarLasOperaciones();
 /*

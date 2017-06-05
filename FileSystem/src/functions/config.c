@@ -58,11 +58,11 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 }
 
 void write_metadataFS(char* path, t_metadata_archivo* archivo, int nroBloque){
-	//Agrego bloque
-	list_add(archivo->bloques, nroBloque);
 
-
+	log_info(logs, "Entra a write_metadataFS");
 	if (!remove(path)){
+
+		log_info(logs, "Entra a Borrar archivo");
 		/*
 		int fd = open(path, O_CREAT);
 		char * strMetadata = string_new();
@@ -71,21 +71,21 @@ void write_metadataFS(char* path, t_metadata_archivo* archivo, int nroBloque){
 		string_append(&strMetadata, "Metadata/Bitmap.bin");
 		*/
 		FILE *fp = fopen(path, "w+");
-
+		log_info(logs, "creo archivo!!x");
 		char * strToWrite = string_new();
 
 		string_append(&strToWrite, "TAMANIO=");
-		string_append(&strToWrite,(char*)archivo->tamanio);
+		string_append_with_format(&strToWrite, "%i", archivo->tamanio);
 		string_append(&strToWrite, "\n");
 		string_append(&strToWrite, "BLOQUES=[");
-
+		log_info(logs, "%s", strToWrite);
 		int i;
 		for(i=0;i<archivo->bloques->elements_count;i++)
 		{
-			string_append_with_format(&strToWrite, "%i", list_get(archivo->bloques, i));
-
+			string_append_with_format(&strToWrite, "%i,", list_get(archivo->bloques, i));
 		}
 
+		log_info(logs, "%s", strToWrite);
 		strToWrite[(int)strlen(strToWrite)-1] = ']';
 		fprintf(fp, strToWrite);
 
