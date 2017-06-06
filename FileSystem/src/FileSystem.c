@@ -160,11 +160,7 @@ void soloParaProbarLasOperaciones(){
 			}
 		}else if(strcmp(comando, "GUARDARDATOS") == 0){
 
-				//Em file system:
-				//1ro: Validar que exista
-				//2do: Validar que el size no exceda el total del disco
-				//3ero: Validar que el offset no exceda el tamanio total del disco
-				//4to: Validar que offset+size no exceda el tamanio total del disco
+
 				printf("Ingrese el offset:\n");
 				int offset;
 				scanf("%d", &offset);
