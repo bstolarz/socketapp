@@ -77,3 +77,7 @@ void console_finish_process(){
 void console_stop_planning(){
 	//TODO
 }
+
+void console_start_planning(){
+	//TODO
+}
