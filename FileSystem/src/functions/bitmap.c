@@ -24,6 +24,21 @@ int encontrarUnBloqueLibre(){
 	return -1;
 }
 
+int hayNBloquesLibres(int cantBloquesNecesitados){
+
+	//Devuelve la cantidad de Bloques Libres
+
+	int cantBloquesLibres = 0, i=0;
+
+	while(cantBloquesLibres<cantBloquesNecesitados && i<bitarray_get_max_bit(bitarray)){
+		if (!bitarray_test_bit(bitarray,i)){
+			cantBloquesLibres++;
+		}
+		i++;
+	}
+	return cantBloquesLibres;
+
+}
 void ocuparBloqueLibre(int posBloqueLibre){
 	bitarray_set_bit(bitarray, posBloqueLibre);
 	log_info(logs, "Se ocupo el bloque %d del bitmap", posBloqueLibre);

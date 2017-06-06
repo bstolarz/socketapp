@@ -554,9 +554,9 @@ void handle_cpu_escribir(t_cpu* cpu){
 		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
 		return;
 	}
+
 	log_info(logKernel, "FS %i", FD);
-	//if(FD == DESCRIPTOR_SALIDA){ //Por algun motivo cuando es imprimir me llama con 0
-	if(FD == 0){
+	if(FD == DESCRIPTOR_SALIDA){
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';

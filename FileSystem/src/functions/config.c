@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <commons/string.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
@@ -56,6 +57,38 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 	log_info("Se leyo el metadata del archivo: %s", path);
 }
 
+void metadataFS_write(char* path, t_metadata_archivo* archivo, int nroBloque){
+
+	log_info(logs, "Entra a metadataFS_write");
+	if (!remove(path)){
+
+		log_info(logs, "Entra a Borrar archivo");
+		FILE *fp = fopen(path, "w+");
+		log_info(logs, "creo archivo!!x");
+		char * strToWrite = string_new();
+
+		string_append(&strToWrite, "TAMANIO=");
+		string_append_with_format(&strToWrite, "%i", archivo->tamanio);
+		string_append(&strToWrite, "\n");
+		string_append(&strToWrite, "BLOQUES=[");
+		log_info(logs, "%s", strToWrite);
+		int i;
+		for(i=0;i<archivo->bloques->elements_count;i++)
+		{
+			string_append_with_format(&strToWrite, "%i,", list_get(archivo->bloques, i));
+		}
+
+		log_info(logs, "%s", strToWrite);
+		strToWrite[(int)strlen(strToWrite)-1] = ']';
+		fprintf(fp, strToWrite);
+
+		fclose(fp);
+		free(strToWrite);
+	}
+
+}
+
+
 
 void metadataFS_print(){
 	printf("Cantidad de bloques del FS: %i\n", configMetadata->cantidadBloques);
@@ -70,6 +103,7 @@ void metadataFS_read(char* path){
 
 	config_destroy(config);
 }
+
 
 void metadataFS_free(){
 	free(configMetadata);

@@ -104,7 +104,7 @@ void initSadica(){
 	//3. Metadata (tamanio real del archivo en bytes, array con nro bloques en orden
 		// TAMANIO=250  BLOQUES=[40,21,82,3]
 
-	//crearArchivos(); /*Por ahora solo creo el Bitmap*/
+	crearArchivos(); /*Por ahora solo creo el Bitmap*/
 
 	char* pathBitmap = string_new();
 	string_append(&pathBitmap, configFileSystem->punto_montaje);

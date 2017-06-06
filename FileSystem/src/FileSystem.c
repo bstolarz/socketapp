@@ -88,20 +88,21 @@ int main(int arg, char* argv[]) {
 }
 
 void soloParaProbarLasOperaciones(){
-	size_t cantidad = 10;
-	char* comando = malloc(sizeof(char)*cantidad);
-
-	size_t cantidadPath = 10;
-	char* path = malloc(sizeof(char)*cantidad);
-
 	int resultado = -1;
 	while(1){
+		size_t cantidad = 10;
+		char* comando = malloc(sizeof(char)*cantidad);
+
+		size_t cantidadPath = 10;
+		char* path = malloc(sizeof(char)*cantidad);
+
 		printf("----------------------------------------------\n");
 		printf("[Filesystem] - Los comandos permitidos son:\n");
 		printf("[Filesystem] - 	VALIDAR\t\tValida si existe un archivo.\n");
 		printf("[Filesystem] - 	CREAR\t\tCrea un archivo y le asigna un bloque.\n");
 		printf("[Filesystem] - 	BORRAR\t\tBorra un archivo y libera sus bloques.\n");
 		printf("[Filesystem] - 	OBTENERDATOS\tLee el contenido de los bloques de un archivo.\n");
+		printf("[Filesystem] - 	GUARDARDATOS\tGuarda contenido en un archivo.\n");
 		printf("[Filesystem] - 	exit\t\tSalir del programa.\n");
 
 		printf("Ingrese un comando:\n");
@@ -117,12 +118,28 @@ void soloParaProbarLasOperaciones(){
 		path[cantLeidaPath-1]='\0';
 
 		path = armarPathArchivo(path);
+
 		if(strcmp(comando, "VALIDAR") == 0){
 			resultado = validar(path);
+			if(resultado > 0){
+				printf("Se pudo %s archivo satisfactoriamente\n", comando);
+			}else{
+				printf("El archivo no existe\n");
+			}
 		}else if(strcmp(comando, "CREAR") == 0){
 			resultado = crear(path);
+			if(resultado == 1){
+				printf("Se pudo %s archivo satisfactoriamente\n", comando);
+			}else{
+				printf("El archivo no existe\n");
+			}
 		}else if(strcmp(comando, "BORRAR") == 0){
 			resultado = borrar(path);
+			if(resultado == 1){
+				printf("Se pudo %s archivo satisfactoriamente\n", comando);
+			}else{
+				printf("El archivo no existe\n");
+			}
 		}else if(strcmp(comando, "OBTENERDATOS") == 0){
 			printf("Ingrese el offset:\n");
 			int offset;
@@ -135,17 +152,52 @@ void soloParaProbarLasOperaciones(){
 			char* buf = malloc(0);
 			resultado = obtenerDatos(path,offset,size,&buf);
 
-			log_info(logs, "Buffer leido:", buf);
-			log_info(logs, "%s", buf);
-		}
+			if(resultado == 1){
+				printf("Se pudo %s archivo satisfactoriamente\n", comando);
+				log_info(logs, "Bytes leidos: %d", resultado);
+				log_info(logs, "Buffer leido:");
+				log_info(logs, "%s", buf);
+			}
+		}else if(strcmp(comando, "GUARDARDATOS") == 0){
 
 
-		if(resultado == 1){
-			printf("Se pudo %s archivo satisfactoriamente\n", comando);
-		}else{
-			printf("El archivo no existe\n");
-		}
+				printf("Ingrese el offset:\n");
+				int offset;
+				scanf("%d", &offset);
+
+
+				printf("Ingrese el size:\n");
+				int size;
+				scanf("%d", &size);
+
+				char * contenido = string_new();
+				char * str = string_repeat('a', size);
+				string_append(&contenido, str);
+
+				log_info(logs, "%s", contenido);
+
+
+				resultado = guardarDatos(path, offset, size, contenido);
+
+
+				if(resultado == 1){
+					printf("Se pudo %s archivo satisfactoriamente\n", comando);
+					log_info(logs, "Buffer grabado:");
+					log_info(logs, "%s", contenido);
+				}
+
+				free(contenido);
+
+			}else if (resultado == -1){
+				printf("Pusiste un offset mayor al tamanioArchivo => no leo nada\n");
+			}
+			else{
+				printf("El archivo no existe\n");
+			}
+		free(path);
+		free(comando);
+
 	}
-	free(path);
-	free(comando);
+
+
 }

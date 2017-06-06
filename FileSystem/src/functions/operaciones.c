@@ -28,6 +28,11 @@ int validar(char* path) {
 
 //Lista
 int crear(char* path) {
+	if(validar(path) == 1){
+	 	log_info(logs, "Intentaste crear un archivo y este ya existe, devuelvo error");
+	 	return -ENOENT;
+	}
+
 	int posBloqueLibre = encontrarUnBloqueLibre();
 	log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
 	if (posBloqueLibre >= 0) {
@@ -61,7 +66,7 @@ int borrar(char* path) {
 
 }
 
-//Falta
+//Lista
 int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 	if (validar(path) == 1) {
 		//Leo el archivo y me lo cargo en la estructura
@@ -69,48 +74,79 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 		read_fileMetadata(path, archivo);
 
 		int desplazamientoHastaElBloque=floor(offset/configMetadata->tamanioBloques);
-		log_info(logs, "DesplazamientoHastaElBloque: %d", desplazamientoHastaElBloque);
 		int bloqueArranque=avanzarBloque(archivo, desplazamientoHastaElBloque);
-		log_info(logs, "Bloque de arranque: %d", bloqueArranque);
 		int byteComienzoLectura = offset-(desplazamientoHastaElBloque*configMetadata->tamanioBloques);
-		log_info(logs, "ByteComienzoLectura: %d", byteComienzoLectura);
+
 		int desplazamiento = 0;
 		int iSize = size;
 		int fileSize = archivo->tamanio;
 
+		//Reallocs
+		if(offset == 0 && iSize<=fileSize){
+			*buf=realloc(*buf, iSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
+		}
+		else if(offset == 0 && iSize>fileSize){
+			*buf=realloc(*buf, fileSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", fileSize);
+			iSize=fileSize;
+		}
+		else if(offset>0 && offset<=fileSize && iSize+offset == fileSize){
+			*buf=realloc(*buf, iSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
+		}
+		else if(offset>0 && offset<=fileSize && iSize+offset > fileSize){
+			*buf=realloc(*buf, fileSize-offset);
+			log_info(logs, "HAGO REALLOC de %d bytes", fileSize-offset);
+			iSize = fileSize-offset;
+		}
+		else if(offset>0 && offset<=fileSize && iSize+offset<fileSize){
+			*buf=realloc(*buf, iSize);
+			log_info(logs, "HAGO REALLOC de %d bytes", iSize);
+		}
+		else{
+			log_info(logs, "Me diste un offset que se pasa del tamanioArchivo, aborto realloc y lectura");
+			return -1;
+		}
+
+
 		while (bloqueArranque != -1 && (iSize-desplazamiento)>0 && (fileSize-desplazamiento-offset)>0){
+			log_info(logs, "DesplazamientoHastaElBloque: %d", desplazamientoHastaElBloque);
+			log_info(logs, "Bloque de arranque: %d", bloqueArranque);
+			log_info(logs, "ByteComienzoLectura: %d", byteComienzoLectura);
 			char* pathBloqueFisico = armarPathBloqueDatos(bloqueArranque);
 			int fileDesBF = open(pathBloqueFisico, O_RDWR);
 			void* bloqueArranqueFisico = mmap(0, configMetadata->tamanioBloques, PROT_READ, MAP_SHARED, fileDesBF, 0);
 
+
 			if((fileSize-desplazamiento-offset)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
 				if((iSize-desplazamiento)>=(configMetadata->tamanioBloques-byteComienzoLectura)){
-					*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
+					//*buf = realloc(*buf, desplazamiento+configMetadata->tamanioBloques-byteComienzoLectura);
 					memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,configMetadata->tamanioBloques-byteComienzoLectura);
+					log_info(logs, "Hice memcpy con size: %d", configMetadata->tamanioBloques-byteComienzoLectura);
 					desplazamiento += configMetadata->tamanioBloques-byteComienzoLectura;
 				}else{
-					*buf = realloc(*buf, iSize);
+					//*buf = realloc(*buf, iSize);
 					memcpy(*buf+desplazamiento, bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento);
+					log_info(logs, "Hice memcpy con size: %d", iSize-desplazamiento);
 					desplazamiento += iSize-desplazamiento;
 				}
 			}else{
-				*buf = realloc(*buf, iSize-offset);
-				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento-offset);
+				//*buf = realloc(*buf, archivo->tamanio);
+				//log_info(logs, "Hago realloc de %d bytes", archivo->tamanio);
+				memcpy(*buf+desplazamiento,bloqueArranqueFisico+byteComienzoLectura,iSize-desplazamiento);
+				log_info(logs, "Hice memcpy con size: %d", iSize-desplazamiento);
 				desplazamiento += iSize-desplazamiento-offset;
 			}
 
 			desplazamientoHastaElBloque++;
 			bloqueArranque = avanzarBloque(archivo, desplazamientoHastaElBloque);
-			log_info(logs, "Proximo bloque arranque: %d", bloqueArranque);
 
 			byteComienzoLectura=0;
-			log_info(logs, "Proximo byteComienzoLectura: %d", byteComienzoLectura);
-
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 		}
 
-
-		return 1;
+		return iSize;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
 		return -ENOENT;
@@ -118,53 +154,152 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 }
 
-//Falta
+
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
+
+	if(offset+size >= configMetadata->cantidadBloques*configMetadata->tamanioBloques){
+		printf("Lo que desea escribir excede el tamanio del disco. No se pueden guardar los datos. \n");
+		return -ENOENT;
+	}
+
+	if(size == 0){
+		printf("El tamanio a escribir no puede ser cero. \n");
+		return -ENOENT;
+	}
+
+
 	if (validar(path) == 1) {
+
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
 
-		int posBloqueArranque = ceil(offset / configMetadata->tamanioBloques);
-		int bytesAEscribirEnElBloque = (posBloqueArranque * configMetadata->tamanioBloques) - offset;
-		int byteComienzoEscritura = configMetadata->tamanioBloques - bytesAEscribirEnElBloque;
+		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
+
+		log_info(logs, "elements count: %i \n", archivo->bloques->elements_count);
+		log_info(logs, "size: %i \n", size);
+		log_info(logs, "offset: %i \n", offset);
+
+		double cantBloquesLibresNuevos;
+
+		log_info(logs, "cantBloquesArchivo: %d", archivo->bloques->elements_count);
+
+		if(offset+size > archivo->bloques->elements_count*configMetadata->tamanioBloques){
+			double cantBloquesLibresAux = (float)(offset+size-(archivo->bloques->elements_count*configMetadata->tamanioBloques))
+																			/(float)configMetadata->tamanioBloques;
+			cantBloquesLibresNuevos = ceil(cantBloquesLibresAux);
+
+
+		}else{
+			cantBloquesLibresNuevos = 0;
+		}
+
+		log_info(logs, "Necesito %f bloques libres", cantBloquesLibresNuevos);
+		if(cantBloquesLibresNuevos > 0){
+			if(!hayNBloquesLibres(cantBloquesLibresNuevos)){
+				log_info(logs, "No hay espacio para guardar los cambios");
+				return 0; // No hay espacio para guardar la nueva data
+			}
+		}
+		else{
+			//escribe sobre el espacio ya previamente reservado
+
+		}
+		log_info(logs, "SI hay espacio para guardar los cambios");
+
+
+		int posBloqueArranque = (int) floor(offset / configMetadata->tamanioBloques);
+
+		int byteComienzoEscritura = offset - posBloqueArranque * configMetadata->tamanioBloques;
+
+
 		int bytesEscritos = 0;
 		int sizeAux = size;
+		int posPrimerBloqueLibre;
+		int cantAsignaciones = 0;
+		int i;
 
-		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
+
+		log_info(logs, "Este archivo tiene asignados %i bloques", archivo->bloques->elements_count);
+
+
+		for(i=0;i<(int)cantBloquesLibresNuevos;i++){
+			posPrimerBloqueLibre = encontrarUnBloqueLibre();
+			list_add(archivo->bloques, (int)posPrimerBloqueLibre);
+			ocuparBloqueLibre(posPrimerBloqueLibre);
+		}
+
+
 		while (sizeAux > 0) {
-			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque - 1);
+
+			log_info(logs, "posbloqueArranque=%i", posBloqueArranque);
+			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque);
 
 			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
-			FILE* bloqueFisico = fopen(pathBloqueFisico, "w");
+			int bloqueFisico = open(pathBloqueFisico, O_RDWR, (mode_t)0600);
 
-			//Si lo que me queda por escribir (sizeAux) es mayor a lo que tengo que escribir en el bloque
-			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),configMetadata->tamanioBloques - byteComienzoEscritura);
-			}else{
-				memcpy(bloqueFisico+byteComienzoEscritura,buffer+((int)size-sizeAux),sizeAux);
+			if(bloqueFisico == -1){
+				log_info(logs, "No se pudo abrir el archivo %s del bloque", pathBloqueFisico);
+				return -1;
 			}
 
-			if(sizeAux >= (configMetadata->tamanioBloques - byteComienzoEscritura)){
-				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
-				actualizarBytesEscritos(&bytesEscritos,configMetadata->tamanioBloques-byteComienzoEscritura);
-			}else{
-				log_info(logs,"Size aux vale %d y byte comienzo vale %d",sizeAux,byteComienzoEscritura);
-				actualizarBytesEscritos(&bytesEscritos,sizeAux);
+			char* bloqueFisicoMapped = mmap(NULL, configMetadata->tamanioBloques, PROT_WRITE, MAP_SHARED, bloqueFisico, 0);
+
+			if(bloqueFisicoMapped == MAP_FAILED){
+				log_info(logs, "El mapeo con el archivo %s del bloque ha fallado porque %s", pathBloqueFisico, strerror(errno));
+				return -ENOENT;
 			}
+
+
+
+			int espacioLibreEnBloqueActual = configMetadata->tamanioBloques - (offset - posBloqueArranque * configMetadata->tamanioBloques);
+
+			//Si lo que me queda por escribir (sizeAux) es mayor al espacio libre en el bloque
+			if(sizeAux >= espacioLibreEnBloqueActual){
+				log_info(logs, "lo que resta por escribir excede al bloque actual");
+				memcpy(bloqueFisicoMapped+byteComienzoEscritura, buffer+((int)size-sizeAux), configMetadata->tamanioBloques - byteComienzoEscritura);
+				log_info(logs, "Size aux vale %d y byte comienzo vale %d", sizeAux, byteComienzoEscritura);
+				actualizarBytesEscritos(&bytesEscritos, configMetadata->tamanioBloques-byteComienzoEscritura);
+			}else{
+				log_info(logs, "lo que resta por escribir entra en el bloque actual");
+				memcpy(bloqueFisicoMapped+byteComienzoEscritura, buffer+((int)size-sizeAux), sizeAux);
+				log_info(logs, "Size aux vale %d y byte comienzo vale %d", sizeAux, byteComienzoEscritura);
+				actualizarBytesEscritos(&bytesEscritos, sizeAux);
+
+			}
+
+			/*
+			//Ocupo bloque si se pudo mapear archivo correctamente
+			if(cantAsignaciones >0 || (offset>0 && (offset % configMetadata->tamanioBloques) == 0)){
+				ocuparBloqueLibre(posPrimerBloqueLibre);
+				list_add(archivo->bloques, posPrimerBloqueLibre);
+			}
+			*/
 			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
 
-			log_info(logs, "Se han escrito %d bytes\n",bytesEscritos);
+			log_info(logs, "Se han escrito %d bytes en el bloque %d\n",bytesEscritos, posBloqueArranque);
 			byteComienzoEscritura=0;
-			posBloqueArranque+=1;
+			posBloqueArranque = posBloqueArranque + 1;
+			cantAsignaciones++;
 
-			fclose(bloqueFisico);
+
+			munmap(bloqueFisicoMapped, configMetadata->tamanioBloques);
+			log_info(logs, "hizo el munmap");
+			close(bloqueFisico);
+			log_info(logs, "cerro archivo fisico");
 		}
+
+		if((offset+size)>archivo->tamanio)
+			archivo->tamanio=offset+size;
+
+		metadataFS_write(path, archivo);
 
 		list_destroy(archivo->bloques);
 		free(archivo);
 		return 1;
-	} else {
-		log_info(logs, "No se encontro el archivo, por ende no se le puede guardar datos");
+	}
+	else{
+		//No existe el archivo
+		printf("No se encontro el archivo, por ende no se le puede guardar datos. \n");
 		return -ENOENT;
 	}
 
