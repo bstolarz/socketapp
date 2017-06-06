@@ -94,6 +94,8 @@ int main(int argc, char* argv[]) {
 			console_finish_process();
 		}else if(strcmp(comando, "6") == 0){
 			console_stop_planning();
+		}else if(strcmp(comando, "7") == 0){
+			console_start_planning();
 		}else{
 			printf("[SISTEMA] - 1) Listado de procesos del sistema.\n");
 			printf("[SISTEMA] - 2) Obtener estadistica de proceso.\n");
@@ -101,6 +103,7 @@ int main(int argc, char* argv[]) {
 			printf("[SISTEMA] - 4) Modificar grado de multiprogramacion.\n");
 			printf("[SISTEMA] - 5) Finalizar proceso.\n");
 			printf("[SISTEMA] - 6) Detener planificacion.\n");
+			printf("[SISTEMA] - 7) Iniciar planificacion.\n");
 
 		}
 	}

@@ -14,5 +14,6 @@ void console_get_global_file_table();
 void console_multiprogram_degree();
 void console_finish_process();
 void console_stop_planning();
+void console_start_planning();
 
 #endif /* FUNCTIONS_CONSOLE_H_ */
