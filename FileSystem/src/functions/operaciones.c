@@ -144,6 +144,7 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 			byteComienzoLectura=0;
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
+			close(fileDesBF);
 		}
 
 		return iSize;
