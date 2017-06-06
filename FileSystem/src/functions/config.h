@@ -16,5 +16,6 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo);
 void metadataFS_print();
 void metadataFS_read(char* path);
 void metadataFS_free();
+void metadataFS_write();
 
 #endif /* FUNCTIONS_CONFIG_H_ */

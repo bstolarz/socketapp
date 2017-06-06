@@ -37,7 +37,7 @@ int main(int arg, char* argv[]) {
 	metadataFS_read("./mnt/SADICA_FS/Metadata/Metadata.bin");
 	metadataFS_print();
 
-	//initSadica();
+	initSadica();
 
 	soloParaProbarLasOperaciones();
 /*
@@ -160,27 +160,28 @@ void soloParaProbarLasOperaciones(){
 			}
 		}else if(strcmp(comando, "GUARDARDATOS") == 0){
 
+				//Em file system:
+				//1ro: Validar que exista
+				//2do: Validar que el size no exceda el total del disco
+				//3ero: Validar que el offset no exceda el tamanio total del disco
+				//4to: Validar que offset+size no exceda el tamanio total del disco
 				printf("Ingrese el offset:\n");
 				int offset;
 				scanf("%d", &offset);
 
-				/*
+
 				printf("Ingrese el size:\n");
 				int size;
 				scanf("%d", &size);
-				*/
 
-				/*
-				printf("Ingrese el contenido a escribir:\n");
-
-				size_t cantContenido = 1;
-				size_t cantContenidoLeido = getline(&contenido, &cantContenido, stdin);
-				contenido[cantContenidoLeido-1]='\0';
-			*/
 				char * contenido = string_new();
-				string_append(&contenido, "CONTENIDO");
-				//log_info(logs, "el size es de %d bytes", sizeof(contenido));
-				resultado = guardarDatos(path, offset, 9, contenido);
+				char * str = string_repeat('a', size);
+				string_append(&contenido, str);
+
+				log_info(logs, "%s", contenido);
+
+
+				resultado = guardarDatos(path, offset, size, contenido);
 
 
 				if(resultado == 1){

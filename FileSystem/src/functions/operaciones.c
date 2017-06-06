@@ -156,23 +156,36 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
+
+
 	if (validar(path) == 1) {
+
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
 
 		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
 
 		log_info(logs, "elements count: %i \n", archivo->bloques->elements_count);
-		log_info(logs, "size: %i", size);
+		log_info(logs, "size: %i \n", size);
+		log_info(logs, "offset: %i \n", offset);
 
-		log_info(logs, "ceil(5/64)=%d", ceil(5/64));
-		double cantBloquesLibresAux = abs((float)size-(archivo->bloques->elements_count*configMetadata->tamanioBloques-offset))
-																/(float)configMetadata->tamanioBloques;
-		double cantBloquesLibresNuevosQueNecesito = ceil(cantBloquesLibresAux);
+		double cantBloquesLibresNuevos;
 
-		log_info(logs, "Necesito %f bloques libres", cantBloquesLibresNuevosQueNecesito);
-		if(cantBloquesLibresNuevosQueNecesito > 0){
-			if(!hayNBloquesLibres(cantBloquesLibresNuevosQueNecesito)){
+		log_info(logs, "cantBloquesArchivo: %d", archivo->bloques->elements_count);
+
+		if(offset+size > archivo->bloques->elements_count*configMetadata->tamanioBloques){
+			double cantBloquesLibresAux = (float)(offset+size-(archivo->bloques->elements_count*configMetadata->tamanioBloques))
+																			/(float)configMetadata->tamanioBloques;
+			cantBloquesLibresNuevos = ceil(cantBloquesLibresAux);
+
+
+		}else{
+			cantBloquesLibresNuevos = 0;
+		}
+
+		log_info(logs, "Necesito %f bloques libres", cantBloquesLibresNuevos);
+		if(cantBloquesLibresNuevos > 0){
+			if(!hayNBloquesLibres(cantBloquesLibresNuevos)){
 				log_info(logs, "No hay espacio para guardar los cambios");
 				return 0; // No hay espacio para guardar la nueva data
 			}
@@ -194,20 +207,17 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		int posPrimerBloqueLibre;
 		int cantAsignaciones = 0;
 		int i;
-		bool arrancaEnNuevoBloque;
 
 
 		log_info(logs, "Este archivo tiene asignados %i bloques", archivo->bloques->elements_count);
 
-		//Busco bloque libre solo si ya de primera ya necesita reservar nuevo bloque de datos
-		if(offset > archivo->tamanio){
-			//reservo bloques nuevos
-			for(i=0;i<(int)cantBloquesLibresNuevosQueNecesito;i++){
-				posPrimerBloqueLibre = encontrarUnBloqueLibre();
-				list_add(archivo->bloques, posPrimerBloqueLibre);
-			}
 
+		for(i=0;i<(int)cantBloquesLibresNuevos;i++){
+			posPrimerBloqueLibre = encontrarUnBloqueLibre();
+			list_add(archivo->bloques, (int)posPrimerBloqueLibre);
+			ocuparBloqueLibre(posPrimerBloqueLibre);
 		}
+
 
 		while (sizeAux > 0) {
 
@@ -271,7 +281,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		if((offset+size)>archivo->tamanio)
 			archivo->tamanio=offset+size;
 
-		write_metadataFS(path, archivo);
+		metadataFS_write(path, archivo);
 
 		list_destroy(archivo->bloques);
 		free(archivo);
