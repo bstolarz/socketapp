@@ -157,12 +157,6 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
-	//Valido que exista el archivo
-	if (validar(path) != 1) {
-		printf("No se encontro el archivo, por ende no se le puede guardar datos. \n");
-		return -ENOENT;
-	}
-
 	if(offset+size >= configMetadata->cantidadBloques*configMetadata->tamanioBloques){
 		printf("Lo que desea escribir excede el tamanio del disco. No se pueden guardar los datos. \n");
 		return -ENOENT;
@@ -302,6 +296,11 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		list_destroy(archivo->bloques);
 		free(archivo);
 		return 1;
+	}
+	else{
+		//No existe el archivo
+		printf("No se encontro el archivo, por ende no se le puede guardar datos. \n");
+		return -ENOENT;
 	}
 
 
