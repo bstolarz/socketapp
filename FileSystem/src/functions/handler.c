@@ -23,7 +23,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	int resultado;
 
 	socket_recv_string(serverSocket, &path);
-	log_info(logs, "Recibi el path: %s", path);
+	log_info(logs, "Recibi el path de kernel: %s", path);
 	path = armarPathArchivo(path);
 
 	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
