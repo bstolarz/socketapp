@@ -22,7 +22,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	int size;
 	int resultado;
 
-	socket_recv_string(serverSocket, &path);
+	socket_recv_string(socketKernel, &path);
 	log_info(logs, "Recibi el path de kernel: %s", path);
 	path = armarPathArchivo(path);
 
@@ -36,8 +36,8 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		resultado = borrar(path);
 
 	} else if (strcmp(unMensajeDeOperacion,"OBTENERDATOS") == 0) {
-		socket_recv_int(serverSocket, &offset);
-		socket_recv_int(serverSocket, &size);
+		socket_recv_int(socketKernel, &offset);
+		socket_recv_int(socketKernel, &size);
 		log_info(logs, "Recibi el offset: %d", offset);
 		log_info(logs, "Recibi el size: %d", size);
 
@@ -47,9 +47,9 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 	} else if (strcmp(unMensajeDeOperacion,"GUARDARDATOS") == 0) {
 		void* buffer;
 
-		socket_recv_int(serverSocket, &offset);
-		socket_recv_int(serverSocket, &size);
-		socket_recv(serverSocket, &buffer, 1);
+		socket_recv_int(socketKernel, &offset);
+		socket_recv_int(socketKernel, &size);
+		socket_recv(socketKernel, &buffer, 1);
 		log_info(logs, "Recibi el offset: %d", offset);
 		log_info(logs, "Recibi el size: %d", size);
 		log_info(logs, "Recibi el buffer: %s", buffer);
@@ -57,7 +57,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		resultado = guardarDatos(path, offset, size, buffer);
 	}
 
-	socket_send_int(serverSocket, resultado);
+	socket_send_int(socketKernel, resultado);
 
 	free(path);
 }

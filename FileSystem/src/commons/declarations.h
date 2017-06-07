@@ -16,5 +16,6 @@ t_metadata* configMetadata;
 int serverSocket;
 t_bitarray* bitarray;
 t_log* logs;
+int socketKernel;
 
 #endif /* COMMONS_DECLARATIONS_H_ */

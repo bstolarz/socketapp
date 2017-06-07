@@ -41,7 +41,7 @@ int main(int arg, char* argv[]) {
 
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
-	int socketKernel;
+
 	while (1) {
 		socketKernel = socket_server_accept_connection(serverSocket);
 
@@ -58,7 +58,22 @@ int main(int arg, char* argv[]) {
 		if (strcmp(identificador, "KERNEL") == 0) {
 			printf("Se conecto Kernel. Esperando mensajes.\n");
 			free(identificador);
-			break;
+
+			char* mensajeDeOperacion = string_new();
+			while (1) {
+				if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
+					printf("Se recibio el mensaje del kernel: %s\n", mensajeDeOperacion);
+					log_info(logs, "Se recibio el mensaje de kernel: %s", mensajeDeOperacion);
+					hacerLoQueCorresponda(mensajeDeOperacion);
+				} else {
+					printf("Se desconecto el kernel.\n");
+					log_info(logs, "Se desconecto el kernel.");
+					close(socketKernel);
+					break;
+				}
+			}
+
+			free(mensajeDeOperacion);
 		} else {
 			//Cierro el socket y vuelvo al while (vuelvo a abrir el socket para escuchar)
 			free(identificador);
@@ -67,21 +82,6 @@ int main(int arg, char* argv[]) {
 		}
 	}
 
-	char* mensajeDeOperacion = string_new();
-	while (1) {
-		if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
-			printf("Se recibio el mensaje del kernel: %s\n", mensajeDeOperacion);
-			log_info(logs, "Se recibio el mensaje de kernel: %s", mensajeDeOperacion);
-			hacerLoQueCorresponda(mensajeDeOperacion);
-		} else {
-			printf("Se desconecto el kernel.\n");
-			log_info(logs, "Se desconecto el kernel.");
-			close(socketKernel);
-			config_free();
-			return EXIT_FAILURE;
-		}
-	}
-	free(mensajeDeOperacion);
 
 	log_destroy(logs);
 	return EXIT_SUCCESS;
