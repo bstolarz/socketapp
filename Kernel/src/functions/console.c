@@ -185,16 +185,23 @@ void console_get_process_stats(){
 }
 
 void console_get_global_file_table(){
-	printf("\n-------------TABLA GLOBAL DE ARCHIVOS-----------\n");
-	printf("Path                                 Open\n");
 	t_list* l=globalFileDescriptors->list;
 	int size=list_size(l);
-	int i;
-	for (i=0;i!=size;i++){
-		t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
-		printf("%s %d\n",globalFD->path,globalFD->open);
+	if (size==0){
+		printf("No hay archivos abiertos\n");
+	}else{
+		printf("\n-------------TABLA GLOBAL DE ARCHIVOS-----------\n");
+		printf("Path                                 Open\n");
+		printf("--------------------------------------------------\n");
+
+		int i;
+		for (i=0;i!=size;i++){
+			t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
+			printf("%s %d\n",globalFD->path,globalFD->open);
+			printf("..............................................\n");
+		}
+		printf("---------------------------------------------------\n");
 	}
-	printf("---------------------------------------------------\n");
 }
 
 void console_multiprogram_degree(){
