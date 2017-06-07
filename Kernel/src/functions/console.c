@@ -56,6 +56,7 @@ void console_process_list(){
 	printf("Lista de procesos finalizados\n");
 	list_iterate(queueFinishedPrograms->list, (void*)_printProccessFinishList);
 	pthread_mutex_unlock(&queueFinishedPrograms->mutex);
+	printf("\n-----------------FIN DE LISTAR PROCESOS------------\n\n");
 }
 t_program* seek_program(t_list* l,int pid){
 	int i,t;
@@ -149,9 +150,12 @@ void console_get_process_stats(){
 	printf("[SISTEMA] - Ingrese el PID del proceso: ");
 	scanf("%d",&pidProceso);
 	while(check_pid_is_incorrect(pidProceso)==0){
-		printf("El PID ingresado no existe. Vuelva a intentarlo\n");
+		printf("El PID ingresado no existe. Vuelva a intentarlo. Si desea volver al menu de comandos ingrese 0\n");
 		printf("[SISTEMA] - Ingrese el PID del proceso: ");
 		scanf("%d",&pidProceso);
+		if (pidProceso==0){
+			return;
+		}
 	}
 	printf("[SISTEMA] - Ingrese el numero de comando:\n");
 	printf("[SISTEMA] - 1: Cantidad de rafagas.\n");
