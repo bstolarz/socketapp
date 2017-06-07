@@ -57,9 +57,127 @@ void console_process_list(){
 	list_iterate(queueFinishedPrograms->list, (void*)_printProccessFinishList);
 	pthread_mutex_unlock(&queueFinishedPrograms->mutex);
 }
+t_program* seek_program(t_list* l,int pid){
+	int i,t;
+	t_program* program=NULL;
+		t=list_size(l);
+		for(i=0;i!=t;i++){
+			t_program* p=(t_program*)list_get(l,i);
+			if(p->pcb->pid==pid){
+				program=p;
+			}
+		}
+		return program;
+}
+t_program* get_program(int pid){
+	t_program* prog;
+	prog=seek_program(queueBlockedPrograms->list,pid);
+	if (prog==NULL){
+		prog=seek_program(queueFinishedPrograms->list,pid);
+		if(prog==NULL){
+			return seek_program(queueReadyPrograms->list,pid);
+		}else{
+			return prog;
+		}
+	}else{
+		return prog;
+	}
+}
+int check_pid_is_incorrect(int pid){
+	int tam=list_size(queueBlockedPrograms->list);
+	int i;
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueBlockedPrograms->list,i);
+		if (p->pcb->pid==pid){
+			return 1;
+		}
+	}
+	tam=list_size(queueFinishedPrograms->list);
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueFinishedPrograms->list,i);
+		if (p->pcb->pid==pid){
+			return 1;
+		}
+	}
+	tam=list_size(queueNewPrograms->list);
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueNewPrograms->list,i);
+		if (p->pcb->pid==pid){
+			return 1;
+		}
+	}
+	tam=list_size(queueReadyPrograms->list);
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueReadyPrograms->list,i);
+		if (p->pcb->pid==pid){
+			return 1;
+		}
+	}
+	return 0;
+}
 
+void print_rafagas_del_proceso(int p){
+	t_program* program=get_program(p);
+	printf("El programa con PID [%d] ha ejecutado [%d rafagas]\n",program->pcb->pid,program->stats.rafagas);
+}
+void print_syscalls(int p){
+	t_program* program=get_program(p);
+	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
+}
+void print_table(char* _, t_fd* fd){
+	printf("FD    Flags   Nombre del Archivo\n");
+	printf("%d     %s    %s\n",fd->value,fd->permissions, fd->global->path);
+	printf("..................................\n");
+}
+void print_file_process_table(int p){
+	t_program* program=get_program(p);
+	if(dictionary_is_empty(program->pcb->processFileTable)){
+		printf("El programa con PID [%d] no ha abierto ningun archivo\n",program->pcb->pid);
+	}else{
+		printf("---------------------\n");
+		dictionary_iterator(program->pcb->processFileTable,(void*) print_table);
+		printf("---------------------\n");
+	}
+}
+void print_head_pages_used(int p){
+	t_program* program=get_program(p);
+	printf("Proceso con PID [%d] aloco %d paginas del heap\n",program->pcb->pid,program->stats.pagesAlloc);
+	printf("Proceso con PID [%d] libero %d paginas del heap\n",program->pcb->pid,program->stats.pagesFree);
+}
 void console_get_process_stats(){
-	//TODO
+	int pidProceso;
+	printf("[SISTEMA] - Ingrese el PID del proceso: ");
+	scanf("%d",&pidProceso);
+	while(check_pid_is_incorrect(pidProceso)==0){
+		printf("El PID ingresado no existe. Vuelva a intentarlo\n");
+		printf("[SISTEMA] - Ingrese el PID del proceso: ");
+		scanf("%d",&pidProceso);
+	}
+	printf("[SISTEMA] - Ingrese el numero de comando:\n");
+	printf("[SISTEMA] - 1: Cantidad de rafagas.\n");
+	printf("[SISTEMA] - 2: Operaciones privilegiadas ejecutadas.\n");
+	printf("[SISTEMA] - 3: Tabla de archivos abiertos por el proceso.\n");
+	printf("[SISTEMA] - 4: Cantidad de paginas de heap utilizadas.\n");
+
+	int opcion;
+	scanf("%d",&opcion);
+	switch(opcion){
+	case 1:
+		print_rafagas_del_proceso(pidProceso);
+		break;
+	case 2:
+		print_syscalls(pidProceso);
+		break;
+	case 3:
+		print_file_process_table(pidProceso);
+		break;
+	case 4:
+		print_head_pages_used(pidProceso);
+		break;
+	default:
+		printf("La operacion elegida no existe.\n");
+		break;
+	}
 }
 
 void console_get_global_file_table(){
