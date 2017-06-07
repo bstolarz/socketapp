@@ -5,6 +5,7 @@
 
 // 0 si pudo allocar memoria, -1 si no pudo 
 int ram_init();
+void ram_destroy();
 
 // Operaciones de Memoria (pag 26)
 int ram_program_init(int PID, size_t pageCount);

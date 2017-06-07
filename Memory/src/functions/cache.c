@@ -54,6 +54,12 @@ int cache_init()
 	return 0;
 }
 
+void cache_destroy()
+{
+	list_destroy_and_destroy_elements(proccessesCacheEntries, proccess_entries_destroy);
+	free(cacheContent);
+	free(cache);
+}
 
 void cache_access_lock()
 {
@@ -266,11 +272,11 @@ void cache_program_end(int PID)
 
 	list_remove_and_destroy_by_condition(proccessesCacheEntries, hasPID, proccess_entries_destroy);
 
-	assert(cacheUseCount >= 0);
-
 	log_info(logMemory, "[cache (PID = %d)] program end] cacheUseCount = %d\n", PID, cacheUseCount);
 
 	pthread_mutex_unlock(&replaceLock);
+
+	assert(cacheUseCount >= 0);
 }
 
 void cache_flush()
@@ -288,6 +294,7 @@ void cache_flush()
 	}
 
 	list_destroy_and_destroy_elements(proccessesCacheEntries, proccess_entries_destroy);
+	proccessesCacheEntries = list_create();
 	cacheUseCount = 0;
 
 	pthread_mutex_unlock(&replaceLock);

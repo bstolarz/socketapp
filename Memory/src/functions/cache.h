@@ -15,4 +15,6 @@ void cache_access_unlock();
 
 void cache_flush();
 
+void cache_destroy();
+
 #endif /* FUNCTIONS_CACHE_H_ */

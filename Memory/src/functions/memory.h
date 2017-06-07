@@ -2,6 +2,7 @@
 #define FUNCTIONS_MEMORY_H_
 
 void memory_init();
+void memory_destroy();
 
 // Operaciones de Memoria
 void program_end(int PID);

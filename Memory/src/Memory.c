@@ -40,9 +40,10 @@ int main(int argc, char* argv[]){
 
 	pthread_join(serverThread, NULL);
 
-	config_free();
-	free(pageTable);
 	log_destroy(logMemory);
+	memory_destroy();
+	config_free();
 	
+
 	return EXIT_SUCCESS;
 }
