@@ -205,7 +205,12 @@ void console_get_global_file_table(){
 }
 
 void console_multiprogram_degree(){
-	//TODO
+	printf("El grado de multiprogramacion es: %d\n", configKernel->grado_multiprog);
+	printf("Ingrese el nuevo valor\n");
+	int value;
+	scanf("%d",&value);
+	configKernel->grado_multiprog=value;
+	printf("El nuevo valor del grado de multiprogramacion es: %d\n",value);
 }
 
 void console_finish_process(){
