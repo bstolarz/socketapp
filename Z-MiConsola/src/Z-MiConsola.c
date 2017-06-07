@@ -20,14 +20,5 @@ int main(int argc, char* argv[]) {
 	socket_send_string(serverSocket, "CONSOLA");
 	printf("Le mande mi identificador\n");
 
-	size_t cantidad = 50;
-	while(1){
-		char* mensaje = malloc(sizeof(char)*cantidad);
-		printf("Escribe un mensaje para enviar al filesystem:\n");
-		getline(&mensaje, &cantidad, stdin);
-		socket_send_string(serverSocket, mensaje);
-		free(mensaje);
-	}
-
 	return EXIT_SUCCESS;
 }

@@ -265,6 +265,32 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	pthread_mutex_unlock(&(queueCPUs->mutex));
 }
 
+// desblockear programa blockeado por semaforo sem (pasarlo de block -> ready)
+// (inversa wait)
 void program_unblock(t_semaforo* sem){
-	//TODO
+	bool is_blocked_by_sem(void* elem)
+	{
+		t_program* program = (t_program*) elem;
+
+		return 	program->waiting &&
+				(strcmp(program->waitingReason, sem->nombre) == 0);
+	}
+
+	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	void* blockedElem = list_remove_by_condition(queueBlockedPrograms->list, is_blocked_by_sem);
+	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+
+	if (blockedElem != NULL)
+	{
+		t_program* blockedProgram = (t_program*) blockedElem;
+		blockedProgram->waiting = 0;
+		free(blockedProgram->waitingReason);
+		blockedProgram->waitingReason = NULL;
+
+		pthread_mutex_lock(&queueReadyPrograms->mutex);
+		list_add(queueReadyPrograms->list, blockedElem);
+		pthread_mutex_unlock(&queueReadyPrograms->mutex);
+
+		// llamar algun planificador?
+	}
 }

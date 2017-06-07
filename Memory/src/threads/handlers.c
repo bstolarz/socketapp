@@ -147,7 +147,7 @@ int handle_read(int clientSocket)
 	void* data = memory_read(PID, page, offset, size);
     
     //Envio la respuesta
-    int nBytes = socket_send(clientSocket, data, size);
+    int nBytes = socket_send(clientSocket, data, data == NULL ? 0 : size);
     if (nBytes == -1){
     	log_error(logMemory, "[read] request: problema en send (PID %d, page %d, offset %d, size %d, socket %d)", PID, page, offset, size, clientSocket);
     	return -1;

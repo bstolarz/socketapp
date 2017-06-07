@@ -11,6 +11,7 @@
 #include "../functions/ram.h"
 #include "../functions/cache.h"
 
+_Bool done = false;
 
 void set_response_delay(int newResponseDelay)
 {
@@ -158,14 +159,17 @@ char* stringify_frames_content(_Bool (*framePredicate)(t_pageTableEntry*), frame
 	{
 		t_pageTableEntry* pageEntry = pageTable + i;
 
-		// TODO: lock?
 		if (framePredicate(pageEntry))
 		{
+			pthread_spin_lock(&pageEntry->lock);
+
 			string_append_with_format(&contents, "frame: %zd, PID: %d, page: %d\n", i, pageEntry->PID, pageEntry->page);
 			char* frameStr = frameStringifier(get_frame(i));
 			string_append(&contents, frameStr);
 			free(frameStr);
 			string_append(&contents, "\n");
+
+			pthread_spin_unlock(&pageEntry->lock);
 		}
 	}
 
@@ -260,16 +264,18 @@ void show_options()
 	printf("Proceso Memoria\n");
 	printf("\n");
 
-	printf("- [ret ms] Setear retardo memoria en milisegs(?)\n"); // done
+	printf("- [ret ms] Setear retardo memoria en milisegs(?)\n");
 	printf("\n");
-	printf("- [dump cache] Muestra qué hay en la memoria caché\n"); // TODO
+	printf("- [dump cache] Muestra qué hay en la memoria caché\n");
 	printf("- [dump structs] Muestra la Tabla de páginas y listado de procesos activos\n"); // semi done (ver si hay que locker) (testear)
 	printf("- [dump cont (PID|*) type] Datos almacenados en memoria de todos los procesos o de un proceso en particular\n");
 	printf("\n");
-	printf("- [flu] borra lo que está cacheado\n"); // done
+	printf("- [flu] borra lo que está cacheado\n");
 	printf("\n");
-	printf("- [size mem] Total frames, cant ocupados y cant libres\n"); // done
-	printf("- [size pid] Muestra el tamano de un proceso\n"); // done
+	printf("- [size mem] Total frames, cant ocupados y cant libres\n");
+	printf("- [size pid] Muestra el tamano de un proceso\n");
+	printf("\n");
+	printf("- [exit] cierra proceso memoria\n");
 }
 
 typedef _Bool (*console_command_handler)(char** tokens, char**);
@@ -422,6 +428,19 @@ _Bool handle_size(char** tokens, char** info)
 	return false;
 }
 
+_Bool handle_exit(char** tokens, char** info)
+{
+	if (string_starts_with(tokens[0], "exit"))
+	{
+		done = true;
+		*info = string_from_format("Memoria se cierra");
+
+		return true;
+	}
+
+	return false;
+}
+
 char* get_input()
 {
 	size_t inputSize = 128;
@@ -443,7 +462,8 @@ _Bool proccess_command(char** commandTokens, char** resultInfo)
 		&handle_delay,
 		&handle_flush,
 		&handle_dump,
-		&handle_size
+		&handle_size,
+		&handle_exit
 	};
 	int commandCount = sizeof(commandHandlers) / sizeof(console_command_handler);
 	int i;
@@ -461,7 +481,7 @@ _Bool proccess_command(char** commandTokens, char** resultInfo)
 
 void debug_console()
 {
-	while(1)
+	while(!done)
 	{
 		show_options();
 		printf("Ingrese alguno de esos comandos: ");

@@ -14,6 +14,12 @@ void memory_init()
 	cache_init();
 }
 
+void memory_destroy()
+{
+	cache_destroy();
+	ram_destroy();
+}
+
 void program_end(int PID)
 {
 	ram_program_end(PID);

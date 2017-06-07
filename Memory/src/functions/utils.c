@@ -11,5 +11,10 @@
 #include "../commons/declarations.h"
 
 int bytes_to_pages(int byteCount){
-	return (byteCount / configMemory->frameSize) + 1;
+	int fullPages = byteCount / configMemory->frameSize;
+
+	if ((byteCount % configMemory->frameSize) > 0)
+		return fullPages + 1;
+
+	return fullPages;
 }
