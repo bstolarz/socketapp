@@ -57,19 +57,12 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 	log_info("Se leyo el metadata del archivo: %s", path);
 }
 
-void write_metadataFS(char* path, t_metadata_archivo* archivo, int nroBloque){
+void metadataFS_write(char* path, t_metadata_archivo* archivo, int nroBloque){
 
-	log_info(logs, "Entra a write_metadataFS");
+	log_info(logs, "Entra a metadataFS_write");
 	if (!remove(path)){
 
 		log_info(logs, "Entra a Borrar archivo");
-		/*
-		int fd = open(path, O_CREAT);
-		char * strMetadata = string_new();
-
-		string_append(&strMetadata, "TAMANIO=250\n");
-		string_append(&strMetadata, "Metadata/Bitmap.bin");
-		*/
 		FILE *fp = fopen(path, "w+");
 		log_info(logs, "creo archivo!!x");
 		char * strToWrite = string_new();

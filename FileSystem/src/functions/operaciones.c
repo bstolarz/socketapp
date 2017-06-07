@@ -144,6 +144,7 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 			byteComienzoLectura=0;
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
+			close(fileDesBF);
 		}
 
 		return iSize;
@@ -156,20 +157,46 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 
 
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
+
+	if(offset+size >= configMetadata->cantidadBloques*configMetadata->tamanioBloques){
+		printf("Lo que desea escribir excede el tamanio del disco. No se pueden guardar los datos. \n");
+		return -ENOENT;
+	}
+
+	if(size == 0){
+		printf("El tamanio a escribir no puede ser cero. \n");
+		return -ENOENT;
+	}
+
+
 	if (validar(path) == 1) {
+
 		t_metadata_archivo* archivo = malloc(sizeof(t_metadata_archivo));
 		read_fileMetadata(path, archivo);
 
 		//Validar antes del while si tengo que reservar bloques y si el bitmap los tiene, si no los tiene entonces no escribo nada
 
 		log_info(logs, "elements count: %i \n", archivo->bloques->elements_count);
-		log_info(logs, "size: %i", size);
-		double cantBloquesLibresNuevosQueNecesito = ceil(abs(size-(archivo->bloques->elements_count*configMetadata->tamanioBloques-offset))
-														/configMetadata->tamanioBloques);
+		log_info(logs, "size: %i \n", size);
+		log_info(logs, "offset: %i \n", offset);
 
-		log_info(logs, "Necesito %f bloques libres", cantBloquesLibresNuevosQueNecesito);
-		if(cantBloquesLibresNuevosQueNecesito > 0){
-			if(!hayNBloquesLibres(cantBloquesLibresNuevosQueNecesito)){
+		double cantBloquesLibresNuevos;
+
+		log_info(logs, "cantBloquesArchivo: %d", archivo->bloques->elements_count);
+
+		if(offset+size > archivo->bloques->elements_count*configMetadata->tamanioBloques){
+			double cantBloquesLibresAux = (float)(offset+size-(archivo->bloques->elements_count*configMetadata->tamanioBloques))
+																			/(float)configMetadata->tamanioBloques;
+			cantBloquesLibresNuevos = ceil(cantBloquesLibresAux);
+
+
+		}else{
+			cantBloquesLibresNuevos = 0;
+		}
+
+		log_info(logs, "Necesito %f bloques libres", cantBloquesLibresNuevos);
+		if(cantBloquesLibresNuevos > 0){
+			if(!hayNBloquesLibres(cantBloquesLibresNuevos)){
 				log_info(logs, "No hay espacio para guardar los cambios");
 				return 0; // No hay espacio para guardar la nueva data
 			}
@@ -180,29 +207,32 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		}
 		log_info(logs, "SI hay espacio para guardar los cambios");
 
-		double posBloqueArranque = floor(offset / configMetadata->tamanioBloques);
+
+		int posBloqueArranque = (int) floor(offset / configMetadata->tamanioBloques);
 
 		int byteComienzoEscritura = offset - posBloqueArranque * configMetadata->tamanioBloques;
 
-		/*LLENAR DE BASURA ARCHIVO SI EL OFFSET ARRANCA EN UN PUNTO ADELANTE AL TAMANIO DEL
-		 * ARCHIVO Y QUEDA UN GAP*/
 
 		int bytesEscritos = 0;
 		int sizeAux = size;
 		int posPrimerBloqueLibre;
 		int cantAsignaciones = 0;
+		int i;
+
 
 		log_info(logs, "Este archivo tiene asignados %i bloques", archivo->bloques->elements_count);
 
 
+		for(i=0;i<(int)cantBloquesLibresNuevos;i++){
+			posPrimerBloqueLibre = encontrarUnBloqueLibre();
+			list_add(archivo->bloques, (int)posPrimerBloqueLibre);
+			ocuparBloqueLibre(posPrimerBloqueLibre);
+		}
+
+
 		while (sizeAux > 0) {
 
-			//Busco bloque libre solo si es 2da iteracion o en la primera iteracion cuando
-			//de primera ya necesita reservar nuevo bloque de datos
-			if(cantAsignaciones >0 || (offset % configMetadata->tamanioBloques) == 0){
-				posPrimerBloqueLibre = encontrarUnBloqueLibre();
-			}
-
+			log_info(logs, "posbloqueArranque=%i", posBloqueArranque);
 			int numeroDeBloqueFisico = (int)list_get(archivo->bloques, posBloqueArranque);
 
 			char* pathBloqueFisico = armarPathBloqueDatos(numeroDeBloqueFisico);
@@ -238,17 +268,19 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
 			}
 
+			/*
 			//Ocupo bloque si se pudo mapear archivo correctamente
 			if(cantAsignaciones >0 || (offset>0 && (offset % configMetadata->tamanioBloques) == 0)){
 				ocuparBloqueLibre(posPrimerBloqueLibre);
 				list_add(archivo->bloques, posPrimerBloqueLibre);
 			}
-
+			*/
 			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
 
 			log_info(logs, "Se han escrito %d bytes en el bloque %d\n",bytesEscritos, posBloqueArranque);
 			byteComienzoEscritura=0;
-			posBloqueArranque+=1;
+			posBloqueArranque = posBloqueArranque + 1;
+			cantAsignaciones++;
 
 
 			munmap(bloqueFisicoMapped, configMetadata->tamanioBloques);
@@ -260,13 +292,15 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		if((offset+size)>archivo->tamanio)
 			archivo->tamanio=offset+size;
 
-		write_metadataFS(path, archivo);
+		metadataFS_write(path, archivo);
 
 		list_destroy(archivo->bloques);
 		free(archivo);
 		return 1;
-	} else {
-		log_info(logs, "No se encontro el archivo, por ende no se le puede guardar datos");
+	}
+	else{
+		//No existe el archivo
+		printf("No se encontro el archivo, por ende no se le puede guardar datos. \n");
 		return -ENOENT;
 	}
 

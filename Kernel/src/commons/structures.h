@@ -76,7 +76,12 @@ typedef struct{
 	size_t maxStackPosition;
 	int exitCode;
 }t_pcb;
-
+typedef struct{
+	int rafagas;
+	int syscallEjecutadas;
+	int pagesAlloc;
+	int pagesFree;
+}t_stat;
 typedef struct{
 	int socket;
 	t_pcb * pcb;
@@ -89,6 +94,7 @@ typedef struct{
 	int incrementalFD;
 	int quantum;
 	t_list* heapPages;
+	t_stat stats;
 }t_program;
 
 typedef struct{
