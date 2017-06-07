@@ -85,7 +85,7 @@ int main(int arg, char* argv[]) {
 			if((interruption=cycle_interruption_handler())<0){
 				continuoEjecucion = 0;
 				pcb->exitCode = interruption;
-
+				print_interruption(pcb->exitCode);
 			}
 
 
