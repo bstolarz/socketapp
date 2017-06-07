@@ -180,9 +180,8 @@ void print_syscalls(int p){
 	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
 }
 void print_table(char* _, t_fd* fd){
-	printf("FD    Flags   Nombre del Archivo\n");
-	printf("%d     %s    %s\n",fd->value,fd->permissions, fd->global->path);
-	printf("..................................\n");
+	printf("FD Flags   Nombre del Archivo\n");
+	printf("%d  %s    %s\n",fd->value,fd->permissions, fd->global->path);
 }
 void print_file_process_table(int p){
 	t_program* program=get_program(p);
@@ -252,7 +251,6 @@ void console_get_global_file_table(){
 		for (i=0;i!=size;i++){
 			t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
 			printf("%s %d\n",globalFD->path,globalFD->open);
-			printf("..............................................\n");
 		}
 		printf("---------------------------------------------------\n");
 	}
