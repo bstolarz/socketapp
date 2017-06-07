@@ -72,17 +72,71 @@ t_program* seek_program(t_list* l,int pid){
 }
 t_program* get_program(int pid){
 	t_program* prog;
+	pthread_mutex_lock(&queueBlockedPrograms->mutex);
 	prog=seek_program(queueBlockedPrograms->list,pid);
+	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 	if (prog==NULL){
+		pthread_mutex_lock(&queueFinishedPrograms->mutex);
 		prog=seek_program(queueFinishedPrograms->list,pid);
+		pthread_mutex_lock(&queueFinishedPrograms->mutex);
 		if(prog==NULL){
-			return seek_program(queueReadyPrograms->list,pid);
+			pthread_mutex_lock(&queueReadyPrograms->mutex);
+			prog= seek_program(queueReadyPrograms->list,pid);
+			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+			return prog;
 		}else{
 			return prog;
 		}
 	}else{
 		return prog;
 	}
+}
+int check_pid_is_running(int pid){
+	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	int tam=list_size(queueBlockedPrograms->list);
+	int i;
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueBlockedPrograms->list,i);
+		if (p->pcb->pid==pid){
+			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+			return 1;
+		}
+	}
+	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+
+	pthread_mutex_lock(&queueNewPrograms->mutex);
+	tam=list_size(queueNewPrograms->list);
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueNewPrograms->list,i);
+		if (p->pcb->pid==pid){
+			pthread_mutex_unlock(&queueNewPrograms->mutex);
+			return 1;
+		}
+	}
+	pthread_mutex_unlock(&queueNewPrograms->mutex);
+
+	pthread_mutex_lock(&queueReadyPrograms->mutex);
+	tam=list_size(queueReadyPrograms->list);
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueReadyPrograms->list,i);
+		if (p->pcb->pid==pid){
+			pthread_mutex_unlock(&queueReadyPrograms->mutex);
+			return 1;
+		}
+	}
+	pthread_mutex_unlock(&queueReadyPrograms->mutex);
+
+	pthread_mutex_lock(&queueCPUs->mutex);
+	tam=list_size(queueCPUs->list);
+	for (i=0;i!=tam;i++){
+		t_program* p=(t_program*)list_get(queueCPUs->list,i);
+		if (p->pcb->pid==pid){
+			pthread_mutex_unlock(&queueCPUs->mutex);
+			return 1;
+		}
+	}
+	pthread_mutex_unlock(&queueCPUs->mutex);
+	return 0;
 }
 int check_pid_is_incorrect(int pid){
 	int tam=list_size(queueBlockedPrograms->list);
@@ -126,9 +180,8 @@ void print_syscalls(int p){
 	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
 }
 void print_table(char* _, t_fd* fd){
-	printf("FD    Flags   Nombre del Archivo\n");
-	printf("%d     %s    %s\n",fd->value,fd->permissions, fd->global->path);
-	printf("..................................\n");
+	printf("FD Flags   Nombre del Archivo\n");
+	printf("%d  %s    %s\n",fd->value,fd->permissions, fd->global->path);
 }
 void print_file_process_table(int p){
 	t_program* program=get_program(p);
@@ -198,7 +251,6 @@ void console_get_global_file_table(){
 		for (i=0;i!=size;i++){
 			t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
 			printf("%s %d\n",globalFD->path,globalFD->open);
-			printf("..............................................\n");
 		}
 		printf("---------------------------------------------------\n");
 	}
@@ -214,13 +266,30 @@ void console_multiprogram_degree(){
 }
 
 void console_finish_process(){
-	//TODO
+	printf("Ingrese el PID del proceso que desea finalizar\n");
+	int p;
+	scanf("%d",&p);
+	if(check_pid_is_running(p)==1){
+		t_program* pr=get_program(p);
+		program_interrup(pr->socket,-7,1);
+	}
+	if(check_pid_is_running(p)==0){
+		printf("El programa ha sido finalizado con exito\n");
+	}else{
+		printf("El programa no pudo ser finalizado\n");
+	}
 }
 
 void console_stop_planning(){
-	//TODO
+	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	pthread_mutex_lock(&queueCPUs->mutex);
+	pthread_mutex_lock(&queueNewPrograms->mutex);
+	pthread_mutex_lock(&queueReadyPrograms->mutex);
 }
 
 void console_start_planning(){
-	//TODO
+	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+		pthread_mutex_unlock(&queueCPUs->mutex);
+		pthread_mutex_unlock(&queueNewPrograms->mutex);
+		pthread_mutex_unlock(&queueReadyPrograms->mutex);
 }

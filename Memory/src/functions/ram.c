@@ -40,6 +40,11 @@ int ram_init()
     return 0;
 }
 
+void ram_destroy()
+{
+	free((void*) pageTable);
+}
+
 int insert_proccess_page(int PID, int page)
 {
 	size_t frameIndex = hash(PID, page) % proccessPageCount;
@@ -106,16 +111,28 @@ int ram_program_init(int PID, size_t pageCount)
 	return ram_get_pages_for_proccess(PID, pageCount, 0);
 }
 
+size_t proccess_page_max(int PID)
+{
+    size_t i;
+    size_t pageMax = 0;
+
+    for (i = 0; i != proccessPageCount; ++i)
+    {
+		if (pageTable[i].PID == PID &&
+			pageTable[i].page > pageMax)
+        {
+			pageMax = pageTable[i].page;
+        }
+    }
+
+    return pageMax;
+}
+
 int ram_get_pages(int PID, size_t pageCount)
 {
-	_Bool isProccessFrame(t_pageTableEntry* entry)
-	{
-		return PID == entry->PID;
-	};
+	size_t pageMax = proccess_page_max(PID);
 
-	size_t proccessCurrentPageCount = frame_count(isProccessFrame);
-
-	return ram_get_pages_for_proccess(PID, pageCount, proccessCurrentPageCount);
+	return ram_get_pages_for_proccess(PID, pageCount, pageMax + 1);
 }
 
 void ram_program_end(int PID)
