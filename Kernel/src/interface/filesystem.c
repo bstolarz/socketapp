@@ -16,9 +16,13 @@
 
 void filesystem_connect(){
 	pthread_mutex_init(&(fileSystemServer.mutex),NULL);
+	fileSystemServer.socket=0;
 	socket_client_create(&fileSystemServer.socket, configKernel->ip_fs, configKernel->puerto_fs);
-
-	socket_send_string(fileSystemServer.socket, "KERNEL");
+	if(socket_send_string(fileSystemServer.socket,"KERNEL")>0){
+		log_info(logKernel, "Conexion a FS exitosa\n");
+	}else{
+		log_info(logKernel, "No se pudo conectar a FS\n");
+	}
 }
 
 int filesystem_read(char* path, size_t offset, int size){
