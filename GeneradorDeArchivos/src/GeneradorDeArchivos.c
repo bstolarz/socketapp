@@ -27,6 +27,7 @@ int main(void) {
 	remove("../../FileSystem/Debug/mnt/SADICA_FS/Metadata/Bitmap.bin");
 	crearBitmapVacio();
 
+	truncarBloquesBitmap();
 
 	free(configMetadata);
 	return EXIT_SUCCESS;

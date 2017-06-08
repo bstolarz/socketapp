@@ -13,10 +13,24 @@
 #include "../commons/declarations.h"
 #include <commons/bitarray.h>
 
+void truncarBloquesBitmap(){
+
+	int i;
+	for (i=0; i<configMetadata->cantidadBloques; i++){
+		char* comando = string_new();
+		char* numero = string_new();
+		sprintf(numero, "%d.bin", i);
+		string_append(&comando, "truncate -s 64 ../../FileSystem/Debug/mnt/SADICA_FS/Bloques/");
+		string_append(&comando, numero);
+
+		system(comando);
+	}
+}
+
 
 void crearBitmapVacio(){
 	int i;
-	char * strPath = "../../FileSystem/Debug/mnt/SAIDCA_FS/Metadata/Bitmap.bin";
+	char * strPath = "../../FileSystem/Debug/mnt/SADICA_FS/Metadata/Bitmap.bin";
 
 	int bitmapFD = open(strPath, O_RDWR, (mode_t)0600);
 

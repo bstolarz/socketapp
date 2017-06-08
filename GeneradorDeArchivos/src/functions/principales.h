@@ -9,5 +9,6 @@
 #define FUNCTIONS_PRINCIPALES_H_
 
 void crearBitmapVacio();
+void truncarBloquesBitmap();
 
 #endif /* FUNCTIONS_PRINCIPALES_H_ */
