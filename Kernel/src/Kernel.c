@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 	programID = 0;
 
 	memory_connect();
-	//filesystem_connect();
+	filesystem_connect();
 
 	FILE_DESCRIPTOR_PERMISSION_READ = "r";
 	FILE_DESCRIPTOR_PERMISSION_WRITE = "w";

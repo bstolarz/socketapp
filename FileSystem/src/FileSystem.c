@@ -17,7 +17,7 @@
 #include "functions/auxiliares.h"
 #include "functions/handler.h"
 
-void soloParaProbarLasOperaciones();
+//void soloParaProbarLasOperaciones();
 
 int main(int arg, char* argv[]) {
 	if (arg != 2) {
@@ -39,12 +39,9 @@ int main(int arg, char* argv[]) {
 
 	initSadica();
 
-	soloParaProbarLasOperaciones();
-/*
-
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
-	int socketKernel;
+
 	while (1) {
 		socketKernel = socket_server_accept_connection(serverSocket);
 
@@ -56,38 +53,41 @@ int main(int arg, char* argv[]) {
 		}
 
 		//Handshake
-		char* identificador = "";
+		char* identificador = string_new();
 		socket_recv_string(socketKernel, &identificador);
 		if (strcmp(identificador, "KERNEL") == 0) {
-			break;
+			printf("Se conecto Kernel. Esperando mensajes.\n");
+			free(identificador);
+
+			char* mensajeDeOperacion = string_new();
+			while (1) {
+				if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
+					printf("Se recibio el mensaje del kernel: %s\n", mensajeDeOperacion);
+					log_info(logs, "Se recibio el mensaje de kernel: %s", mensajeDeOperacion);
+					hacerLoQueCorresponda(mensajeDeOperacion);
+				} else {
+					printf("Se desconecto el kernel.\n");
+					log_info(logs, "Se desconecto el kernel.");
+					close(socketKernel);
+					break;
+				}
+			}
+
+			free(mensajeDeOperacion);
 		} else {
 			//Cierro el socket y vuelvo al while (vuelvo a abrir el socket para escuchar)
-
+			free(identificador);
 			printf("Se conecto alguien que no es kernel. Te equivocaste de barrio papu!\n");
 			close(socketKernel);
 		}
-		break;
 	}
 
-	char* mensajeDeOperacion = "";
-	while (1) {
-		if (socket_recv_string(socketKernel, &mensajeDeOperacion) > 0) {
-			log_info(logs, "Se recibio el mensaje de kernel: %s", mensajeDeOperacion);
-			hacerLoQueCorresponda(mensajeDeOperacion);
-		} else {
-			log_info(logs, "Se desconecto el kernel.");
-			close(socketKernel);
-			config_free();
-			return EXIT_FAILURE;
-		}
-	}
 
-	unmountSadica();*/
 	log_destroy(logs);
 	return EXIT_SUCCESS;
 }
 
-void soloParaProbarLasOperaciones(){
+/*void soloParaProbarLasOperaciones(){
 	int resultado = -1;
 	while(1){
 		size_t cantidad = 10;
@@ -197,7 +197,4 @@ void soloParaProbarLasOperaciones(){
 		free(path);
 		free(comando);
 
-	}
-
-
-}
+	}*/
