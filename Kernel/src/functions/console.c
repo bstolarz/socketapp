@@ -61,15 +61,45 @@ void console_process_list(){
 t_program* seek_program(t_list* l,int pid){
 	int i,t;
 	t_program* program=NULL;
-		t=list_size(l);
-		for(i=0;i!=t;i++){
-			t_program* p=(t_program*)list_get(l,i);
-			if(p->pcb->pid==pid){
-				program=p;
-			}
+	t=list_size(l);
+	printf("List size: %d\n", t);
+	for(i=0;i<t;i++){
+		t_program* p=(t_program*)list_get(l,i);
+		if(p->pcb->pid==pid){
+			program=p;
+			printf("Encontre el programa\n");
 		}
-		return program;
+	}
+	return program;
 }
+
+t_program* get_program(int pid){
+
+	bool encontrarPrograma(t_program* program){
+		return program->pcb->pid==pid;
+	}
+
+	t_program* prog = NULL;
+
+	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	prog=list_find(queueBlockedPrograms->list,(void*)encontrarPrograma);
+	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+
+	if(prog == NULL){
+		pthread_mutex_lock(&queueFinishedPrograms->mutex);
+		prog=list_find(queueFinishedPrograms->list,(void*)encontrarPrograma);
+		pthread_mutex_lock(&queueFinishedPrograms->mutex);
+	}
+
+	if(prog == NULL){
+		pthread_mutex_lock(&queueReadyPrograms->mutex);
+		prog=list_find(queueReadyPrograms->list,(void*)encontrarPrograma);
+		pthread_mutex_lock(&queueReadyPrograms->mutex);
+	}
+
+	return prog;
+	}
+/*
 t_program* get_program(int pid){
 	t_program* prog;
 	pthread_mutex_lock(&queueBlockedPrograms->mutex);
@@ -83,15 +113,22 @@ t_program* get_program(int pid){
 			pthread_mutex_lock(&queueReadyPrograms->mutex);
 			prog= seek_program(queueReadyPrograms->list,pid);
 			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
-			return prog;
-		}else{
+			if(prog==NULL){
+				pthread_mutex_lock(&queueCPUs->mutex);
+				//prog= seek_program(queueCPUs->list,pid);
+				pthread_mutex_unlock(&queueCPUs->mutex);
+			}
+		//	return prog;
+
+		}else {
+			printf("Estaba en finish\n");
 			return prog;
 		}
 	}else{
 		return prog;
 	}
 }
-int check_pid_is_running(int pid){
+*/int check_pid_is_running(int pid){
 	pthread_mutex_lock(&queueBlockedPrograms->mutex);
 	int tam=list_size(queueBlockedPrograms->list);
 	int i;
@@ -141,28 +178,28 @@ int check_pid_is_running(int pid){
 int check_pid_is_incorrect(int pid){
 	int tam=list_size(queueBlockedPrograms->list);
 	int i;
-	for (i=0;i!=tam;i++){
+	for (i=0;i<tam;i++){
 		t_program* p=(t_program*)list_get(queueBlockedPrograms->list,i);
 		if (p->pcb->pid==pid){
 			return 1;
 		}
 	}
 	tam=list_size(queueFinishedPrograms->list);
-	for (i=0;i!=tam;i++){
+	for (i=0;i<tam;i++){
 		t_program* p=(t_program*)list_get(queueFinishedPrograms->list,i);
 		if (p->pcb->pid==pid){
 			return 1;
 		}
 	}
 	tam=list_size(queueNewPrograms->list);
-	for (i=0;i!=tam;i++){
+	for (i=0;i<tam;i++){
 		t_program* p=(t_program*)list_get(queueNewPrograms->list,i);
 		if (p->pcb->pid==pid){
 			return 1;
 		}
 	}
 	tam=list_size(queueReadyPrograms->list);
-	for (i=0;i!=tam;i++){
+	for (i=0;i<tam;i++){
 		t_program* p=(t_program*)list_get(queueReadyPrograms->list,i);
 		if (p->pcb->pid==pid){
 			return 1;
@@ -179,18 +216,25 @@ void print_syscalls(int p){
 	t_program* program=get_program(p);
 	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
 }
-void print_table(char* _, t_fd* fd){
+void print_list(t_fd* fd){
 	printf("FD Flags   Nombre del Archivo\n");
 	printf("%d  %s    %s\n",fd->value,fd->permissions, fd->global->path);
 }
+
 void print_file_process_table(int p){
+	printf("#\n");
 	t_program* program=get_program(p);
-	if(dictionary_is_empty(program->pcb->processFileTable)){
-		printf("El programa con PID [%d] no ha abierto ningun archivo\n",program->pcb->pid);
+	if(program!=NULL){
+		printf("Program no vale null\n");
+		if(list_size(program->fileDescriptors)==0){
+			printf("El programa con PID [%d] no ha abierto ningun archivo\n",program->pcb->pid);
+		}else{
+			printf("---------------------\n");
+			list_iterate(program->fileDescriptors,(void*)print_list);
+			printf("---------------------\n");
+		}
 	}else{
-		printf("---------------------\n");
-		dictionary_iterator(program->pcb->processFileTable,(void*) print_table);
-		printf("---------------------\n");
+		printf("Esto se va al carajo!\n");
 	}
 }
 void print_head_pages_used(int p){
@@ -244,7 +288,7 @@ void console_get_global_file_table(){
 		printf("No hay archivos abiertos\n");
 	}else{
 		printf("\n-------------TABLA GLOBAL DE ARCHIVOS-----------\n");
-		printf("Path                                 Open\n");
+		printf("Path            Open\n");
 		printf("--------------------------------------------------\n");
 
 		int i;
