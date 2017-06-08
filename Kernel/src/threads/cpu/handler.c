@@ -255,7 +255,7 @@ void handle_cpu_signal(t_cpu* cpu){
 
 	//Busco la shared variable
 	int _es_el_semaforo(t_semaforo* var){
-		return strcmp(semaforo,var->nombre);
+		return strcmp(semaforo,var->nombre) == 0;
 	}
 	t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
 
