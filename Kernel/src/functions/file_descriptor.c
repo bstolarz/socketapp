@@ -66,7 +66,7 @@ t_global_fd* file_descriptor_global_get_by_path(char* path){
 t_global_fd* file_descriptor_global_create(char* path){
 	t_global_fd* gFD = malloc(sizeof(t_global_fd));
 	gFD->path = string_duplicate(path);
-
+	gFD->open=0;
 	pthread_mutex_lock(&globalFileDescriptors->mutex);
 	list_add(globalFileDescriptors->list,gFD);
 	pthread_mutex_unlock(&globalFileDescriptors->mutex);

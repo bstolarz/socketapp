@@ -104,7 +104,7 @@ void initSadica(){
 	//3. Metadata (tamanio real del archivo en bytes, array con nro bloques en orden
 		// TAMANIO=250  BLOQUES=[40,21,82,3]
 
-	crearArchivos(); /*Por ahora solo creo el Bitmap*/
+	//crearArchivos(); /*Por ahora solo creo el Bitmap*/
 
 	char* pathBitmap = string_new();
 	string_append(&pathBitmap, configFileSystem->punto_montaje);
@@ -120,7 +120,7 @@ void initSadica(){
 	char* bitmapMapped = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapArchive, 0);
 
 	//Crear bit array
-	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
+	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques / 8, MSB_FIRST);
 
 }
 
