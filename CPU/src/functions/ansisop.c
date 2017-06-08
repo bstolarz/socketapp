@@ -31,5 +31,9 @@ void ansisop_init(){
 	ansisop_funciones_kernel->AnSISOP_escribir=AnSISOP_escribir;
 	ansisop_funciones_kernel->AnSISOP_reservar=AnSISOP_alocar;
 	ansisop_funciones_kernel->AnSISOP_liberar=AnSISOP_liberar;
-
+	ansisop_funciones_kernel->AnSISOP_abrir=AnSISOP_abrir;
+	ansisop_funciones_kernel->AnSISOP_cerrar=AnSISOP_cerrar;
+	ansisop_funciones_kernel->AnSISOP_leer=AnSISOP_leer;
+	ansisop_funciones_kernel->AnSISOP_borrar=AnSISOP_borrar;
+	ansisop_funciones_kernel->AnSISOP_moverCursor=AnSISOP_moverCursor;
 }
