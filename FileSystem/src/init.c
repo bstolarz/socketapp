@@ -120,7 +120,7 @@ void initSadica(){
 	char* bitmapMapped = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapArchive, 0);
 
 	//Crear bit array
-	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques-1 /8, MSB_FIRST);
+	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques / 8, MSB_FIRST);
 
 }
 

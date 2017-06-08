@@ -14,7 +14,7 @@
 
 int encontrarUnBloqueLibre(){
 	int posLibre;
-	for (posLibre=0;posLibre<=bitarray_get_max_bit(bitarray);posLibre++){
+	for (posLibre=0;posLibre<bitarray_get_max_bit(bitarray);posLibre++){
 		if (!bitarray_test_bit(bitarray,posLibre)){
 			return posLibre;
 		}

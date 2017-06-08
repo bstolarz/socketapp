@@ -39,6 +39,8 @@ int main(int arg, char* argv[]) {
 
 	initSadica();
 
+	log_info(logs, "get_max_bit() es: %d", bitarray_get_max_bit(bitarray));
+
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
 
