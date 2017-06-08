@@ -24,11 +24,13 @@ int main(void) {
 	configMetadata = malloc(sizeof(t_metadata));
 	metadataFS_read("../../FileSystem/Debug/mnt/SADICA_FS/Metadata/Metadata.bin");
 
-	remove("../../FileSystem/Debug/mnt/SADICA_FS/Metadata/Bitmap.bin");
-	crearBitmapVacio();
+	printf("Inicializando bitmap...\n");
+	inicializarBitmapEnCero();
 
+	printf("Truncando bloques del bitmap...\n");
 	truncarBloquesBitmap();
 
+	printf("Listo!\n");
 	free(configMetadata);
 	return EXIT_SUCCESS;
 }

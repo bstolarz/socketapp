@@ -24,11 +24,14 @@ void truncarBloquesBitmap(){
 		string_append(&comando, numero);
 
 		system(comando);
+
+		free(comando);
+		free(numero);
 	}
 }
 
 
-void crearBitmapVacio(){
+void inicializarBitmapEnCero(){
 	int i;
 	char * strPath = "../../FileSystem/Debug/mnt/SADICA_FS/Metadata/Bitmap.bin";
 
@@ -52,5 +55,4 @@ void crearBitmapVacio(){
 	close(bitmapFD);
 
 	munmap(&bitarray, configMetadata->cantidadBloques-1);
-	free(strPath);
 }
