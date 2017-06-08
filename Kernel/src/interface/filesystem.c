@@ -18,7 +18,7 @@ void filesystem_connect(){
 	pthread_mutex_init(&(fileSystemServer.mutex),NULL);
 	socket_client_create(&fileSystemServer.socket, configKernel->ip_fs, configKernel->puerto_fs);
 
-	socket_send_string(fileSystemServer.socket, "Kernel");
+	socket_send_string(fileSystemServer.socket, "KERNEL");
 }
 
 int filesystem_read(char* path, size_t offset, int size){
