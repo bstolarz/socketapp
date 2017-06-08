@@ -51,7 +51,7 @@ char * cycle_fetch(t_intructions* currentInstruction){
 
 	if (instructionStr == NULL){
 		log_error(logCPU, "[fetch instruccion desde memoria] memoria no me mando datos para instruccion page: %d / offset: %d / size : %d", codePage, codeOffset, size);
-		pcb->exitCode = -5; //TODO: reemplazar con ERROR_MEMORY o el correspondiente;
+		pcb->exitCode = ERROR_MEMORY;
 		return "";
 	}
 

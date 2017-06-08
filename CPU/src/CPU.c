@@ -51,12 +51,6 @@ int main(int arg, char* argv[]) {
 	//Inicio las estructuras de
 	ansisop_init();
 
-	//Codigo temporal para testear primitivas
-	/*
-	pcb_to_test_primitives();
-	programLoop();
-	return 0;
-	*/
 
 	socket_client_create(&serverKernel, configCPU->ip_kernel, configCPU->puerto_kernel);
 	socket_send_string(serverKernel, "NewCPU");

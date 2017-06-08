@@ -8,6 +8,6 @@
 #ifndef FUNCTIONS_INTERRUPTION_H_
 #define FUNCTIONS_INTERRUPTION_H_
 
-void print_interruption(t_pcb* pcb);
+void print_interruption(int exitCode);
 
 #endif /* FUNCTIONS_INTERRUPTION_H_ */
