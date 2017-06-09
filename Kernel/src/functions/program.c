@@ -33,6 +33,10 @@ void program_process_new(fd_set* master, int socket){
 	program->heapPages = list_create();
 	program->quantum = 0;
 
+	program->stats.syscallEjecutadas=0;
+	program->stats.rafagas=0;
+	program->stats.pagesAlloc=0;
+	program->stats.pagesFree=0;
 	program->pcb = malloc(sizeof(t_pcb));
 
 	program->pcb->pid=program_generate_id();

@@ -71,7 +71,7 @@ void handle_end_burst(t_cpu* cpu){
 	t_program* program = cpu->program;
 	program->pcb = cpu_recv_pcb(cpu);
 	program->quantum = 0;
-
+	program->stats.rafagas++;
 	int termino = 0;
 	if(socket_recv_int(cpu->socket, &termino)<=0){
 		log_warning(logKernel, "[handle_end_burst/termino] CPU desconectado");

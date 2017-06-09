@@ -86,15 +86,17 @@ t_program* get_program(int pid){
 	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
 	if(prog == NULL){
+		printf("No estaba en bloqueados\n");
 		pthread_mutex_lock(&queueFinishedPrograms->mutex);
 		prog=list_find(queueFinishedPrograms->list,(void*)encontrarPrograma);
-		pthread_mutex_lock(&queueFinishedPrograms->mutex);
+		pthread_mutex_unlock(&queueFinishedPrograms->mutex);
 	}
 
 	if(prog == NULL){
+		printf("No estaba en finalizados\n");
 		pthread_mutex_lock(&queueReadyPrograms->mutex);
 		prog=list_find(queueReadyPrograms->list,(void*)encontrarPrograma);
-		pthread_mutex_lock(&queueReadyPrograms->mutex);
+		pthread_mutex_unlock(&queueReadyPrograms->mutex);
 	}
 
 	return prog;
@@ -217,15 +219,14 @@ void print_syscalls(int p){
 	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
 }
 void print_list(t_fd* fd){
-	printf("FD Flags   Nombre del Archivo\n");
-	printf("%d  %s    %s\n",fd->value,fd->permissions, fd->global->path);
+	printf("|FD - Flags -  File name|\n");
+	printf("|%d -   %s -    %s\n",fd->value,fd->permissions, fd->global->path);
 }
 
 void print_file_process_table(int p){
-	printf("#\n");
+
 	t_program* program=get_program(p);
 	if(program!=NULL){
-		printf("Program no vale null\n");
 		if(list_size(program->fileDescriptors)==0){
 			printf("El programa con PID [%d] no ha abierto ningun archivo\n",program->pcb->pid);
 		}else{
@@ -287,16 +288,16 @@ void console_get_global_file_table(){
 	if (size==0){
 		printf("No hay archivos abiertos\n");
 	}else{
-		printf("\n-------------TABLA GLOBAL DE ARCHIVOS-----------\n");
-		printf("Path            Open\n");
-		printf("--------------------------------------------------\n");
+		printf("\n-TABLA GLOBAL DE ARCHIVOS-\n");
+		printf("|Path  -  Open|\n");
+		printf("|-------------|\n");
 
 		int i;
 		for (i=0;i!=size;i++){
 			t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
-			printf("%s %d\n",globalFD->path,globalFD->open);
+			printf("|%s - %d|\n",globalFD->path,globalFD->open);
 		}
-		printf("---------------------------------------------------\n");
+		printf("---------------\n");
 	}
 }
 
