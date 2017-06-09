@@ -6,14 +6,14 @@ end
 function f
 	variables a
 	a=1
-	print a
+	prints n a
 	g
 end
 
 function g
 	variables a
 	a=0
-	print a
+	prints n a
 	f
 end
 
