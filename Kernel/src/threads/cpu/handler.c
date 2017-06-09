@@ -101,6 +101,7 @@ void handle_end_burst(t_cpu* cpu){
 }
 
 void handle_cpu_get_shared_variable(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Obtengo el nombre de la shared variable
 	char* sharedVariable=string_new();
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
@@ -144,6 +145,7 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 }
 
 void handle_cpu_set_shared_variable(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Obtengo el nombre de la shared variable
 	char* sharedVariable=string_new();
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
@@ -190,6 +192,7 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 }
 
 void handle_cpu_wait(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Obtengo el nombre de la shared variable
 	char* semaforo=string_new();
 	if (socket_recv_string(cpu->socket,&semaforo)<=0){
@@ -245,6 +248,7 @@ void handle_cpu_wait(t_cpu* cpu){
 }
 
 void handle_cpu_signal(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Obtengo el nombre de la shared variable
 	char* semaforo=string_new();
 	if (socket_recv_string(cpu->socket,&semaforo)<=0){
@@ -286,6 +290,7 @@ void handle_cpu_signal(t_cpu* cpu){
 }
 
 void handle_cpu_alocar(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Obtengo el tamaño a alocar
 	int size = 0;
 	if (socket_recv_int(cpu->socket,&size)<=0){
@@ -304,7 +309,7 @@ void handle_cpu_alocar(t_cpu* cpu){
 }
 
 void handle_cpu_liberar(t_cpu* cpu){
-
+	cpu->program->stats.syscallEjecutadas++;
 	//Obtengo el tamaño a alocar
 	int posicion = 0;
 	if (socket_recv_int(cpu->socket,&posicion)<=0){
@@ -318,6 +323,7 @@ void handle_cpu_liberar(t_cpu* cpu){
 }
 
 void handle_cpu_abrir(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Recibo el path
 	char* path=string_new();
 	if(socket_recv_string(cpu->socket,&path)<=0){
@@ -384,6 +390,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 }
 
 void handle_cpu_borrar(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 	int nFD;
 	if (socket_recv_int(cpu->socket,&nFD)<=0){
@@ -462,6 +469,7 @@ void handle_cpu_borrar(t_cpu* cpu){
 }
 
 void handle_cpu_cerrar(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 		int nFD;
 		if (socket_recv_int(cpu->socket,&nFD)<=0){
@@ -513,6 +521,8 @@ void handle_cpu_cerrar(t_cpu* cpu){
 }
 
 void handle_cpu_mover_cursor(t_cpu* cpu){
+
+	cpu->program->stats.syscallEjecutadas++;
 	//Recibo el descriptor de archivo
 	int FD;
 	if (socket_recv_int(cpu->socket,&FD)<=0){
@@ -540,6 +550,7 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 
 void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
+	cpu->program->stats.syscallEjecutadas++;
 	int FD = 0;
 	//Recibo de CPU el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
@@ -612,7 +623,7 @@ void handle_cpu_leer(t_cpu* cpu){
 	int d;
 	int dondeGuardarLoLeido;
 	int tamanioALeer;
-
+	cpu->program->stats.syscallEjecutadas++;
 	//Recibo el file descriptor
 	if(socket_recv_int(cpu->socket,&d)>0){
 		log_info(logKernel, "Recibi correctamente el file descriptor: %d",d);
