@@ -11,6 +11,8 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+int ERROR_MEMORY = -5;
+
 void* memory_read(int PID, int page, int offset, int size)
 {
 	/*

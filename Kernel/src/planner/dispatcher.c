@@ -16,9 +16,12 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
-t_program* planificar(){
-	t_program* program = NULL;
+#include "ltp.h"
 
+t_program* planificar(){
+	planificador_largo_plazo();
+
+	t_program* program = NULL;
 
 	pthread_mutex_lock(&(queueReadyPrograms->mutex));
 	if(list_size(queueReadyPrograms->list)>0){

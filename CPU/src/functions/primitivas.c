@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #include <parser/metadata_program.h>
 #include <parser/metadata_program.h>
 #include "../commons/structures.h"
@@ -35,6 +36,15 @@ bool is_argument(t_nombre_variable identificador_variable)
 
 t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 	printf("AnSISOP_definirVariable [%c]\n",identificador_variable);
+
+	// checkear que haya lugar, si no marcar exit code en error
+	if (pcb->stackPosition >= pcb->maxStackPosition)
+	{
+		printf("stackOverflow\n");
+		pcb->exitCode = ERROR_MEMORY;
+		// seguir ejecutando para que meta en el stack estas vars mas alla del stack (no pasa nada, todavia no va a memoria)
+	}
+
 	// Guardo el offset dond está esta variable/arg
 	int varStackPosition = pcb->stackPosition;
 
@@ -47,8 +57,8 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 		stack_add_var(identificador_variable);
 	}
 
+
 	// Incremento la pila
-	// TODO: check stack overflow?
 	pcb->stackPosition += VAR_SIZE;
 	printf("Finalizo AnSISOP_definirVariable\n");
  	return varStackPosition; // retorno donde empezaba la var que puse en stack*/
@@ -81,7 +91,7 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 
 t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	printf("AnSISOP_dereferenciar [%d]\n",direccion_variable);
-	printf("[dereferenciar]: %d\n", direccion_variable);
+
 	t_position pos = puntero_to_position(direccion_variable);
 
 	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d", direccion_variable, pos.page, pos.off);
@@ -89,6 +99,7 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
+
 	log_debug(logCPU, "El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
 	printf("Finalizo AnSISOP_dereferenciar\n");
 	return *((t_valor_variable*)readResult);
@@ -96,13 +107,27 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	printf("AnSISOP_asignar a [%d] el valor [%d]\n", direccion_variable, valor);
-	printf("[asignar]: %d en la direccion %d\n", valor, direccion_variable);
+
+	// esto previene asignar valores a parametros
+	if (direccion_variable >= pcb->maxStackPosition)
+	{
+		assert(pcb->exitCode == ERROR_MEMORY);
+		printf("AnSISOP_asignar: stackOverflow\n");
+		pcb->exitCode = ERROR_MEMORY;
+		return;
+	}
+
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d", pos.page, pos.off, valor);
 
 	int writeResult = memory_write(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
 
-	if (writeResult == -1)	log_error(logCPU, "[asignar] error al escribir en memoria");
+
+	if (writeResult == -1)
+	{
+		log_error(logCPU, "[asignar] error al escribir en memoria");
+	}
+
 	printf("Finalizo AnSISOP_asignar\n");
 }
 
