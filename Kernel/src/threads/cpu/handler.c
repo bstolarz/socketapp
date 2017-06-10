@@ -69,6 +69,9 @@ void handle_still_burst(t_cpu* cpu){
 
 void handle_end_burst(t_cpu* cpu){
 	t_program* program = cpu->program;
+
+	cpu->program = NULL;
+
 	program->pcb = cpu_recv_pcb(cpu);
 	program->quantum = 0;
 	program->stats.rafagas++;
