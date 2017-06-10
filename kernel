@@ -9,6 +9,6 @@ QUANTUM_SLEEP=500
 ALGORITMO=FIFO
 GRADO_MULTIPROG=1
 SEM_IDS=[SEM1, SEM2, SEM3, b, c, mutexA, mutexB]
-SEM_INIT=[0, 0, 5, 1, 1, 1, 1]
+SEM_INIT=[0, 0, 5, 1, 0, 1, 1]
 SHARED_VARS=[!Global, !UnaVar, !tiempo3,!colas]
 STACK_SIZE=2
