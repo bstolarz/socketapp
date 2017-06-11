@@ -20,45 +20,60 @@
 #include "../commons/declarations.h"
 #include "../threads/program.h"
 
-void command_start(){
-	printf("[SISTEMA] - Ingrese el path al archivo o el accesos directo al mismo:\n");
+char* ruta_programas = "../../programas-ejemplo/";
 
-	size_t cantidad = 200;
-	char* path = malloc(sizeof(char)*cantidad);
-
-	size_t cantLeida = getline(&path, &cantidad, stdin);
-	path[cantLeida-1]='\0';
-
+void program_create(char* path_copy){
 	t_program * program = malloc(sizeof(t_program));
-	program->pathProgram = string_new();
+	program->pathProgram = path_copy;
 	program->pid = 0;
 
-	if(strcmp(path, "facil")==0){
-		string_append(&program->pathProgram, "../../programas-ejemplo/facil.ansisop");
-	}else if(strcmp(path, "for")==0){
-		string_append(&program->pathProgram, "../../programas-ejemplo/for.ansisop");
-	}else if(strcmp(path, "productor")==0){
-		string_append(&program->pathProgram, "../../programas-ejemplo/productor.ansisop");
-	}else if(strcmp(path, "stackoverflow")==0){
-		string_append(&program->pathProgram, "../../programas-ejemplo/stackoverflow.ansisop");
-	}else if(strcmp(path, "completo")==0){
-		string_append(&program->pathProgram, "../../programas-ejemplo/completo.ansisop");
-	}else if(strcmp(path, "consumidor")==0){
-		string_append(&program->pathProgram, "../../programas-ejemplo/consumidor.ansisop");
-	}else{
-		string_append(&program->pathProgram, path);
-	}
-	
 	program->stats = malloc(sizeof(t_statistics));
 	program->stats->stringInicioEjecucion = temporal_get_string_time();
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	program->stats->timestampInicio = tv.tv_sec;
 	program->stats->cantImpresionesPantalla = 0;
-	
-	free(path);
 
 	pthread_create(&(program->thread),NULL,thread_program, (void*)program);
+}
+
+char* input_program_path()
+{
+	printf("[SISTEMA] - Ingrese el path al archivo o el accesos directo al mismo:\n");
+
+	size_t cantidad = 200;
+	char* buffer = malloc(sizeof(char)*cantidad);
+
+	size_t cantLeida = getline(&buffer, &cantidad, stdin);
+	buffer[cantLeida-1]='\0';
+
+	char* programPath = string_new();
+
+	if(strcmp(buffer, "facil")==0){
+		string_append(&programPath, "../../programas-ejemplo/facil.ansisop");
+	}else if(strcmp(buffer, "for")==0){
+		string_append(&programPath, "../../programas-ejemplo/for.ansisop");
+	}else if(strcmp(buffer, "productor")==0){
+		string_append(&programPath, "../../programas-ejemplo/productor.ansisop");
+	}else if(strcmp(buffer, "stackoverflow")==0){
+		string_append(&programPath, "../../programas-ejemplo/stackoverflow.ansisop");
+	}else if(strcmp(buffer, "completo")==0){
+		string_append(&programPath, "../../programas-ejemplo/completo.ansisop");
+	}else if(strcmp(buffer, "consumidor")==0){
+		string_append(&programPath, "../../programas-ejemplo/consumidor.ansisop");
+	}else{
+		string_append(&programPath, buffer);
+	}
+	
+	free(buffer);
+
+	return programPath;
+}
+
+void command_start(){
+	char* path = input_program_path();
+	printf("path = %s\n", path);
+	program_create(path);
 
 	return;
 }
@@ -101,3 +116,13 @@ void command_disconnect(){
 	return;
 }
 
+void command_start_several()
+{
+	int i;
+
+	for (i = 0; i != 5; ++i)
+	{
+		program_create(string_from_format("%sfor%s", ruta_programas, ".ansisop"));
+		sleep(3);
+	}
+}
