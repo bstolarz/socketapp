@@ -13,31 +13,56 @@
 #include "../commons/declarations.h"
 #include <commons/bitarray.h>
 
-void truncarBloquesBitmap(){
+bool ends_with_char(char* unString, char unChar){
+	return unString[string_length(unString)-1] == unChar;
+}
+
+char* concatenarSegundoParametroAlPrimero(char* puntoMontaje, char* otroString){
+	char* pathMetadata = string_new();
+	string_append(&pathMetadata, puntoMontaje);
+
+	if(!ends_with_char(pathMetadata, '/')){
+		string_append(&pathMetadata, "/");
+	}
+
+	string_append(&pathMetadata, otroString);
+	return pathMetadata;
+}
+
+void truncarBloquesBitmap(char* pathCarpetaBloques){
+	char* tamanioBloque = string_new();
+	sprintf(tamanioBloque, "%d ", configMetadata->tamanioBloques);
 
 	int i;
 	for (i=0; i<configMetadata->cantidadBloques; i++){
 		char* comando = string_new();
-		char* numero = string_new();
-		sprintf(numero, "%d.bin", i);
-		string_append(&comando, "truncate -s 64 ../../FileSystem/Debug/mnt/SADICA_FS/Bloques/");
-		string_append(&comando, numero);
+		char* numeroBloque = string_new();
+		sprintf(numeroBloque, "%d.bin", i);
+
+		string_append(&comando, "truncate -s ");
+		string_append(&comando, tamanioBloque);
+		string_append(&comando, pathCarpetaBloques);
+		string_append(&comando, numeroBloque);
+
+		if(access(comando, F_OK)){
+			remove(comando);
+		}
 
 		system(comando);
 
 		free(comando);
-		free(numero);
+		free(numeroBloque);
 	}
+	free(tamanioBloque);
 }
 
 
-void inicializarBitmapEnCero(){
+void inicializarBitmapEnCero(char* pathBitmap){
 	int i;
-	char * strPath = "../../FileSystem/Debug/mnt/SADICA_FS/Metadata/Bitmap.bin";
 
-	int bitmapFD = open(strPath, O_RDWR, (mode_t)0600);
+	int bitmapFD = open(pathBitmap, O_RDWR, (mode_t)0600);
 
-	log_info(logs, "Creo archivo bitarray %s", strPath);
+	log_info(logs, "Creo archivo bitarray %s", pathBitmap);
 	char * bitmap = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapFD, 0);
 
 	if (bitmap == MAP_FAILED) {
