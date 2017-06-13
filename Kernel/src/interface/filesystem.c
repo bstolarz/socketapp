@@ -39,7 +39,7 @@ int filesystem_read(char* path, size_t offset, int size){
 	return 0;
 }
 
-int filesystem_write(char* path, int offset, int size){
+int filesystem_write(char* path, int offset, void* buffer, int size){
 	if(socket_send_string(fileSystemServer.socket,"GUARDARDATOS")>0){
 		log_info(logKernel, "Envio correctamente a FS que quiero escribir el archivo '%s'",path);
 	}else{
@@ -55,15 +55,25 @@ int filesystem_write(char* path, int offset, int size){
 	}else{
 		log_info(logKernel, "Error al enviar a FS el offset: %d", offset);
 	}
-	if(socket_send_int(fileSystemServer.socket,size)>0){
-		log_info(logKernel, "Envio correctamente a FS el tamanio a escribir: %d",size);
+
+	if(socket_send(fileSystemServer.socket, buffer, size)>0){
+		log_info(logKernel, "Envio correctamente a FS el buffer a escribir: %s, %d", buffer, size);
 	}else{
-		log_info(logKernel, "Error al enviar a FS el tamanio a escribir: %d", size);
+		log_info(logKernel, "Error al enviar a FS el buffer a escribir: %s, %d", buffer, size);
 	}
 
-	return 0;
+	int respuestaFromFS;
+
+	if (socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0) {
+		return respuestaFromFS;
+	}
+	else {
+		log_error(logKernel, "Error recibiendo respuesta del FS al escribir archivo");
+		return -1;
+	}
 }
 
+// TODO: no se esta usando
 int filesystem_close(){
 	if(socket_send_string(fileSystemServer.socket,"CERRAR")>0){
 		log_info(logKernel, "Envio correctamente a FS que quiero borrar");

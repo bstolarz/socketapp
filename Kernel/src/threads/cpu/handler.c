@@ -562,7 +562,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 	}
 
 	//Recibo de CPU la informacion con su tamanio
-	char* buffer = string_new();
+	char* buffer = string_new(); // es necesario crear este str?
 	int nbytes=0;
 	if ((nbytes = socket_recv(cpu->socket, (void**)&buffer, 1))<=0){
 		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
@@ -596,17 +596,15 @@ void handle_cpu_escribir(t_cpu* cpu){
 			//Informo a FS que quiero escribir
 			t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
 			char* path=string_duplicate(filedescriptor->global->path);
-			filesystem_write(path, filedescriptor->cursor, nbytes);
-			int respuestaFromFS;
-			if(socket_recv_int(fileSystemServer.socket,&respuestaFromFS)>0){
-				if(respuestaFromFS>0){
-					log_info(logKernel, "Se pudo escribir con exito");
-				}else{
-					log_info(logKernel, "Error al escribir en FS");
-				}
+
+			int respuestaFromFS = filesystem_write(path, filedescriptor->cursor, buffer, nbytes);
+
+			if(respuestaFromFS>0){
+				log_info(logKernel, "Se pudo escribir con exito");
 			}else{
-				log_info(logKernel, "Error recibiendo respuesta del FS al escribir archivo");
+				log_info(logKernel, "Error al escribir en FS");
 			}
+
 			free(path);
 		}else{
 			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
