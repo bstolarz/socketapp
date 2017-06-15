@@ -20,7 +20,17 @@
 #include "../commons/declarations.h"
 #include "../threads/program.h"
 
-char* ruta_programas = "../../programas-ejemplo/";
+const char* ruta_programas = "../../programas-ejemplo/";
+const char* programNames[] = {
+	"facil",
+	"for",
+	"productor",
+	"stackoverflow",
+	"completo",
+	"fs",
+	"testfuncall"
+};
+size_t programsCount = sizeof(programNames) / sizeof(char*);
 
 void program_create(char* path_copy){
 	t_program * program = malloc(sizeof(t_program));
@@ -47,23 +57,21 @@ char* input_program_path()
 	size_t cantLeida = getline(&buffer, &cantidad, stdin);
 	buffer[cantLeida-1]='\0';
 
-	char* programPath = string_new();
+	char* programPath = NULL;
 
-	if(strcmp(buffer, "facil")==0){
-		string_append(&programPath, "../../programas-ejemplo/facil.ansisop");
-	}else if(strcmp(buffer, "for")==0){
-		string_append(&programPath, "../../programas-ejemplo/for.ansisop");
-	}else if(strcmp(buffer, "productor")==0){
-		string_append(&programPath, "../../programas-ejemplo/productor.ansisop");
-	}else if(strcmp(buffer, "stackoverflow")==0){
-		string_append(&programPath, "../../programas-ejemplo/stackoverflow.ansisop");
-	}else if(strcmp(buffer, "completo")==0){
-		string_append(&programPath, "../../programas-ejemplo/completo.ansisop");
-	}else if(strcmp(buffer, "consumidor")==0){
-		string_append(&programPath, "../../programas-ejemplo/consumidor.ansisop");
-	}else{
-		string_append(&programPath, buffer);
+	size_t i;
+
+	for (i = 0; i != programsCount; ++i)
+	{
+		if (strcmp(buffer, programNames[i]) == 0)
+		{
+			programPath = string_from_format("%s%s.ansisop", ruta_programas, programNames[i]);
+			break;
+		}
 	}
+
+	if (programPath == NULL)
+		programPath = string_duplicate(buffer);
 	
 	free(buffer);
 
@@ -122,7 +130,7 @@ void command_start_several()
 
 	for (i = 0; i != 5; ++i)
 	{
-		program_create(string_from_format("%sfor%s", ruta_programas, ".ansisop"));
-		sleep(3);
+		program_create(string_from_format("%sfor.ansisop", ruta_programas));
+		//sleep(3);
 	}
 }
