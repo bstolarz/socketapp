@@ -25,10 +25,17 @@ void* memory_read(int PID, int page, int offset, int size)
         (socket_send_int(serverMemory, offset) > 0) &&
         (socket_send_int(serverMemory, size) > 0))
     {
-        void* data;
-        
-        if (socket_recv(serverMemory, &data, 1) == size)
-            return data;
+    	int readResult;
+    	if (socket_recv_int(serverMemory, &readResult) == sizeof(int))
+    	{
+    		if (readResult == size)
+    		{
+    			void* data;
+
+				if (socket_recv(serverMemory, &data, 1) == size)
+					return data;
+    		}
+    	}
     }
 
     return NULL;

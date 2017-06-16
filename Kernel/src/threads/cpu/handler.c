@@ -196,8 +196,10 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 
 void handle_cpu_wait(t_cpu* cpu){
 	cpu->program->stats.syscallEjecutadas++;
+
 	//Obtengo el nombre de la shared variable
-	char* semaforo=string_new();
+	char* semaforo;
+
 	if (socket_recv_string(cpu->socket,&semaforo)<=0){
 		log_warning(logKernel, "[handle_cpu_wait/semaforo] CPU desconectado");
 		cpu->disconnected = 1;

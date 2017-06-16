@@ -173,6 +173,18 @@ int memory_read(t_program* program, int page, int offset, int size, void** buffe
 		return -20;
 	}
 
+	// primero veo si no lei fuera de las pags del proceso
+	int readResult;
+	if(socket_recv_int(memoryServer.socket, &readResult)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	if (readResult != size)
+		return readResult;
+
 	//Obtengo respuesta
 	int nbytes =0;
 	if((nbytes = socket_recv(memoryServer.socket, buffer, 1))<=0){
