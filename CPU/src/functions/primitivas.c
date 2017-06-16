@@ -402,6 +402,13 @@ t_puntero AnSISOP_alocar(t_valor_variable espacio){
 
 void AnSISOP_liberar(t_puntero puntero){
 	printf("AnSISOP_liberar el puntero [%d]\n",puntero);
+
+	if (socket_send_string(serverKernel, "liberar")>0){
+		log_info(logCPU,"[liberar] mensaje enviado\n");
+	}else{
+		log_info(logCPU,"[liberar] error mandando liberar\n");
+	}
+
 	//COMO VALIDAMOS QUE PUNTERO HAYA SIDO PREVIAMENTE ALOCADO?
 	log_info(logCPU, "Se va a liberar el puntero: %d", puntero);
 

@@ -28,7 +28,8 @@ const char* programNames[] = {
 	"stackoverflow",
 	"completo",
 	"fs",
-	"testfuncall"
+	"testfuncall",
+	"heap"
 };
 size_t programsCount = sizeof(programNames) / sizeof(char*);
 
