@@ -86,7 +86,6 @@ t_program* get_program(int pid){
 	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
 	if(prog == NULL){
-		printf("No estaba en bloqueados\n");
 		pthread_mutex_lock(&queueFinishedPrograms->mutex);
 		prog=list_find(queueFinishedPrograms->list,(void*)encontrarPrograma);
 		pthread_mutex_unlock(&queueFinishedPrograms->mutex);
@@ -219,8 +218,10 @@ void print_syscalls(int p){
 	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
 }
 void print_list(t_fd* fd){
-	printf("|FD - Flags -  File name|\n");
-	printf("|%d -   %s -    %s\n",fd->value,fd->permissions, fd->global->path);
+	printf("............................................\n");
+	printf("FD -> %d\n",fd->value);
+	printf("Flags -> %s\n",fd->permissions);
+	printf("Path -> %s\n",fd->global->path);
 }
 
 void print_file_process_table(int p){
@@ -230,9 +231,19 @@ void print_file_process_table(int p){
 		if(list_size(program->fileDescriptors)==0){
 			printf("El programa con PID [%d] no ha abierto ningun archivo\n",program->pcb->pid);
 		}else{
-			printf("---------------------\n");
-			list_iterate(program->fileDescriptors,(void*)print_list);
-			printf("---------------------\n");
+			if(list_size(program->fileDescriptors)==1){
+				printf("\n\n\n------Tabla de archivos del proceso %d----------\n",p);
+				t_list* l=program->fileDescriptors;
+				t_fd* fd=(t_fd*)list_get(l,0);
+				printf("FD -> %d\n",fd->value);
+				printf("Flags -> %s\n",fd->permissions);
+				printf("Path -> %s\n",fd->global->path);
+				printf("------------------------------------------------\n\n");
+			}else{
+				printf("\n\n------Tabla de archivos del proceso %d----------\n",p);
+				list_iterate(program->fileDescriptors,(void*)print_list);
+				printf("------------------------------------------------\n\n");
+			}
 		}
 	}else{
 		printf("Esto se va al carajo!\n");
@@ -288,26 +299,29 @@ void console_get_global_file_table(){
 	if (size==0){
 		printf("No hay archivos abiertos\n");
 	}else{
-		printf("\n-TABLA GLOBAL DE ARCHIVOS-\n");
-		printf("|Path  -  Open|\n");
-		printf("|-------------|\n");
+		printf("\n\n\n--------TABLA GLOBAL DE ARCHIVOS---------\n");
+
 
 		int i;
 		for (i=0;i!=size;i++){
 			t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
-			printf("|%s - %d|\n",globalFD->path,globalFD->open);
+			printf("|Path -> ");
+			printf("'%s'\n",globalFD->path);
+			printf("|Open -> ");
+			printf("%d\n",globalFD->open);
+			printf("...........................................\n");
 		}
-		printf("---------------\n");
+		printf("\n\n");
 	}
 }
 
 void console_multiprogram_degree(){
-	printf("El grado de multiprogramacion es: %d\n", configKernel->grado_multiprog);
+	printf("\n\nEl grado de multiprogramacion es: %d\n\n", configKernel->grado_multiprog);
 	printf("Ingrese el nuevo valor\n");
 	int value;
 	scanf("%d",&value);
 	configKernel->grado_multiprog=value;
-	printf("El nuevo valor del grado de multiprogramacion es: %d\n",value);
+	printf("\n\nEl nuevo valor del grado de multiprogramacion es: %d\n\n",value);
 }
 
 void console_finish_process(){
