@@ -173,6 +173,18 @@ int memory_read(t_program* program, int page, int offset, int size, void** buffe
 		return -20;
 	}
 
+	// primero veo si no lei fuera de las pags del proceso
+	int readResult;
+	if(socket_recv_int(memoryServer.socket, &readResult)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	if (readResult != size)
+		return readResult;
+
 	//Obtengo respuesta
 	int nbytes =0;
 	if((nbytes = socket_recv(memoryServer.socket, buffer, 1))<=0){
@@ -269,6 +281,10 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 }
 
 void memory_heap_free(t_program* program, int page, int offset){
+	// TODO: no es mas facil ver si esta en las heap pages?
+	// porq puede q quede una pag con numero mayor (se alocan varias pags y
+	// despues se liberan varias, entonces queda 1 con un pageNum > suma pags proceso)
+	// ademas en memoria quedan espacios entre nums de pag (el prox page num es el maximo de los nums de pag + 1)
 	if(page < (program->pcb->cantPagsCodigo + configKernel->stack_size) || page > (program->pcb->cantPagsCodigo + configKernel->stack_size + list_size(program->heapPages) -1)){
 		program->interruptionCode = -5;
 		return;

@@ -40,6 +40,7 @@ t_fd* file_descriptor_create(t_program* program, t_global_fd* gFD, char* permiss
 	fd->permissions = string_duplicate(permissions);
 	fd->value = program->incrementalFD;
 	fd->global=gFD;
+	fd->cursor = 0;
 
 	gFD->open++;
 	program->incrementalFD++;

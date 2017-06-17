@@ -13,5 +13,7 @@ void command_finish();
 void command_clear();
 void command_disconnect();
 
+// para testear varios procesos
+void command_start_several();
 
 #endif /* FUNCTIONS_COMMANDS_H_ */

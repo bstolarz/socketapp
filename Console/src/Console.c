@@ -41,12 +41,14 @@ int main(int argc, char* argv[]) {
 
 		if(strcmp(comando, "clear") == 0){
 			command_clear();
-		}else if(strcmp(comando, "start") == 0){\
+		}else if(strcmp(comando, "start") == 0){
 			command_start();
 		}else if(strcmp(comando, "finish") == 0){
 			command_finish();
 		}else if(strcmp(comando, "disconnect") == 0){
 			command_disconnect();
+		} else if(strcmp(comando, "varios") == 0) {
+			command_start_several();
 		}else{
 			printf("[SISTEMA] - El comando ingresado no existe.\n");
 			printf("[SISTEMA] - Los comandos permitidos son:\n");
@@ -54,7 +56,6 @@ int main(int argc, char* argv[]) {
 			printf("[SISTEMA] - 	finish			Aborta la ejecucion de un programa.\n");
 			printf("[SISTEMA] - 	clear 			Borra la  informacion en pantalla.\n");
 			printf("[SISTEMA] - 	disconnect 		Aborta la ejecucion de todos los programas.\n");
-
 		}
 	}
 

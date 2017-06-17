@@ -98,7 +98,11 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 
 	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
 
-	if (readResult == NULL)	log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
+	if (readResult == NULL)
+	{
+		pcb->exitCode = ERROR_MEMORY;
+		log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
+	}
 
 	log_debug(logCPU, "El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
 	printf("Finalizo AnSISOP_dereferenciar\n");
@@ -108,24 +112,18 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	printf("AnSISOP_asignar a [%d] el valor [%d]\n", direccion_variable, valor);
 
-	// esto previene asignar valores a parametros
-	if (direccion_variable >= pcb->maxStackPosition)
-	{
-		assert(pcb->exitCode == ERROR_MEMORY);
-		printf("AnSISOP_asignar: stackOverflow\n");
-		pcb->exitCode = ERROR_MEMORY;
-		return;
-	}
-
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d", pos.page, pos.off, valor);
 
 	int writeResult = memory_write(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
 
-
 	if (writeResult == -1)
 	{
-		log_error(logCPU, "[asignar] error al escribir en memoria");
+		log_error(logCPU, "[asignar] error comunicandose con memoria");
+	}
+	else if (writeResult == ERROR_MEMORY) // leyo en algun lugar q no existia para el proceso (ej: trata de leer con var din y un offset que se pasa)
+	{
+		pcb->exitCode = ERROR_MEMORY;
 	}
 
 	printf("Finalizo AnSISOP_asignar\n");
@@ -309,22 +307,24 @@ t_valor_variable AnSISOP_asignarValorCompartida(t_nombre_compartida variable, t_
 
 void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 	printf("AnSISOP_wait [%s]\n", identificador_semaforo);
-	char* answerFromKernel=string_new();
-	int resp;
 	if(socket_send_string(serverKernel,"wait")>0){
 		printf("Le solicito al kernel que se haga WAIT al semaforo %s\n", identificador_semaforo);
 		log_info(logCPU, "Le solicito al kernel que se haga WAIT al semaforo %s\n", identificador_semaforo);
 	}
+
 	if(socket_send_string(serverKernel,identificador_semaforo)>0){
 		log_info(logCPU,"Envio al kernel el semaforo al que quiero hacer WAIT: %s\n",identificador_semaforo);
 	}else{
 		log_info(logCPU,"Error enviando al kernel el semaforo al que quiero hacer WAIT: %s\n",identificador_semaforo);
 	}
+
+	char* answerFromKernel=string_new();
 	if (socket_recv_string(serverKernel,&answerFromKernel)>0){
 		if (string_equals_ignore_case(answerFromKernel,"Failure")){
 			log_info(logCPU, "No es posible hacer WAIT al semaforo %s porque no existe en Kernel. El programa finalizara", identificador_semaforo);
-			EXIT_FAILURE;
+			// no hace falta poner el exit code porq el kernel se lo guarda
 		}else{
+			int resp;
 			if(socket_recv_int(serverKernel,&resp)>0){
 					if(resp==1){
 						log_info(logCPU, "Se hizo el wait del semaforo %s", identificador_semaforo);
@@ -336,25 +336,30 @@ void AnSISOP_wait(t_nombre_semaforo identificador_semaforo){
 		}
 	}else{
 		log_info(logCPU, "Error recibiendo respuesta del Kernel al haber pedido hacer el WAIT al semaforo %s\n", identificador_semaforo);
+		exit(EXIT_FAILURE); // el kernel desconecta la cpu
 	}
+
 	free(answerFromKernel);
 	printf("Finalizo AnSISOP_wait\n");
 }
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo){
 	printf("AnSISOP_signal\n");
-	char* answerFromKernel=string_new();
 	log_info(logCPU, "Signal del semaforo: %s", identificador_semaforo);
+
 	if (socket_send_string(serverKernel,"signal")>0){
 		log_info(logCPU, "Le solicito al Kernel hacer Signal");
 	}else{
 		log_info(logCPU,"Error solicitandole al Kernel que haga Signal");
 	}
+
 	if (socket_send_string(serverKernel, identificador_semaforo)>0){
 		log_info(logCPU, "Le envio al Kernel el semaforo al que quiero que le haga Signal: %s\n",identificador_semaforo);
 	}else{
 		log_info(logCPU, "Error enviando al Kernel el semaforo al que quiero que le haga Signal: %s\n",identificador_semaforo);
 	}
+
+	char* answerFromKernel=string_new();
 	if (socket_recv_string(serverKernel,&answerFromKernel)>0){
 			if (string_equals_ignore_case(answerFromKernel,"Success")){
 				log_info(logCPU, "Se hizo SIGNAL al semaforo %s", identificador_semaforo);
@@ -377,30 +382,42 @@ t_puntero AnSISOP_alocar(t_valor_variable espacio){
 	}else{
 		log_info(logCPU,"Error informando al Kernel que quiero alocar\n");
 	}
+
 	if(socket_send_int(serverKernel,espacio)>0){
 		log_info(logCPU,"Le envio al Kernel el tamanio que necesito reservar en Heap: %d\n",espacio);
 	}else{
 		log_info(logCPU,"Error al Kernel el tamanio que necesito reservar en Heap: %d\n", espacio);
 	}
+
 	int puntero;
 	t_puntero punteroFinal;
 	if (socket_recv_int(serverKernel,&puntero)>0){
 		log_info(logCPU,"Recibo el puntero donde se aloco el espacio: %d\n", puntero);
 		 punteroFinal=(int)puntero;
 	}
+
 	printf("Finalizo AnSISOP_alocar\n");
 	return punteroFinal;
 }
 
 void AnSISOP_liberar(t_puntero puntero){
 	printf("AnSISOP_liberar el puntero [%d]\n",puntero);
+
+	if (socket_send_string(serverKernel, "liberar")>0){
+		log_info(logCPU,"[liberar] mensaje enviado\n");
+	}else{
+		log_info(logCPU,"[liberar] error mandando liberar\n");
+	}
+
 	//COMO VALIDAMOS QUE PUNTERO HAYA SIDO PREVIAMENTE ALOCADO?
 	log_info(logCPU, "Se va a liberar el puntero: %d", puntero);
+
 	if(socket_send_int(serverKernel,puntero)>0){
 		log_info(logCPU,"Envio al kernel el puntero que quiero liberar: %d\n",puntero);
 	}else{
 		log_info(logCPU, "Error enviando al kernel el puntero que quiero liberar: %d\n", puntero);
 	}
+
 	printf("Finalizo AnSISOP_liberar\n");
 }
 
@@ -415,6 +432,7 @@ void flagsAppend(char* string, t_banderas flags){
 		string_append(&string,string_from_format("%c",'r'));
 	}
 }
+
 t_descriptor_archivo AnSISOP_abrir (t_direccion_archivo direccion, t_banderas flags){
 	printf("AnSISOP_abrir [%s]\n", direccion);
 	//Envio orden: abrir

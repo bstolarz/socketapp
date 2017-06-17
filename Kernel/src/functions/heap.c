@@ -25,6 +25,8 @@ int heap_new_page(t_program* program){
 
 	t_heap_page* pageMetadata = malloc(sizeof(t_heap_page));
 	pageMetadata->freeSpace = pageSize - sizeof(t_heapmetadata);
+	// TODO: el nro de pag en memoria se setea al max + 1 de las pags del proceso
+	// o sea seria list_empty() ? program->pcb->cantPagsCodigo + configKernel->stack_size : buscar max en program->heapPages
 	pageMetadata->page = program->pcb->cantPagsCodigo + configKernel->stack_size + list_size(program->heapPages);
 	list_add(program->heapPages, pageMetadata);
 
@@ -40,6 +42,7 @@ int heap_new_page(t_program* program){
 	return pageMetadata->page;
 }
 
+// revisa c/pag de heap para ver si tiene espacio
 int heap_find_space_available(t_program* program, int size, int* page, int* offset){
 	printf("+++ Busco +++ %i\n", size);
 	int locatedSpace = 0;

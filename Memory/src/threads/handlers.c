@@ -135,25 +135,29 @@ int handle_read(int clientSocket)
 		return -1;
 	}
 
-	//Proceso la peticion
-	/*
-	 * TODO
-	 * aca es necesario que memory_read devulva un int con el estado de la lectura
-	 * los bytes que se leyeron, o un numero negativo si no pudo leerse
-	 *
-	 * Primero se enviara este estado y despues se enviara la data
-	 * Luego si se envio la data, se hara el free
-	 */
+	// lectura posta
 	void* data = memory_read(PID, page, offset, size);
-    
-    //Envio la respuesta
-    int nBytes = socket_send(clientSocket, data, data == NULL ? 0 : size);
-    if (nBytes == -1){
-    	log_error(logMemory, "[read] request: problema en send (PID %d, page %d, offset %d, size %d, socket %d)", PID, page, offset, size, clientSocket);
-    	return -1;
-    }
 
-    if (data != NULL) free(data);
+	// mando un int para decirle si pudo leer bien
+	int readResult = data == NULL ? -5 : size;
+	if (socket_send_int(clientSocket, readResult) <= 0) {
+		log_error(logMemory, "[read] request: problema send readResult (PID %d, page %d, offset %d, size %d, socket %d)", PID, page, offset, size, clientSocket);
+		return -1;
+	}
+    
+
+    if (data != NULL)
+	{
+		//Envio la respuesta
+		int nBytes = socket_send(clientSocket, data, size);
+		if (nBytes == -1){
+			log_error(logMemory, "[read] request: problema en send (PID %d, page %d, offset %d, size %d, socket %d)", PID, page, offset, size, clientSocket);
+	    	free(data);
+			return -1;
+		}
+
+    	free(data);
+	}
 
     return 0;
 }

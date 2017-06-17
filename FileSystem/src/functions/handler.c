@@ -48,8 +48,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		void* buffer;
 
 		socket_recv_int(socketKernel, &offset);
-		socket_recv_int(socketKernel, &size);
-		socket_recv(socketKernel, &buffer, 1);
+		size = socket_recv(socketKernel, &buffer, 1);
 		log_info(logs, "Recibi el offset: %d", offset);
 		log_info(logs, "Recibi el size: %d", size);
 		log_info(logs, "Recibi el buffer: %s", buffer);

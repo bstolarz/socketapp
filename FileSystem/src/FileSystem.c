@@ -34,7 +34,8 @@ int main(int arg, char* argv[]) {
 	config_read(argv[1]);
 	config_print();
 
-	metadataFS_read("./mnt/SADICA_FS/Metadata/Metadata.bin");
+	char* pathMetadataFS = armarPathMetadataFS();
+	metadataFS_read(pathMetadataFS);
 	metadataFS_print();
 
 	initSadica();

@@ -11,6 +11,13 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+char* armarPathMetadataFS(){
+	char* pathTotal = string_new();
+	string_append(&pathTotal, configFileSystem->punto_montaje);
+	string_append(&pathTotal, "Metadata/Metadata.bin");
+
+	return pathTotal;
+}
 
 char* armarPathArchivo(char* pathDelKernel){
 	char* pathTotal = string_new();

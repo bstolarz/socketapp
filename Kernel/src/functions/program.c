@@ -269,32 +269,30 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	pthread_mutex_unlock(&(queueCPUs->mutex));
 }
 
-// desblockear programa blockeado por semaforo sem (pasarlo de block -> ready)
-// (inversa wait)
 void program_unblock(t_semaforo* sem){
-	bool is_blocked_by_sem(void* elem)
-	{
-		t_program* program = (t_program*) elem;
+	pthread_mutex_lock(&sem->mutex);
 
-		return 	program->waiting &&
-				(strcmp(program->waitingReason, sem->nombre) == 0);
+	bool is_blocked_by_sem(t_program* program){
+		return 	program->waiting==1 && (strcmp(program->waitingReason, sem->nombre) == 0);
 	}
 
 	pthread_mutex_lock(&queueBlockedPrograms->mutex);
-	void* blockedElem = list_remove_by_condition(queueBlockedPrograms->list, is_blocked_by_sem);
+	t_program* blockedProgram = list_remove_by_condition(queueBlockedPrograms->list, (void*)is_blocked_by_sem);
 	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
-	if (blockedElem != NULL)
-	{
-		t_program* blockedProgram = (t_program*) blockedElem;
+	if (blockedProgram != NULL){
 		blockedProgram->waiting = 0;
 		free(blockedProgram->waitingReason);
 		blockedProgram->waitingReason = NULL;
 
 		pthread_mutex_lock(&queueReadyPrograms->mutex);
-		list_add(queueReadyPrograms->list, blockedElem);
+		sem->value = sem->value - 1;
+		list_add(queueReadyPrograms->list, blockedProgram);
 		pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-		// llamar algun planificador?
+		// TODO: este lockea el thread (porque hace lock del mutex cpu (que ya estaba lockeado por cpu/handler))
+		cpu_inactive_planner();
 	}
+
+	pthread_mutex_unlock(&sem->mutex);
 }
