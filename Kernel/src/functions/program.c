@@ -290,6 +290,7 @@ void program_unblock(t_semaforo* sem){
 		list_add(queueReadyPrograms->list, blockedProgram);
 		pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
+		// TODO: este lockea el thread (porque hace lock del mutex cpu (que ya estaba lockeado por cpu/handler))
 		cpu_inactive_planner();
 	}
 

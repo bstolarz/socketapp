@@ -281,6 +281,10 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 }
 
 void memory_heap_free(t_program* program, int page, int offset){
+	// TODO: no es mas facil ver si esta en las heap pages?
+	// porq puede q quede una pag con numero mayor (se alocan varias pags y
+	// despues se liberan varias, entonces queda 1 con un pageNum > suma pags proceso)
+	// ademas en memoria quedan espacios entre nums de pag (el prox page num es el maximo de los nums de pag + 1)
 	if(page < (program->pcb->cantPagsCodigo + configKernel->stack_size) || page > (program->pcb->cantPagsCodigo + configKernel->stack_size + list_size(program->heapPages) -1)){
 		program->interruptionCode = -5;
 		return;
