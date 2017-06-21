@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 #include <commons/string.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
@@ -54,7 +55,7 @@ void read_fileMetadata(char* path, t_metadata_archivo* archivo) {
 
 	config_destroy(config);
 
-	log_info("Se leyo el metadata del archivo: %s", path);
+	log_info(logs, "Se leyo el metadata del archivo: %s", path);
 }
 
 void metadataFS_write(char* path, t_metadata_archivo* archivo, int nroBloque){

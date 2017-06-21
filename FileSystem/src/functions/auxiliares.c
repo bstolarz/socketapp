@@ -41,28 +41,35 @@ char* armarPathBloqueDatos(int numeroBloque) {
 	return pathTotal;
 }
 
-void crearArchivo(char* path, int posBloqueLibre){
+int crearArchivo(char* path, int posBloqueLibre){
 	FILE* archivo = fopen(path, "w+");
-	log_info(logs, "Hice fopen del path: %s", path);
-	fprintf(archivo, "TAMANIO=0\n");
-	log_info(logs, "Hice fprintf de tamanio");
+	if(archivo != NULL){
+		log_info(logs, "Hice fopen del path: %s", path);
+		fprintf(archivo, "TAMANIO=0\n");
+		log_info(logs, "Hice fprintf de tamanio");
 
-	char* bloque = string_new();
-	sprintf(bloque, "%d", posBloqueLibre);
+		char* bloque = string_new();
+		sprintf(bloque, "%d", posBloqueLibre);
 
-	char* lineaBloques = string_new();
-	string_append(&lineaBloques, "BLOQUES=[");
-	string_append(&lineaBloques, bloque);
-	string_append(&lineaBloques, "]");
+		char* lineaBloques = string_new();
+		string_append(&lineaBloques, "BLOQUES=[");
+		string_append(&lineaBloques, bloque);
+		string_append(&lineaBloques, "]");
 
-	fprintf(archivo, lineaBloques);
-	log_info(logs, "Hice fprintf de la linea de bloques");
+		fprintf(archivo, lineaBloques);
+		log_info(logs, "Hice fprintf de la linea de bloques");
 
-	free(bloque);
-	free(lineaBloques);
-	fclose(archivo);
+		free(bloque);
+		free(lineaBloques);
+		fclose(archivo);
+		return 1;
+	}
+	else{
+		//El path tiene directorios entremedio que no existen
+		return -ENOENT;
+	}
+
 }
-
 
 int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 	if(list_size(archivo->bloques) > desplazamientoHastaElBloque){
@@ -72,8 +79,6 @@ int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 		return -1;
 	}
 }
-
-
 
 void eliminarMetadataArchivo(char* path){
 	remove(path);
@@ -89,3 +94,8 @@ int is_regular_file(const char *path)
     stat(path, &path_stat);
     return S_ISREG(path_stat.st_mode);
 }
+
+
+
+
+
