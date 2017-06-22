@@ -9,7 +9,7 @@
 #define FUNCTIONS_OPERACIONES_H_
 
 int validar(char* path);
-int crear(char* path);
+int crear(char* path, char* pathConPuntoMontaje);
 int borrar(char* path);
 int obtenerDatos(char* path, off_t offset, size_t size, char** buf);
 int guardarDatos(char* path, off_t offset, size_t size, void* buffer);
