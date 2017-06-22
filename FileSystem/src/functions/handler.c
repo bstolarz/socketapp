@@ -24,16 +24,16 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 
 	socket_recv_string(socketKernel, &path);
 	log_info(logs, "Recibi el path de kernel: %s", path);
-	path = armarPathArchivo(path);
+	char* pathConPuntoMontaje = armarPathArchivo(path);
 
 	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
-		resultado = validar(path);
+		resultado = validar(pathConPuntoMontaje);
 
 	} else if (strcmp(unMensajeDeOperacion, "CREAR") == 0) {
-		resultado = crear(path);
+		resultado = crear(path, pathConPuntoMontaje);
 
 	} else if (strcmp(unMensajeDeOperacion, "BORRAR") == 0) {
-		resultado = borrar(path);
+		resultado = borrar(pathConPuntoMontaje);
 
 	} else if (strcmp(unMensajeDeOperacion,"OBTENERDATOS") == 0) {
 		socket_recv_int(socketKernel, &offset);
@@ -42,7 +42,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		log_info(logs, "Recibi el size: %d", size);
 
 		char* buffer = malloc(0);
-		resultado = obtenerDatos(path, offset, size, &buffer);
+		resultado = obtenerDatos(pathConPuntoMontaje, offset, size, &buffer);
 
 	} else if (strcmp(unMensajeDeOperacion,"GUARDARDATOS") == 0) {
 		void* buffer;
@@ -53,7 +53,7 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		log_info(logs, "Recibi el size: %d", size);
 		log_info(logs, "Recibi el buffer: %s", buffer);
 
-		resultado = guardarDatos(path, offset, size, buffer);
+		resultado = guardarDatos(pathConPuntoMontaje, offset, size, buffer);
 	}
 
 	socket_send_int(socketKernel, resultado);

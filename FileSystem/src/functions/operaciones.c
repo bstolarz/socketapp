@@ -27,8 +27,8 @@ int validar(char* path) {
 }
 
 //Lista
-int crear(char* path) {
-	if(validar(path) == 1){
+int crear(char* path, char* pathConPuntoMontaje) {
+	if(validar(pathConPuntoMontaje) == 1){
 		log_info(logs, "Intentaste crear un archivo y este ya existe, devuelvo error");
 		return -ENOENT;
 	}
@@ -37,15 +37,18 @@ int crear(char* path) {
 		log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
 		if (posBloqueLibre >= 0) {
 			ocuparBloqueLibre(posBloqueLibre);
-			if(crearArchivo(path, posBloqueLibre) == 1){
+			if(crearArchivo(pathConPuntoMontaje, posBloqueLibre) == 1){
 				log_info(logs, "Se creo el archivo, se le asigno el bloque: %d", posBloqueLibre);
 				return 1;
 			}
 			else{
-				//No se pudo crear el archivo (hay directorios entremedio del path que no existen)
-				log_info(logs, "No se pudo crear el archivo con path: %s", path);
-				log_info(logs, "Por ende se procede a liberar el bloque del bitmap: %d", posBloqueLibre);
-				liberarBloqueDelBitmap(posBloqueLibre);
+				//No se pudo crear el archivo porque hay directorios entremedio del path que no existen => primero los creo
+				if(seVanAPoderCrearLosDirectoriosNecesarios(path)){
+					crearDirectoriosNecesarios(path);
+					crearArchivo(pathConPuntoMontaje, posBloqueLibre);
+					return 1;
+				}
+				crearArchivo(pathConPuntoMontaje, posBloqueLibre);
 				return -ENOENT;
 			}
 		} else {
