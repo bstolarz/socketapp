@@ -75,6 +75,10 @@ t_global_fd* file_descriptor_global_create(char* path){
 	return gFD;
 }
 
+void file_descriptor_global_destroy(void* elem){
+	t_global_fd* gFD = (t_global_fd*) elem;
+	free(gFD->path);
+}
 
 
 //Otros

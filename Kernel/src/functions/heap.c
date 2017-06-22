@@ -25,9 +25,7 @@ int heap_new_page(t_program* program){
 
 	t_heap_page* pageMetadata = malloc(sizeof(t_heap_page));
 	pageMetadata->freeSpace = pageSize - sizeof(t_heapmetadata);
-	// TODO: el nro de pag en memoria se setea al max + 1 de las pags del proceso
-	// o sea seria list_empty() ? program->pcb->cantPagsCodigo + configKernel->stack_size : buscar max en program->heapPages
-	pageMetadata->page = program->pcb->cantPagsCodigo + configKernel->stack_size + list_size(program->heapPages);
+	pageMetadata->page = heap_max_page_num(program) + 1;
 	list_add(program->heapPages, pageMetadata);
 
 	t_heapmetadata* metadata = malloc(sizeof(t_heapmetadata));
@@ -184,4 +182,21 @@ int heap_free(t_program* program, int page, int offset){
 	heap_defrag(program, page);
 
 	return 1;
+}
+
+int heap_max_page_num(t_program* program)
+{
+	int max = program->pcb->cantPagsCodigo + configKernel->stack_size - 1;
+
+	void set_max_page_num(void* elem)
+	{
+		t_heap_page* heapPage = (t_heap_page*) elem;
+
+		if (heapPage->page > max)
+			max = heapPage->page;
+	};
+
+	list_iterate(program->heapPages, set_max_page_num);
+
+	return max;
 }

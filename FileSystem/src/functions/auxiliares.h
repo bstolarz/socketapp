@@ -8,7 +8,9 @@
 #ifndef FUNCTIONS_AUXILIARES_H_
 #define FUNCTIONS_AUXILIARES_H_
 
-void crearArchivo(char* path, int posBloqueLibre);
+bool seVanAPoderCrearLosDirectoriosNecesarios(char* path);
+int crearDirectoriosNecesarios(char* pathDelKernel);
+int crearArchivo(char* path, int posBloqueLibre);
 void crearBloqueDatos(int posBloqueLibre);
 void eliminarMetadataArchivo(char* path);
 char* armarPathMetadataFS();

@@ -329,8 +329,9 @@ void handle_cpu_liberar(t_cpu* cpu){
 
 void handle_cpu_abrir(t_cpu* cpu){
 	cpu->program->stats.syscallEjecutadas++;
+
 	//Recibo el path
-	char* path=string_new();
+	char* path;
 	if(socket_recv_string(cpu->socket,&path)<=0){
 		log_warning(logKernel, "[handle_cpu_abrir/path] CPU desconectado");
 		cpu->disconnected = 1;
@@ -338,7 +339,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 	}
 
 	//Recibo los permisos
-	char* flags=string_new();
+	char* flags;
 	if (socket_recv_string(cpu->socket,&flags)<=0){
 		log_warning(logKernel, "[handle_cpu_abrir/flags] CPU desconectado");
 		cpu->disconnected = 1;
@@ -347,6 +348,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 
 	t_global_fd* gFD = file_descriptor_global_get_by_path(path);
 	t_fd* fd = NULL;
+
 	if (gFD!=NULL){ //Existe
 		fd = file_descriptor_create(cpu->program, gFD, flags);
 	}else{//No existe
@@ -390,8 +392,6 @@ void handle_cpu_abrir(t_cpu* cpu){
 
 		return;
 	}
-
-
 }
 
 void handle_cpu_borrar(t_cpu* cpu){
@@ -504,7 +504,7 @@ void handle_cpu_cerrar(t_cpu* cpu){
 			bool _findGlobalFD(t_global_fd* gFD){
 				return strcmp(gFD->path, filedescriptor->global->path)==0;
 			}
-			list_remove_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD);
+			list_remove_and_destroy_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD, file_descriptor_global_destroy);
 		}else{
 			filedescriptor->global->open = filedescriptor->global->open - 1;
 		}

@@ -11,6 +11,13 @@
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
 
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
+
 char* armarPathMetadataFS(){
 	char* pathTotal = string_new();
 	string_append(&pathTotal, configFileSystem->punto_montaje);
@@ -41,28 +48,75 @@ char* armarPathBloqueDatos(int numeroBloque) {
 	return pathTotal;
 }
 
-void crearArchivo(char* path, int posBloqueLibre){
+int crearArchivo(char* path, int posBloqueLibre){
 	FILE* archivo = fopen(path, "w+");
-	log_info(logs, "Hice fopen del path: %s", path);
-	fprintf(archivo, "TAMANIO=0\n");
-	log_info(logs, "Hice fprintf de tamanio");
+	if(archivo != NULL){
+		log_info(logs, "Hice fopen del path: %s", path);
+		fprintf(archivo, "TAMANIO=0\n");
+		log_info(logs, "Hice fprintf de tamanio");
 
-	char* bloque = string_new();
-	sprintf(bloque, "%d", posBloqueLibre);
+		char* bloque = string_new();
+		sprintf(bloque, "%d", posBloqueLibre);
 
-	char* lineaBloques = string_new();
-	string_append(&lineaBloques, "BLOQUES=[");
-	string_append(&lineaBloques, bloque);
-	string_append(&lineaBloques, "]");
+		char* lineaBloques = string_new();
+		string_append(&lineaBloques, "BLOQUES=[");
+		string_append(&lineaBloques, bloque);
+		string_append(&lineaBloques, "]");
 
-	fprintf(archivo, lineaBloques);
-	log_info(logs, "Hice fprintf de la linea de bloques");
+		fprintf(archivo, lineaBloques);
+		log_info(logs, "Hice fprintf de la linea de bloques");
 
-	free(bloque);
-	free(lineaBloques);
-	fclose(archivo);
+		free(bloque);
+		free(lineaBloques);
+		fclose(archivo);
+		return 1;
+	}
+	else{
+		//El path tiene directorios entremedio que no existen
+		return -ENOENT;
+	}
+
 }
 
+bool seVanAPoderCrearLosDirectoriosNecesarios(char* pathDelKernel){
+	char* directorio = string_duplicate(configFileSystem->punto_montaje);
+	char** arrayDeDirectoriosYArchivoFinal = string_split(pathDelKernel, "/");
+
+	while(arrayDeDirectoriosYArchivoFinal+1 != NULL){
+		string_append(&directorio, *arrayDeDirectoriosYArchivoFinal);
+
+		if(access(directorio, F_OK) == 0 && is_regular_file(directorio)){
+			return false;
+		}
+
+		string_append(&directorio, "/");
+		arrayDeDirectoriosYArchivoFinal++;
+	}
+	//Se le hace free a cada string del arrayDeDirectoriosYArchivoFinal?
+	free(directorio);
+	return true;
+}
+
+int crearDirectoriosNecesarios(char* pathDelKernel){
+	char* directorio = string_duplicate(configFileSystem->punto_montaje);
+	char** arrayDeDirectoriosYArchivoFinal = string_split(pathDelKernel, "/");
+
+	while(arrayDeDirectoriosYArchivoFinal+1 != NULL){
+		string_append(&directorio, *arrayDeDirectoriosYArchivoFinal);
+
+		char* comando = string_new();
+		string_append(&comando, "mkdir ");
+		string_append(&comando, directorio);
+		system(comando);
+		free(comando);
+
+		string_append(&directorio, "/");
+		arrayDeDirectoriosYArchivoFinal++;
+	}
+	//Se le hace free a cada string del arrayDeDirectoriosYArchivoFinal?
+	free(directorio);
+	return 1;
+}
 
 int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 	if(list_size(archivo->bloques) > desplazamientoHastaElBloque){
@@ -73,8 +127,6 @@ int avanzarBloque(t_metadata_archivo* archivo, int desplazamientoHastaElBloque){
 	}
 }
 
-
-
 void eliminarMetadataArchivo(char* path){
 	remove(path);
 }
@@ -83,9 +135,4 @@ void actualizarBytesEscritos (int* acum, int bytes){
 	*acum += bytes;
 }
 
-int is_regular_file(const char *path)
-{
-    struct stat path_stat;
-    stat(path, &path_stat);
-    return S_ISREG(path_stat.st_mode);
-}
+

@@ -27,24 +27,35 @@ int validar(char* path) {
 }
 
 //Lista
-int crear(char* path) {
-	if(validar(path) == 1){
-	 	log_info(logs, "Intentaste crear un archivo y este ya existe, devuelvo error");
-	 	return -ENOENT;
-	}
-
-	int posBloqueLibre = encontrarUnBloqueLibre();
-	log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
-	if (posBloqueLibre >= 0) {
-		ocuparBloqueLibre(posBloqueLibre);
-		crearArchivo(path, posBloqueLibre);
-		log_info(logs, "Se creo el archivo, se le asigno el bloque: %d", posBloqueLibre);
-		return 1;
-	} else {
-		log_info(logs, "No se encontro un bloque libre en el bitmap");
+int crear(char* path, char* pathConPuntoMontaje) {
+	if(validar(pathConPuntoMontaje) == 1){
+		log_info(logs, "Intentaste crear un archivo y este ya existe, devuelvo error");
 		return -ENOENT;
 	}
-
+	else{
+		int posBloqueLibre = encontrarUnBloqueLibre();
+		log_info(logs, "PosBloqueLibre: %d", posBloqueLibre);
+		if (posBloqueLibre >= 0) {
+			ocuparBloqueLibre(posBloqueLibre);
+			if(crearArchivo(pathConPuntoMontaje, posBloqueLibre) == 1){
+				log_info(logs, "Se creo el archivo, se le asigno el bloque: %d", posBloqueLibre);
+				return 1;
+			}
+			else{
+				//No se pudo crear el archivo porque hay directorios entremedio del path que no existen => primero los creo
+				if(seVanAPoderCrearLosDirectoriosNecesarios(path)){
+					crearDirectoriosNecesarios(path);
+					crearArchivo(pathConPuntoMontaje, posBloqueLibre);
+					return 1;
+				}
+				crearArchivo(pathConPuntoMontaje, posBloqueLibre);
+				return -ENOENT;
+			}
+		} else {
+			log_info(logs, "No se encontro un bloque libre en el bitmap");
+			return -ENOENT;
+		}
+	}
 }
 
 //Lista
