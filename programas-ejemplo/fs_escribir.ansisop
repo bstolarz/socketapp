@@ -1,0 +1,12 @@
+#!/usr/bin/ansisop
+begin
+	variables a, b
+	
+	abrir a CLE zorro.txt
+	
+	buscar a 1
+	buscar a 2
+	buscar a 3
+	
+	cerrar a
+end
