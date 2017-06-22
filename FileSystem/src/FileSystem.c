@@ -37,6 +37,7 @@ int main(int arg, char* argv[]) {
 	char* pathMetadataFS = armarPathMetadataFS();
 	metadataFS_read(pathMetadataFS);
 	metadataFS_print();
+	free(pathMetadataFS);
 
 	initSadica();
 
@@ -84,7 +85,6 @@ int main(int arg, char* argv[]) {
 			close(socketKernel);
 		}
 	}
-
 
 	log_destroy(logs);
 	return EXIT_SUCCESS;
@@ -200,4 +200,5 @@ int main(int arg, char* argv[]) {
 		free(path);
 		free(comando);
 
-	}*/
+	}
+}*/
