@@ -79,6 +79,7 @@ typedef struct{
 typedef struct{
 	int rafagas;
 	int syscallEjecutadas;
+	int syscallPrivilegiadas;
 	int pagesAlloc;
 	int pagesFree;
 }t_stat;

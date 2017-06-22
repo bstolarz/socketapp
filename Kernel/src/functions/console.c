@@ -32,30 +32,30 @@ void console_process_list(){
 		}
 	}
 
-	pthread_mutex_lock(&queueNewPrograms->mutex);
+//	pthread_mutex_lock(&queueNewPrograms->mutex);
 	printf("Lista de procesos nuevos\n");
 	list_iterate(queueNewPrograms->list, (void*)_printProccessList);
-	pthread_mutex_unlock(&queueNewPrograms->mutex);
+	//pthread_mutex_unlock(&queueNewPrograms->mutex);
 
-	pthread_mutex_lock(&queueCPUs->mutex);
+	//pthread_mutex_lock(&queueCPUs->mutex);
 	printf("Lista de procesos ejecutando\n");
 	list_iterate(queueCPUs->list, (void*)_printProccessExecutingList);
-	pthread_mutex_unlock(&queueCPUs->mutex);
+//	pthread_mutex_unlock(&queueCPUs->mutex);
 
-	pthread_mutex_lock(&queueReadyPrograms->mutex);
+	//pthread_mutex_lock(&queueReadyPrograms->mutex);
 	printf("Lista de procesos listos\n");
 	list_iterate(queueReadyPrograms->list, (void*)_printProccessList);
-	pthread_mutex_unlock(&queueReadyPrograms->mutex);
+	//pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	//pthread_mutex_lock(&queueBlockedPrograms->mutex);
 	printf("Lista de procesos bloqueados\n");
 	list_iterate(queueBlockedPrograms->list, (void*)_printProccessList);
-	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+	//pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
-	pthread_mutex_lock(&queueFinishedPrograms->mutex);
+	//pthread_mutex_lock(&queueFinishedPrograms->mutex);
 	printf("Lista de procesos finalizados\n");
 	list_iterate(queueFinishedPrograms->list, (void*)_printProccessFinishList);
-	pthread_mutex_unlock(&queueFinishedPrograms->mutex);
+	//pthread_mutex_unlock(&queueFinishedPrograms->mutex);
 	printf("\n-----------------FIN DE LISTAR PROCESOS------------\n\n");
 }
 t_program* seek_program(t_list* l,int pid){
@@ -79,25 +79,38 @@ t_program* get_program(int pid){
 		return program->pcb->pid==pid;
 	}
 
+	t_program* encontrarProgramaEnCPU(int pid){
+		int i;
+		for(i=0;i<list_size(queueCPUs->list);i++){
+			t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
+			if(cpu->program->pcb->pid==pid){
+				return cpu->program;
+			}
+		}
+		return NULL;
+	}
+
 	t_program* prog = NULL;
 
-	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+
 	prog=list_find(queueBlockedPrograms->list,(void*)encontrarPrograma);
-	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+
 
 	if(prog == NULL){
-		pthread_mutex_lock(&queueFinishedPrograms->mutex);
+
 		prog=list_find(queueFinishedPrograms->list,(void*)encontrarPrograma);
-		pthread_mutex_unlock(&queueFinishedPrograms->mutex);
+
 	}
 
 	if(prog == NULL){
-		printf("No estaba en finalizados\n");
-		pthread_mutex_lock(&queueReadyPrograms->mutex);
+
 		prog=list_find(queueReadyPrograms->list,(void*)encontrarPrograma);
-		pthread_mutex_unlock(&queueReadyPrograms->mutex);
+
 	}
 
+	if(prog == NULL){
+		prog=encontrarProgramaEnCPU(pid);
+	}
 	return prog;
 	}
 /*
@@ -206,6 +219,13 @@ int check_pid_is_incorrect(int pid){
 			return 1;
 		}
 	}
+	tam=list_size(queueCPUs->list);
+	for (i=0;i<tam;i++){
+		t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
+		if (cpu->program->pcb->pid==1){
+			return 1;
+		}
+	}
 	return 0;
 }
 
@@ -215,7 +235,7 @@ void print_rafagas_del_proceso(int p){
 }
 void print_syscalls(int p){
 	t_program* program=get_program(p);
-	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
+	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallPrivilegiadas);
 }
 void print_list(t_fd* fd){
 	printf("............................................\n");
@@ -265,7 +285,9 @@ void console_get_process_stats(){
 		if (pidProceso==0){
 			return;
 		}
+
 	}
+	printf("Has ingresado el PID: %d\n",pidProceso);
 	printf("[SISTEMA] - Ingrese el numero de comando:\n");
 	printf("[SISTEMA] - 1: Cantidad de rafagas.\n");
 	printf("[SISTEMA] - 2: Operaciones privilegiadas ejecutadas.\n");
