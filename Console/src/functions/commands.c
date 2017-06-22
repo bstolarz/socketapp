@@ -25,6 +25,7 @@ const char* programNames[] = {
 	"facil",
 	"for",
 	"productor",
+	"consumidor",
 	"stackoverflow",
 	"completo",
 	"testfuncall",
