@@ -566,8 +566,8 @@ void AnSISOP_escribir(t_descriptor_archivo descriptor_archivo, void* informacion
 
 	printf("Finalizo AnSISOP_escribir\n");
 }
-void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
-	printf("AnSISOP_leer [Descriptor: %d] [Donde: %d] [Tamanio: %d]\n",descriptor_archivo, informacion, tamanio);
+void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero posicionMemoria, t_valor_variable tamanio){
+	printf("AnSISOP_leer [Descriptor: %d] [Donde: %d] [Tamanio: %d]\n",descriptor_archivo, posicionMemoria, tamanio);
 	//Informo al kernel que quiero leer archivo
 	if (socket_send_string(serverKernel,"leer")>0){
 		log_info(logCPU, "Informo correctamente al kernel que el programa %d quiere leer un archivo\n", pcb->pid);
@@ -575,21 +575,21 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion
 		log_info(logCPU, "Error informando al kernel que el programa %d quiere leer un archivo\n", pcb->pid);
 	}
 
-	//Envio al kernel el descriptor de archivo
+	// descriptor de archivo
 	if (socket_send_int(serverKernel, (int)descriptor_archivo)>0){
 		log_info(logCPU, "Envio correctamente el descriptor de archivo: %d\n", descriptor_archivo);
 	}else{
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);
 	}
 
-	//Envio al kernel el lugar donde quiero que se almacene la informacion leida
-	if (socket_send_int(serverKernel,informacion)>0){
-		log_info(logCPU, "Envio correctamente el puntero donde quiero se guarde la informacion leida: %d\n", informacion);
+	// pos memoria
+	if (socket_send_int(serverKernel,posicionMemoria)>0){
+		log_info(logCPU, "Envio correctamente el puntero donde quiero se guarde la informacion leida: %d\n", posicionMemoria);
 	}else{
-		log_info(logCPU, "Error enviando el puntero donde quiero se guarde la informacion leida: %d\n", informacion);
+		log_info(logCPU, "Error enviando el puntero donde quiero se guarde la informacion leida: %d\n", posicionMemoria);
 	}
 
-	//Envio al kernel el tamanio de lo que quiero leer
+	// tamanio de lo que quiero leer
 	if (socket_send_int(serverKernel, tamanio)>0){
 		log_info(logCPU, "Envio correctamente el tamanio de lo que quiero leer: %d\n", tamanio);
 	}else{

@@ -2,9 +2,9 @@
 begin
 	variables d, a, b, c
 	
-	abrir d CLE zorro.txt
+	abrir d LE zorro.txt
 	
-	#leer descriptor pos_memoria 10
+	#leer descriptor pos_memoria cant_bytes
 	leer d a 12
 	
 	cerrar d

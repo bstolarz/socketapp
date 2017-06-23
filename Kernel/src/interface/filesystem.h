@@ -9,7 +9,7 @@
 #define INTERFACE_FILESYSTEM_H_
 
 void filesystem_connect();
-int filesystem_read(char* path, size_t offset, int size);
+int filesystem_read(char* path, size_t offset, int size, void** buffer);
 int filesystem_write(char* path, int offset, void* buffer, int size);
 int filesystem_close();
 int filesystem_delete(char* path);

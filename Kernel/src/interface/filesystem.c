@@ -25,18 +25,50 @@ void filesystem_connect(){
 	}
 }
 
-int filesystem_read(char* path, size_t offset, int size){
-	if (socket_send_string(fileSystemServer.socket,"OBTENERDATOS")>0){
-		log_info(logKernel, "Le pido a FS obtener datos");
-		if (socket_send_string(fileSystemServer.socket,path)>0){
-			log_info(logKernel, "Le paso a FS el path '%s'",path);
+int filesystem_read(char* path, size_t offset, int size, void** buffer){
 
-		}else{
+	if (socket_send_string(fileSystemServer.socket, "OBTENERDATOS") == -1)
+	{
+		log_error(logKernel, "[OBTENERDATOS] Error mandando orden leer archivo '%s'",path);
+		return -20;
+	}
 
+	if(socket_send_string(fileSystemServer.socket, path) == -1)
+	{
+		log_error(logKernel, "[OBTENERDATOS] Error mandando nombre del archivo '%s'",path);
+		return -20;
+	}
+
+	if(socket_send_int(fileSystemServer.socket, offset) == -1)
+	{
+		log_error(logKernel, "[OBTENERDATOS] Error mandando offset archivo '%s'",path);
+		return -20;
+	}
+
+	if(socket_send_int(fileSystemServer.socket, size) == -1)
+	{
+		log_error(logKernel, "[OBTENERDATOS] Error mandando tamanio a leer archivo '%s'",path);
+		return -20;
+	}
+
+	int readCount;
+
+	if (socket_recv_int(fileSystemServer.socket, &readCount) == -1)
+	{
+		log_error(logKernel, "[OBTENERDATOS] error obteniendo respuesta del fs archivo '%s'", path);
+		return -20;
+	}
+
+	if (readCount >= 0)
+	{
+		if (socket_recv(fileSystemServer.socket, buffer, 1) == -1)
+		{
+			log_error(logKernel, "[OBTENERDATOS] error obteniendo data del fs archivo '%s'", path);
+			return -20;
 		}
 	}
 
-	return 0;
+	return readCount;
 }
 
 int filesystem_write(char* path, int offset, void* buffer, int size){

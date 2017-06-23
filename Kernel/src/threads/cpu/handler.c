@@ -636,58 +636,83 @@ void handle_cpu_leer(t_cpu* cpu){
 	int tamanioALeer;
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
-	//Recibo el file descriptor
-	if(socket_recv_int(cpu->socket,&d)>0){
-		log_info(logKernel, "Recibi correctamente el file descriptor: %d",d);
-	}else{
-		log_info(logKernel, "Error recibiendo el file descriptor del programa %d que esta en la CPU [socket: %d]", cpu->program->pcb->pid,cpu->socket);
+	int readResult = -20;
+	void* buffer = NULL;
+
+	// file descriptor
+	if(socket_recv_int(cpu->socket,&d) == -1) {
+		log_error(logKernel, "Error recibiendo el file descriptor del programa %d que esta en la CPU [socket: %d]", cpu->program->pcb->pid,cpu->socket);
+		cpu->disconnected = 1;
+		return;
 	}
-	descriptor=(t_descriptor_archivo)d;
+
+	descriptor = (t_descriptor_archivo) d;
+
+	// pos en memoria
+	if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido) == -1){
+		log_error(logKernel, "Error al recibir el puntero donde se quiere guardar lo leido");
+		cpu->disconnected = 1;
+		return;
+	}
+
+	// tamanio a leer
+	if(socket_recv_int(cpu->socket,&tamanioALeer) == -1){
+		log_error(logKernel, "Error al recibir el tamanio de lo que se quiere leer");
+		cpu->disconnected = 1;
+		return;
+	}
+
+	log_debug(logKernel, "[leer] cpu me paso bien los datos (%d, %d, %d)", d, dondeGuardarLoLeido, tamanioALeer);
+
+
 	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, descriptor);
-	char* path=string_duplicate(filedescriptor->global->path);
-	//Busco el path
-	//Recibo el tamanio a leer
-	if(socket_recv_int(cpu->socket,&tamanioALeer)>0){
-		log_info(logKernel, "CPU necesita leer %d bytes",tamanioALeer);
-	}else{
-		log_info(logKernel, "Error al recibir el tamanio de lo que se quiere leer");
+
+	if(filedescriptor == NULL)
+	{
+		cpu->program->interruptionCode = -11;
+		readResult = -11;
 	}
-
-	//Reviso los permisos de lectura
-	int puedeLeer=file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_READ);
-
-
-	//Verifico si se puede leer y en ese caso le pido a FS leer el archivo
-	if(puedeLeer){
-		//PUEDE LEER
-		if(socket_recv_int(cpu->socket,&dondeGuardarLoLeido)>0){
-			log_info(logKernel, "CPU requiere que se guarde la info en el puntero %d",dondeGuardarLoLeido);
-			//Le pido a FS leer el archivo
-			filesystem_read(path,filedescriptor->cursor,tamanioALeer);
-			//Recibo la respuesta de FS de la lectura efectuada
-			int resp;
-			if (socket_recv_int(fileSystemServer.socket,&resp)>0){
-				log_info(logKernel, "Recibo la respuesta del FS de lectura de '%s': %d", path, resp);
-				if(resp==1){
-					//Informo a CPU que se leyo con exito
-					if (socket_send_int(cpu->socket,resp)>0){
-						log_info(logKernel, "Se informo correctamente a la CPU [socket: %d] de la lectura EXITOSA del archivo '%s' con file descriptor: %d", cpu->socket,path, d);
-					}else{
-						log_info(logKernel, "Error al informar a la CPU [socket: %d] de la lectura  EXITOSA del archivo '%s' con file descriptor: %d", cpu->socket,path, d);
-					}
-				}
-			}
-		}else{
-			log_info(logKernel, "Error al recibir el puntero donde se quiere guardar lo leido");
-		}
-	}// NO PUEDE LEER
 	else
 	{
-		if(socket_send_int(cpu->socket,-3)>0){
-			log_info(logKernel, "Le informo al CPU que el programa con pid %d no tiene permisos de lectura", cpu->program->pcb->pid);
-		}else{
-			log_info(logKernel, "Error al informar al CPU que el programa con pid %d no tiene permisos de lectura", cpu->program->pcb->pid);
+		//Verifico si se puede leer y en ese caso le pido a FS leer el archivo
+		//Reviso los permisos de lectura
+		int puedeLeer = file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_READ);
+
+		if(puedeLeer)
+		{
+			readResult = filesystem_read(filedescriptor->global->path, filedescriptor->cursor, tamanioALeer, &buffer);
 		}
+		else
+		{
+			cpu->program->interruptionCode = -3;
+			readResult = -3;
+		}
+	}
+
+	// guardar en memoria
+	if(buffer != NULL)
+	{
+		int writeMemoryResult = memory_write(cpu->program, dondeGuardarLoLeido / pageSize, dondeGuardarLoLeido % pageSize, buffer, tamanioALeer);
+
+		if (writeMemoryResult > -1)
+		{
+			readResult = 1;
+		}
+		else
+		{
+			cpu->program->interruptionCode = writeMemoryResult;
+			readResult = writeMemoryResult;
+		}
+	}
+
+	// mando resultado a cpu, no se si es necesario,
+	// solo seria necesario si usase el error code.
+	// preguntar a jonatan
+	if (socket_send_int(cpu->socket, readResult) == -1)
+	{
+		log_error(logKernel, "Error al recibir el tamanio de lo que se quiere leer");
+		cpu->disconnected = 1;
+		return;
 	}
 }
 
