@@ -55,19 +55,9 @@ int crearArchivo(char* path, int posBloqueLibre){
 		fprintf(archivo, "TAMANIO=0\n");
 		log_info(logs, "Hice fprintf de tamanio");
 
-		char* bloque = string_new();
-		sprintf(bloque, "%d", posBloqueLibre);
-
-		char* lineaBloques = string_new();
-		string_append(&lineaBloques, "BLOQUES=[");
-		string_append(&lineaBloques, bloque);
-		string_append(&lineaBloques, "]");
-
-		fprintf(archivo, lineaBloques);
+		fprintf(archivo, "BLOQUES=[%d]", posBloqueLibre);
 		log_info(logs, "Hice fprintf de la linea de bloques");
 
-		free(bloque);
-		free(lineaBloques);
 		fclose(archivo);
 		return 1;
 	}
@@ -80,41 +70,64 @@ int crearArchivo(char* path, int posBloqueLibre){
 
 bool seVanAPoderCrearLosDirectoriosNecesarios(char* pathDelKernel){
 	char* directorio = string_duplicate(configFileSystem->punto_montaje);
+	string_append(&directorio, "Archivos/");
 	char** arrayDeDirectoriosYArchivoFinal = string_split(pathDelKernel, "/");
+	size_t i = 0;
 
-	while(arrayDeDirectoriosYArchivoFinal+1 != NULL){
-		string_append(&directorio, *arrayDeDirectoriosYArchivoFinal);
+	while(arrayDeDirectoriosYArchivoFinal[i + 1] != NULL){
+		string_append(&directorio, arrayDeDirectoriosYArchivoFinal[i]);
 
 		if(access(directorio, F_OK) == 0 && is_regular_file(directorio)){
 			return false;
 		}
 
 		string_append(&directorio, "/");
-		arrayDeDirectoriosYArchivoFinal++;
+		i++;
 	}
-	//Se le hace free a cada string del arrayDeDirectoriosYArchivoFinal?
+
+	// liberar strings
 	free(directorio);
+
+	i = 0;
+	while (arrayDeDirectoriosYArchivoFinal[i] != NULL)
+	{
+		free(arrayDeDirectoriosYArchivoFinal[i]); // el nombre del archivo
+		++i;
+	}
+
+	free(arrayDeDirectoriosYArchivoFinal);
+
 	return true;
 }
 
 int crearDirectoriosNecesarios(char* pathDelKernel){
 	char* directorio = string_duplicate(configFileSystem->punto_montaje);
+	string_append(&directorio, "Archivos/");
 	char** arrayDeDirectoriosYArchivoFinal = string_split(pathDelKernel, "/");
+	size_t i = 0;
 
-	while(arrayDeDirectoriosYArchivoFinal+1 != NULL){
-		string_append(&directorio, *arrayDeDirectoriosYArchivoFinal);
+	while(arrayDeDirectoriosYArchivoFinal[i + 1] != NULL){
+		string_append(&directorio, arrayDeDirectoriosYArchivoFinal[i]);
 
-		char* comando = string_new();
-		string_append(&comando, "mkdir ");
-		string_append(&comando, directorio);
+		char* comando = string_from_format("mkdir %s", directorio);
 		system(comando);
 		free(comando);
 
 		string_append(&directorio, "/");
-		arrayDeDirectoriosYArchivoFinal++;
+		i++;
 	}
-	//Se le hace free a cada string del arrayDeDirectoriosYArchivoFinal?
+
+	// liberar strings
 	free(directorio);
+
+	i = 0;
+	while (arrayDeDirectoriosYArchivoFinal[i] != NULL)
+	{
+		free(arrayDeDirectoriosYArchivoFinal[i]); // el nombre del archivo
+		++i;
+	}
+	free(arrayDeDirectoriosYArchivoFinal);
+
 	return 1;
 }
 
