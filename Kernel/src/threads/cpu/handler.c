@@ -692,11 +692,11 @@ void handle_cpu_leer(t_cpu* cpu){
 	// guardar en memoria
 	if(buffer != NULL)
 	{
-		int writeMemoryResult = memory_write(cpu->program, dondeGuardarLoLeido / pageSize, dondeGuardarLoLeido % pageSize, buffer, tamanioALeer);
+		int writeMemoryResult = memory_write(cpu->program, dondeGuardarLoLeido / pageSize, dondeGuardarLoLeido % pageSize, buffer, readResult);
 
 		if (writeMemoryResult > -1)
 		{
-			readResult = 1;
+			readResult = 1; // es lo q espera cpu
 		}
 		else
 		{

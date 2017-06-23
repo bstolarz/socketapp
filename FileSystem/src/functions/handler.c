@@ -28,12 +28,15 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 
 	if (strcmp(unMensajeDeOperacion, "VALIDAR") == 0) {
 		resultado = validar(pathConPuntoMontaje);
+		socket_send_int(socketKernel, resultado);
 
 	} else if (strcmp(unMensajeDeOperacion, "CREAR") == 0) {
 		resultado = crear(path, pathConPuntoMontaje);
+		socket_send_int(socketKernel, resultado);
 
 	} else if (strcmp(unMensajeDeOperacion, "BORRAR") == 0) {
 		resultado = borrar(pathConPuntoMontaje);
+		socket_send_int(socketKernel, resultado);
 
 	} else if (strcmp(unMensajeDeOperacion,"OBTENERDATOS") == 0) {
 		socket_recv_int(socketKernel, &offset);
@@ -43,6 +46,12 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 
 		char* buffer = malloc(0);
 		resultado = obtenerDatos(pathConPuntoMontaje, offset, size, &buffer);
+		socket_send_int(socketKernel, resultado);
+
+		if (resultado > 0)
+		{
+			socket_send(socketKernel, buffer, resultado);
+		}
 
 	} else if (strcmp(unMensajeDeOperacion,"GUARDARDATOS") == 0) {
 		void* buffer;
@@ -54,9 +63,8 @@ void hacerLoQueCorresponda(char* unMensajeDeOperacion) {
 		log_info(logs, "Recibi el buffer: %s", buffer);
 
 		resultado = guardarDatos(pathConPuntoMontaje, offset, size, buffer);
+		socket_send_int(socketKernel, resultado);
 	}
-
-	socket_send_int(socketKernel, resultado);
 
 	free(path);
 }

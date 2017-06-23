@@ -59,9 +59,11 @@ int filesystem_read(char* path, size_t offset, int size, void** buffer){
 		return -20;
 	}
 
-	if (readCount >= 0)
+	if (readCount > 0)
 	{
-		if (socket_recv(fileSystemServer.socket, buffer, 1) == -1)
+		int bufferSize = socket_recv(fileSystemServer.socket, buffer, 1);
+
+		if (bufferSize == -1)
 		{
 			log_error(logKernel, "[OBTENERDATOS] error obteniendo data del fs archivo '%s'", path);
 			return -20;

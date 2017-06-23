@@ -582,8 +582,9 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero posicionMem
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);
 	}
 
-	// pos memoria
-	if (socket_send_int(serverKernel,posicionMemoria)>0){
+	// pos memoria.
+	// TODO: el pcb->cantPagsCodigo * pageSize +  puede que sea temporal
+	if (socket_send_int(serverKernel, (pcb->cantPagsCodigo * pageSize) + posicionMemoria)>0){
 		log_info(logCPU, "Envio correctamente el puntero donde quiero se guarde la informacion leida: %d\n", posicionMemoria);
 	}else{
 		log_info(logCPU, "Error enviando el puntero donde quiero se guarde la informacion leida: %d\n", posicionMemoria);

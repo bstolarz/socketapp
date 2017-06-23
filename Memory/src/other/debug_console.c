@@ -150,6 +150,24 @@ char* stringify_frame_content_str(char* frame)
 	return strContent;
 }
 
+char* stringify_frame_content_char(char* frame)
+{
+	size_t i = 0;
+	char* charContent = malloc(configMemory->frameSize);
+
+	for (i = 0; i != configMemory->frameSize; ++i)
+	{
+		if (frame[i] == '\0')
+			charContent[i] = '.';
+		else
+			charContent[i] = frame[i];
+	}
+	charContent[i] = '\0';
+
+	return charContent;
+}
+
+
 char* stringify_frames_content(_Bool (*framePredicate)(t_pageTableEntry*), frame_stringifier frameStringifier)
 {
 	size_t i;
@@ -357,6 +375,9 @@ _Bool handle_dump(char** tokens, char** info)
 
 			if (string_equals_ignore_case(tokens[i], "str"))
 				return stringify_frame_content_str;
+
+			if (string_equals_ignore_case(tokens[i], "char"))
+				return stringify_frame_content_char;
 		}
 		return stringify_frame_content_int;
 	};
