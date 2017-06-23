@@ -42,7 +42,7 @@ void program_process_new(fd_set* master, int socket){
 
 	program->pcb->pid=program_generate_id();
 	program->pcb->pc=0;
-	printf("PID: %d\n",program->pcb->pid);
+
 	program->pcb->processFileTable=dictionary_create();
 	program->pcb->stackPosition=0;
 	program->pcb->cantPagsCodigo=0;
