@@ -143,50 +143,50 @@ t_program* get_program(int pid){
 	}
 }
 */int check_pid_is_running(int pid){
-	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	//pthread_mutex_lock(&queueBlockedPrograms->mutex);
 	int tam=list_size(queueBlockedPrograms->list);
 	int i;
 	for (i=0;i!=tam;i++){
 		t_program* p=(t_program*)list_get(queueBlockedPrograms->list,i);
 		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+		//	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+//	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
-	pthread_mutex_lock(&queueNewPrograms->mutex);
+	//pthread_mutex_lock(&queueNewPrograms->mutex);
 	tam=list_size(queueNewPrograms->list);
 	for (i=0;i!=tam;i++){
 		t_program* p=(t_program*)list_get(queueNewPrograms->list,i);
 		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueNewPrograms->mutex);
+		//	pthread_mutex_unlock(&queueNewPrograms->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueNewPrograms->mutex);
+//	pthread_mutex_unlock(&queueNewPrograms->mutex);
 
-	pthread_mutex_lock(&queueReadyPrograms->mutex);
+	//pthread_mutex_lock(&queueReadyPrograms->mutex);
 	tam=list_size(queueReadyPrograms->list);
 	for (i=0;i!=tam;i++){
 		t_program* p=(t_program*)list_get(queueReadyPrograms->list,i);
 		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueReadyPrograms->mutex);
+		//	pthread_mutex_unlock(&queueReadyPrograms->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueReadyPrograms->mutex);
+	//pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-	pthread_mutex_lock(&queueCPUs->mutex);
+	//pthread_mutex_lock(&queueCPUs->mutex);
 	tam=list_size(queueCPUs->list);
 	for (i=0;i!=tam;i++){
-		t_program* p=(t_program*)list_get(queueCPUs->list,i);
-		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueCPUs->mutex);
+		t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
+		if (cpu->program->pcb->pid==pid){
+		//	pthread_mutex_unlock(&queueCPUs->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueCPUs->mutex);
+	//pthread_mutex_unlock(&queueCPUs->mutex);
 	return 0;
 }
 int check_pid_is_incorrect(int pid){
