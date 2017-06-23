@@ -17,7 +17,7 @@
 #include "functions/auxiliares.h"
 #include "functions/handler.h"
 
-//void soloParaProbarLasOperaciones();
+void soloParaProbarLasOperaciones();
 
 int main(int arg, char* argv[]) {
 	if (arg != 2) {
@@ -120,24 +120,24 @@ int main(int arg, char* argv[]) {
 		size_t cantLeidaPath = getline(&path, &cantidadPath, stdin);
 		path[cantLeidaPath-1]='\0';
 
-		path = armarPathArchivo(path);
+		char* pathConPuntoMontaje = armarPathArchivo(path);
 
 		if(strcmp(comando, "VALIDAR") == 0){
-			resultado = validar(path);
+			resultado = validar(pathConPuntoMontaje);
 			if(resultado > 0){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
 			}else{
 				printf("El archivo no existe\n");
 			}
 		}else if(strcmp(comando, "CREAR") == 0){
-			resultado = crear(path);
+			resultado = crear(path, pathConPuntoMontaje);
 			if(resultado == 1){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
 			}else{
 				printf("El archivo no existe\n");
 			}
 		}else if(strcmp(comando, "BORRAR") == 0){
-			resultado = borrar(path);
+			resultado = borrar(pathConPuntoMontaje);
 			if(resultado == 1){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
 			}else{
@@ -153,7 +153,7 @@ int main(int arg, char* argv[]) {
 			scanf("%d", &size);
 
 			char* buf = malloc(0);
-			resultado = obtenerDatos(path,offset,size,&buf);
+			resultado = obtenerDatos(pathConPuntoMontaje,offset,size,&buf);
 
 			if(resultado == 1){
 				printf("Se pudo %s archivo satisfactoriamente\n", comando);
@@ -180,7 +180,7 @@ int main(int arg, char* argv[]) {
 				log_info(logs, "%s", contenido);
 
 
-				resultado = guardarDatos(path, offset, size, contenido);
+				resultado = guardarDatos(pathConPuntoMontaje, offset, size, contenido);
 
 
 				if(resultado == 1){
