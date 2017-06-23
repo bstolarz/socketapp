@@ -32,30 +32,30 @@ void console_process_list(){
 		}
 	}
 
-	pthread_mutex_lock(&queueNewPrograms->mutex);
+//	pthread_mutex_lock(&queueNewPrograms->mutex);
 	printf("Lista de procesos nuevos\n");
 	list_iterate(queueNewPrograms->list, (void*)_printProccessList);
-	pthread_mutex_unlock(&queueNewPrograms->mutex);
+	//pthread_mutex_unlock(&queueNewPrograms->mutex);
 
-	pthread_mutex_lock(&queueCPUs->mutex);
+	//pthread_mutex_lock(&queueCPUs->mutex);
 	printf("Lista de procesos ejecutando\n");
 	list_iterate(queueCPUs->list, (void*)_printProccessExecutingList);
-	pthread_mutex_unlock(&queueCPUs->mutex);
+//	pthread_mutex_unlock(&queueCPUs->mutex);
 
-	pthread_mutex_lock(&queueReadyPrograms->mutex);
+	//pthread_mutex_lock(&queueReadyPrograms->mutex);
 	printf("Lista de procesos listos\n");
 	list_iterate(queueReadyPrograms->list, (void*)_printProccessList);
-	pthread_mutex_unlock(&queueReadyPrograms->mutex);
+	//pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	//pthread_mutex_lock(&queueBlockedPrograms->mutex);
 	printf("Lista de procesos bloqueados\n");
 	list_iterate(queueBlockedPrograms->list, (void*)_printProccessList);
-	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+	//pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
-	pthread_mutex_lock(&queueFinishedPrograms->mutex);
+	//pthread_mutex_lock(&queueFinishedPrograms->mutex);
 	printf("Lista de procesos finalizados\n");
 	list_iterate(queueFinishedPrograms->list, (void*)_printProccessFinishList);
-	pthread_mutex_unlock(&queueFinishedPrograms->mutex);
+	//pthread_mutex_unlock(&queueFinishedPrograms->mutex);
 	printf("\n-----------------FIN DE LISTAR PROCESOS------------\n\n");
 }
 t_program* seek_program(t_list* l,int pid){
@@ -79,26 +79,38 @@ t_program* get_program(int pid){
 		return program->pcb->pid==pid;
 	}
 
+	t_program* encontrarProgramaEnCPU(int pid){
+		int i;
+		for(i=0;i<list_size(queueCPUs->list);i++){
+			t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
+			if(cpu->program->pcb->pid==pid){
+				return cpu->program;
+			}
+		}
+		return NULL;
+	}
+
 	t_program* prog = NULL;
 
-	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+
 	prog=list_find(queueBlockedPrograms->list,(void*)encontrarPrograma);
-	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+
 
 	if(prog == NULL){
-		printf("No estaba en bloqueados\n");
-		pthread_mutex_lock(&queueFinishedPrograms->mutex);
+
 		prog=list_find(queueFinishedPrograms->list,(void*)encontrarPrograma);
-		pthread_mutex_unlock(&queueFinishedPrograms->mutex);
+
 	}
 
 	if(prog == NULL){
-		printf("No estaba en finalizados\n");
-		pthread_mutex_lock(&queueReadyPrograms->mutex);
+
 		prog=list_find(queueReadyPrograms->list,(void*)encontrarPrograma);
-		pthread_mutex_unlock(&queueReadyPrograms->mutex);
+
 	}
 
+	if(prog == NULL){
+		prog=encontrarProgramaEnCPU(pid);
+	}
 	return prog;
 	}
 /*
@@ -131,50 +143,50 @@ t_program* get_program(int pid){
 	}
 }
 */int check_pid_is_running(int pid){
-	pthread_mutex_lock(&queueBlockedPrograms->mutex);
+	//pthread_mutex_lock(&queueBlockedPrograms->mutex);
 	int tam=list_size(queueBlockedPrograms->list);
 	int i;
 	for (i=0;i!=tam;i++){
 		t_program* p=(t_program*)list_get(queueBlockedPrograms->list,i);
 		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+		//	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+//	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
-	pthread_mutex_lock(&queueNewPrograms->mutex);
+	//pthread_mutex_lock(&queueNewPrograms->mutex);
 	tam=list_size(queueNewPrograms->list);
 	for (i=0;i!=tam;i++){
 		t_program* p=(t_program*)list_get(queueNewPrograms->list,i);
 		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueNewPrograms->mutex);
+		//	pthread_mutex_unlock(&queueNewPrograms->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueNewPrograms->mutex);
+//	pthread_mutex_unlock(&queueNewPrograms->mutex);
 
-	pthread_mutex_lock(&queueReadyPrograms->mutex);
+	//pthread_mutex_lock(&queueReadyPrograms->mutex);
 	tam=list_size(queueReadyPrograms->list);
 	for (i=0;i!=tam;i++){
 		t_program* p=(t_program*)list_get(queueReadyPrograms->list,i);
 		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueReadyPrograms->mutex);
+		//	pthread_mutex_unlock(&queueReadyPrograms->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueReadyPrograms->mutex);
+	//pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-	pthread_mutex_lock(&queueCPUs->mutex);
+	//pthread_mutex_lock(&queueCPUs->mutex);
 	tam=list_size(queueCPUs->list);
 	for (i=0;i!=tam;i++){
-		t_program* p=(t_program*)list_get(queueCPUs->list,i);
-		if (p->pcb->pid==pid){
-			pthread_mutex_unlock(&queueCPUs->mutex);
+		t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
+		if (cpu->program->pcb->pid==pid){
+		//	pthread_mutex_unlock(&queueCPUs->mutex);
 			return 1;
 		}
 	}
-	pthread_mutex_unlock(&queueCPUs->mutex);
+	//pthread_mutex_unlock(&queueCPUs->mutex);
 	return 0;
 }
 int check_pid_is_incorrect(int pid){
@@ -207,6 +219,13 @@ int check_pid_is_incorrect(int pid){
 			return 1;
 		}
 	}
+	tam=list_size(queueCPUs->list);
+	for (i=0;i<tam;i++){
+		t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
+		if (cpu->program->pcb->pid==1){
+			return 1;
+		}
+	}
 	return 0;
 }
 
@@ -216,11 +235,13 @@ void print_rafagas_del_proceso(int p){
 }
 void print_syscalls(int p){
 	t_program* program=get_program(p);
-	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallEjecutadas);
+	printf("El programa con PID [%d] ha ejecutado [%d syscalls]\n",program->pcb->pid,program->stats.syscallPrivilegiadas);
 }
 void print_list(t_fd* fd){
-	printf("|FD - Flags -  File name|\n");
-	printf("|%d -   %s -    %s\n",fd->value,fd->permissions, fd->global->path);
+	printf("............................................\n");
+	printf("FD -> %d\n",fd->value);
+	printf("Flags -> %s\n",fd->permissions);
+	printf("Path -> %s\n",fd->global->path);
 }
 
 void print_file_process_table(int p){
@@ -230,9 +251,19 @@ void print_file_process_table(int p){
 		if(list_size(program->fileDescriptors)==0){
 			printf("El programa con PID [%d] no ha abierto ningun archivo\n",program->pcb->pid);
 		}else{
-			printf("---------------------\n");
-			list_iterate(program->fileDescriptors,(void*)print_list);
-			printf("---------------------\n");
+			if(list_size(program->fileDescriptors)==1){
+				printf("\n\n\n------Tabla de archivos del proceso %d----------\n",p);
+				t_list* l=program->fileDescriptors;
+				t_fd* fd=(t_fd*)list_get(l,0);
+				printf("FD -> %d\n",fd->value);
+				printf("Flags -> %s\n",fd->permissions);
+				printf("Path -> %s\n",fd->global->path);
+				printf("------------------------------------------------\n\n");
+			}else{
+				printf("\n\n------Tabla de archivos del proceso %d----------\n",p);
+				list_iterate(program->fileDescriptors,(void*)print_list);
+				printf("------------------------------------------------\n\n");
+			}
 		}
 	}else{
 		printf("Esto se va al carajo!\n");
@@ -254,7 +285,9 @@ void console_get_process_stats(){
 		if (pidProceso==0){
 			return;
 		}
+
 	}
+	printf("Has ingresado el PID: %d\n",pidProceso);
 	printf("[SISTEMA] - Ingrese el numero de comando:\n");
 	printf("[SISTEMA] - 1: Cantidad de rafagas.\n");
 	printf("[SISTEMA] - 2: Operaciones privilegiadas ejecutadas.\n");
@@ -288,26 +321,29 @@ void console_get_global_file_table(){
 	if (size==0){
 		printf("No hay archivos abiertos\n");
 	}else{
-		printf("\n-TABLA GLOBAL DE ARCHIVOS-\n");
-		printf("|Path  -  Open|\n");
-		printf("|-------------|\n");
+		printf("\n\n\n--------TABLA GLOBAL DE ARCHIVOS---------\n");
+
 
 		int i;
 		for (i=0;i!=size;i++){
 			t_global_fd* globalFD=(t_global_fd*)list_get(l,i);
-			printf("|%s - %d|\n",globalFD->path,globalFD->open);
+			printf("|Path -> ");
+			printf("'%s'\n",globalFD->path);
+			printf("|Open -> ");
+			printf("%d\n",globalFD->open);
+			printf("...........................................\n");
 		}
-		printf("---------------\n");
+		printf("\n\n");
 	}
 }
 
 void console_multiprogram_degree(){
-	printf("El grado de multiprogramacion es: %d\n", configKernel->grado_multiprog);
+	printf("\n\nEl grado de multiprogramacion es: %d\n\n", configKernel->grado_multiprog);
 	printf("Ingrese el nuevo valor\n");
 	int value;
 	scanf("%d",&value);
 	configKernel->grado_multiprog=value;
-	printf("El nuevo valor del grado de multiprogramacion es: %d\n",value);
+	printf("\n\nEl nuevo valor del grado de multiprogramacion es: %d\n\n",value);
 }
 
 void console_finish_process(){
