@@ -29,5 +29,5 @@ int pageSize;
 int desconectar;
 int serverKernel;
 int serverMemory;
-
+int isExecuting;
 #endif /* COMMONS_DECLARATIONS_H_ */

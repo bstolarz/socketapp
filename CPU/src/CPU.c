@@ -24,9 +24,15 @@
 #include "others/tests.h"
 #include <signal.h>
 #include <unistd.h>
+
+
 void desconectarCPU(){
 	printf("CPU desconectada por la senial SIGUSR1\n");
-	desconectar=1;
+	if(isExecuting==0){
+		exit(EXIT_SUCCESS);
+	}else{
+		desconectar=1;
+	}
 }
 
 
@@ -44,6 +50,7 @@ int main(int arg, char* argv[]) {
 	logCPU = log_create_file();
 	log_config();
 	desconectar=0;
+	isExecuting=0;
 	signal(SIGUSR1,desconectarCPU);
 	//Me conecto a memoria
 	memory_connect();
@@ -62,10 +69,8 @@ int main(int arg, char* argv[]) {
 		if ((pcb = recv_pcb(serverKernel)) == NULL){
 			return EXIT_FAILURE;
 		}
-
+		isExecuting=1;
 		int continuoEjecucion = 1;
-
-
 		while(continuoEjecucion && pcb->exitCode == 1){
 			//Fetch
 			char* instruccion = cycle_fetch(pcb->indiceDeCodigo + pcb->pc);
@@ -90,9 +95,9 @@ int main(int arg, char* argv[]) {
 
 		if (desconectar==1){
 			printf("Exit OK!\n");
-			return EXIT_SUCCESS;
+			exit(EXIT_SUCCESS);
 		}
-
+		isExecuting=0;
 	}
 
 	return EXIT_SUCCESS;
