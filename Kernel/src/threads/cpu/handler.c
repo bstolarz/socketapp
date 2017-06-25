@@ -592,9 +592,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 		if(socket_send_string(cpu->program->socket, buffer)<=0){
 			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
 		}
-	}//SE PIDE ESCRIBIR EN UN ARCHIVO
-
-	else{
+	}else{ //SE PIDE ESCRIBIR EN UN ARCHIVO
 		//Verifico que tenga los permisos
 		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
 		if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){

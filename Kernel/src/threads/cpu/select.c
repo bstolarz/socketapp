@@ -33,14 +33,15 @@ void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 	}
 	list_remove_by_condition(queueCPUs->list, (void*)_removeCPUBySocket);
 
-	cpu->program->interruptionCode = -16;
-	cpu->program->pcb->exitCode = -16;
-	program_finish(cpu->program);
+	if(cpu->program != NULL){
+		cpu->program->interruptionCode = -16;
+		cpu->program->pcb->exitCode = -16;
+		program_finish(cpu->program);
+	}
+
 	FD_CLR(cpu->socket, master);
 	close(cpu->socket);
 	free(cpu);
-
-	FD_CLR(socket, master);
 
 	pthread_mutex_unlock(&queueCPUs->mutex);
 }
