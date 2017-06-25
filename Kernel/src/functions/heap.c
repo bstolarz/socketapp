@@ -82,15 +82,15 @@ int heap_find_space_available(t_program* program, int size, int* page, int* offs
 	return locatedSpace;
 }
 
-void heap_defrag(t_program* program, int page){
+void heap_defrag(t_program* program, t_heap_page* heapPage){
 	int offset = 0;
 	t_heapmetadata* currentMetadata = NULL;
 	t_heapmetadata* prevMetadata = NULL;
 
-	if(memory_read(program, page, offset, sizeof(t_heapmetadata), (void**)&prevMetadata) == sizeof(t_heapmetadata)){
+	if(memory_read(program, heapPage->page, offset, sizeof(t_heapmetadata), (void**)&prevMetadata) == sizeof(t_heapmetadata)){
 		offset = sizeof(t_heapmetadata) + prevMetadata->size;
 		while(offset < pageSize){
-			if(memory_read(program, page, offset, sizeof(t_heapmetadata), (void**)&currentMetadata) != sizeof(t_heapmetadata)){
+			if(memory_read(program, heapPage->page, offset, sizeof(t_heapmetadata), (void**)&currentMetadata) != sizeof(t_heapmetadata)){
 				printf("heap_defrag read\n");
 				exit(EXIT_FAILURE);
 			}
@@ -98,16 +98,12 @@ void heap_defrag(t_program* program, int page){
 			if(currentMetadata->isFree==1 && prevMetadata->isFree==1){
 				offset = offset + sizeof(t_heapmetadata) + currentMetadata->size;
 				prevMetadata->size = prevMetadata->size + sizeof(t_heapmetadata) + currentMetadata->size;
-				if(memory_write(program, page, offset - sizeof(t_heapmetadata) - prevMetadata->size, prevMetadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
+				if(memory_write(program, heapPage->page, offset - sizeof(t_heapmetadata) - prevMetadata->size, prevMetadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
 					printf("heap_defrag write\n");
 					exit(EXIT_FAILURE);
 				}
 				free(currentMetadata);
 
-				bool _findPage(t_heap_page* hp){
-					return hp->page==page;
-				}
-				t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
 				heapPage->freeSpace = heapPage->freeSpace + sizeof(t_heapmetadata);
 			}else{
 				free(prevMetadata);
@@ -117,6 +113,15 @@ void heap_defrag(t_program* program, int page){
 		}
 	}else{
 		exit(EXIT_FAILURE);
+	}
+
+	printf("Espacio libre: %d\n", heapPage->freeSpace);
+	if(heapPage->freeSpace == (pageSize - sizeof(t_heapmetadata))){
+		int resp;
+		printf("liberamos pagina %d\n", heapPage->page);
+		if((resp=memory_free_page(program, heapPage->page))!= 0){
+			program->interruptionCode = resp;
+		}
 	}
 }
 
@@ -159,7 +164,7 @@ int heap_alloc(t_program* program, int size, int page, int offset){
 		}
 	}
 
-	heap_defrag(program, page);
+	heap_defrag(program, heapPage);
 
 	return 1;
 }
@@ -189,7 +194,7 @@ int heap_free(t_program* program, int page, int offset){
 	t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
 	heapPage->freeSpace = heapPage->freeSpace + metadata->size;
 
-	heap_defrag(program, page);
+	heap_defrag(program, heapPage);
 
 	return 1;
 }
