@@ -1,0 +1,8 @@
+#!/usr/bin/ansisop
+begin
+	variables d
+	
+	# el archivo tiene que existir
+	abrir d E otro.txt
+	borrar d
+end

@@ -27,6 +27,27 @@
 #include <parser/parser.h>
 
 
+#define ERROR_NO_RESOURCES -1
+#define ERROR_FILE_DOES_NOT_EXIST -2
+#define ERROR_FILE_NO_READ_PERMISION -3
+#define ERROR_FILE_NO_WRITE_PERMISION -4
+#define ERROR_MEMORY -5
+#define ERROR_CONSOLE_DISCONNECTED -6
+#define ERROR_CONSOLE_FINISH_COMMAND -7
+#define ERROR_ALLOC_BIGGER_THAN_PAGE_SIZE -8
+#define ERROR_NO_PAGES_FOR_PROCESS -9
+#define ERROR_FILE_BAD_DELETE -10
+#define ERROR_FD_DOES_NOT_EXIST -11
+#define ERROR_FILE_CREATE_PERMISION -12
+#define ERROR_FS_OPERATION -13
+#define ERROR_SEM_DOES_NOT_EXIST -14
+#define ERROR_SHARED_VAR_DOES_NOT_EXIST -15
+#define ERROR_CPU_DISCONNECTED -16
+#define ERROR_MEMORY_DISCONNECTED -17
+#define ERROR_UNDEFINED -20
+
+
+
 void handle_new_cpu(int socket){
 	t_cpu* cpu = malloc(sizeof(t_cpu));
 	cpu->socket = socket;
@@ -107,7 +128,7 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
 	//Obtengo el nombre de la shared variable
-	char* sharedVariable=string_new();
+	char* sharedVariable;
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
 		log_warning(logKernel, "[handle_cpu_get_shared_variable/shared_variable] CPU desconectado");
 		cpu->disconnected = 1;
@@ -122,7 +143,7 @@ void handle_cpu_get_shared_variable(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sv == NULL){
-		cpu->program->interruptionCode = -15;
+		cpu->program->interruptionCode = ERROR_SHARED_VAR_DOES_NOT_EXIST;
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_warning(logKernel, "[handle_cpu_get_shared_variable/Failure] CPU desconectado");
 			cpu->disconnected = 1;
@@ -152,7 +173,8 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
 	//Obtengo el nombre de la shared variable
-	char* sharedVariable=string_new();
+
+	char* sharedVariable;
 	if (socket_recv_string(cpu->socket,&sharedVariable)<=0){
 		log_warning(logKernel, "[handle_cpu_set_shared_variable/shared_variable] CPU desconectado");
 		cpu->disconnected = 1;
@@ -175,7 +197,7 @@ void handle_cpu_set_shared_variable(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sv == NULL){
-		cpu->program->interruptionCode = -15;
+		cpu->program->interruptionCode = ERROR_SHARED_VAR_DOES_NOT_EXIST;
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_warning(logKernel, "[handle_cpu_set_shared_variable/Failure] CPU desconectado");
 			cpu->disconnected = 1;
@@ -216,7 +238,7 @@ void handle_cpu_wait(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sem == NULL){
-		cpu->program->interruptionCode = -14;
+		cpu->program->interruptionCode = ERROR_SEM_DOES_NOT_EXIST;
 
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_warning(logKernel, "[handle_cpu_wait/Failure] CPU desconectado");
@@ -273,7 +295,7 @@ void handle_cpu_signal(t_cpu* cpu){
 
 	//Verifico que exista
 	if(sem == NULL){
-		cpu->program->interruptionCode = -14;
+		cpu->program->interruptionCode = ERROR_SEM_DOES_NOT_EXIST;
 
 		if(socket_send_string(cpu->socket, "Failure")<=0){
 			log_warning(logKernel, "[handle_cpu_signal/Failure] CPU desconectado");
@@ -335,6 +357,7 @@ void handle_cpu_liberar(t_cpu* cpu){
 void handle_cpu_abrir(t_cpu* cpu){
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
+
 	//Recibo el path
 	char* path;
 	if(socket_recv_string(cpu->socket,&path)<=0){
@@ -351,50 +374,51 @@ void handle_cpu_abrir(t_cpu* cpu){
 		return;
 	}
 
+	// que otro proceso no entre a tratar de crear el mismo gfd
+	// o se meta a buscar para remover un gfd que voy a incrementar
+	pthread_mutex_lock(&globalFileDescriptors->mutex);
+
 	t_global_fd* gFD = file_descriptor_global_get_by_path(path);
 	t_fd* fd = NULL;
 
 	if (gFD!=NULL){ //Existe
 		fd = file_descriptor_create(cpu->program, gFD, flags);
 	}else{//No existe
-		if (filesystem_validate(path)==1){ //El archivo existe. Creo gFd y fd
+		if (filesystem_validate(path)==1) // ya existe en fs
+		{
+			// Creo gFd y fd
 			gFD = file_descriptor_global_create(path);
-			if(gFD != NULL){
-				fd = file_descriptor_create(cpu->program, gFD, flags);
-			}
-		}else{ //No existe el archivo. Si tengo permiso, lo creo
-			if(strstr(flags, FILE_DESCRIPTOR_PERMISSION_CREATE) != NULL){
-				if (filesystem_create(path)==1){
+			fd = file_descriptor_create(cpu->program, gFD, flags);
+		}
+		else
+		{ //No existe el archivo. Si tengo permiso, lo creo
+			if(strstr(flags, FILE_DESCRIPTOR_PERMISSION_CREATE) != NULL)
+			{
+				if (filesystem_create(path)==1)
+				{
 					gFD = file_descriptor_global_create(path);
-					if(gFD != NULL){
-						fd = file_descriptor_create(cpu->program, gFD, flags);
-					}
+					fd = file_descriptor_create(cpu->program, gFD, flags);
 				}
+				else // fs tira error
+				{
+					cpu->program->interruptionCode = ERROR_FS_OPERATION; // o ERROR_NO_RESOURCES
+				}
+			}
+			else // sin permisos para crear
+			{
+				cpu->program->interruptionCode = ERROR_FILE_CREATE_PERMISION;
 			}
 		}
 	}
 
+	pthread_mutex_unlock(&globalFileDescriptors->mutex);
+
 	free(path);
 	free(flags);
 
-	int ret = -ENOENT;
-	if(fd != NULL){
-		ret = fd->value;
-
-		if (socket_send_int(cpu->socket,ret)<=0){
-			log_warning(logKernel, "[handle_cpu_abrir/respuesta=FD] CPU desconectado");
-			cpu->disconnected = 1;
-			return;
-		}
-	}else{
-		cpu->program->interruptionCode = -12;
-
-		if(socket_send_int(cpu->socket,0)<=0){
-			log_warning(logKernel, "[handle_cpu_abrir/respuesta=0] CPU desconectado");
-			cpu->disconnected = 1;
-			return;
-		}
-
+	if (socket_send_int(cpu->socket, fd != NULL ? fd->value : 0)<=0){
+		log_warning(logKernel, "[handle_cpu_abrir/respuesta=FD] CPU desconectado");
+		cpu->disconnected = 1;
 		return;
 	}
 }
@@ -402,6 +426,7 @@ void handle_cpu_abrir(t_cpu* cpu){
 void handle_cpu_borrar(t_cpu* cpu){
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
+
 	//Recibo el file descriptor del archivo que CPU quiere borrar
 	int nFD;
 	if (socket_recv_int(cpu->socket,&nFD)<=0){
@@ -410,111 +435,45 @@ void handle_cpu_borrar(t_cpu* cpu){
 		return;
 	}
 
+	void onDeleteError(int interruptionCode)
+	{
+		cpu->program->interruptionCode = interruptionCode;
+		log_error(logKernel, "[handle_cpu_borrar] %d", interruptionCode);
+
+		if(socket_send_int(cpu->socket,0)<=0){
+			log_error(logKernel, "[handle_cpu_borrar] CPU desconectado");
+			cpu->disconnected = 1;
+		}
+	};
+
 	//Obtengo el file descriptor
 	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, nFD);
 
 	//Verifico que existe el FD
 	if(filedescriptor == NULL){
-		cpu->program->interruptionCode = -11;
-
-		if(socket_send_int(cpu->socket,0)<=0){
-			log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/FD=NULL] CPU desconectado");
-			cpu->disconnected = 1;
-			return;
-		}
-
+		onDeleteError(ERROR_FD_DOES_NOT_EXIST);
 		return;
 	}
+
+	// que nadie trate de buscar este gfd
+	pthread_mutex_lock(&globalFileDescriptors->mutex);
 
 	//Verifico que sea el unico que abrio el file descriptor
 	if(filedescriptor->global->open>1){
-		cpu->program->interruptionCode = -10;
-
-		if(socket_send_int(cpu->socket,0)<=0){
-			log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/OPEN>1] CPU desconectado");
-			cpu->disconnected = 1;
-			return;
-		}
-
+		pthread_mutex_unlock(&globalFileDescriptors->mutex);
+		onDeleteError(ERROR_FILE_BAD_DELETE);
 		return;
 	}
 
-	if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
-		if(filesystem_delete(filedescriptor->global->path) == 1){
-			//Borro el global file descriptor de la lista
-			bool _findGlobalFD(t_global_fd* gFD){
-				return strcmp(gFD->path, filedescriptor->global->path)==0;
-			}
-			list_remove_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD);
-
-			//Borro el file descriptor de la lista
-			bool _findFD(t_fd* fd){
-				return fd->value == filedescriptor->value;
-			}
-			list_remove_by_condition(cpu->program->fileDescriptors, (void*)_findFD);
-
-			free(filedescriptor->global->path);
-			free(filedescriptor->global);
-			free(filedescriptor->permissions);
-			free(filedescriptor);
-
-			if(socket_send_int(cpu->socket,1)<=0){
-				log_warning(logKernel, "[handle_cpu_borrar/respuesta=1] CPU desconectado");
-				cpu->disconnected = 1;
-				return;
-			}
-
-			return;
-		}else{
-			cpu->program->interruptionCode = -13;
-		}
-	}else{
-		cpu->program->interruptionCode = -4;
-	}
-
-	if(socket_send_int(cpu->socket,0)<=0){
-		log_warning(logKernel, "[handle_cpu_borrar/respuesta=0/FIN] CPU desconectado");
-		cpu->disconnected = 1;
-		return;
-	}
-}
-
-void handle_cpu_cerrar(t_cpu* cpu){
-	cpu->program->stats.syscallEjecutadas++;
-	cpu->program->stats.syscallPrivilegiadas++;
-	//Recibo el file descriptor del archivo que CPU quiere borrar
-		int nFD;
-		if (socket_recv_int(cpu->socket,&nFD)<=0){
-			log_warning(logKernel, "[handle_cpu_cerrar/nFD] CPU desconectado");
-			cpu->disconnected = 1;
-			return;
-		}
-
-		//Obtengo el file descriptor
-		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, nFD);
-
-		//Verifico que existe el FD
-		if(filedescriptor == NULL){
-			cpu->program->interruptionCode = -11;
-
-			if(socket_send_int(cpu->socket,0)<=0){
-				log_warning(logKernel, "[handle_cpu_cerrar/resultado=0/FD=NULL] CPU desconectado");
-				cpu->disconnected = 1;
-				return;
-			}
-
-			return;
-		}
-
+	if(filesystem_delete(filedescriptor->global->path) == 1){
 		//Borro el global file descriptor de la lista
-		if(filedescriptor->global->open == 1){
-			bool _findGlobalFD(t_global_fd* gFD){
-				return strcmp(gFD->path, filedescriptor->global->path)==0;
-			}
-			list_remove_and_destroy_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD, file_descriptor_global_destroy);
-		}else{
-			filedescriptor->global->open = filedescriptor->global->open - 1;
+		bool _findGlobalFD(t_global_fd* gFD){
+			return strcmp(gFD->path, filedescriptor->global->path)==0;
 		}
+		list_remove_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD);
+
+		// ya pueden buscarlo y ver q no existe
+		pthread_mutex_unlock(&globalFileDescriptors->mutex);
 
 		//Borro el file descriptor de la lista
 		bool _findFD(t_fd* fd){
@@ -522,14 +481,78 @@ void handle_cpu_cerrar(t_cpu* cpu){
 		}
 		list_remove_by_condition(cpu->program->fileDescriptors, (void*)_findFD);
 
+		free(filedescriptor->global->path);
+		free(filedescriptor->global);
 		free(filedescriptor->permissions);
 		free(filedescriptor);
 
 		if(socket_send_int(cpu->socket,1)<=0){
-			log_warning(logKernel, "[handle_cpu_cerrar/resultado=1] CPU desconectado");
+			log_warning(logKernel, "[handle_cpu_borrar/respuesta=1] CPU desconectado");
 			cpu->disconnected = 1;
-			return;
 		}
+	}else{
+		pthread_mutex_unlock(&globalFileDescriptors->mutex);
+		onDeleteError(ERROR_FS_OPERATION);
+	}
+}
+
+void handle_cpu_cerrar(t_cpu* cpu){
+	cpu->program->stats.syscallEjecutadas++;
+	cpu->program->stats.syscallPrivilegiadas++;
+
+	// recibir datos
+	// fd
+	int nFD;
+	if (socket_recv_int(cpu->socket,&nFD)<=0){
+		log_warning(logKernel, "[handle_cpu_cerrar/nFD] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
+	}
+
+	// buscar fd del proceso
+	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, nFD);
+
+	//Verifico que existe el FD
+	if(filedescriptor == NULL){
+		cpu->program->interruptionCode = ERROR_FD_DOES_NOT_EXIST;
+
+		if(socket_send_int(cpu->socket,0)<=0){
+			log_warning(logKernel, "[handle_cpu_cerrar/resultado=0/FD=NULL] CPU desconectado");
+			cpu->disconnected = 1;
+		}
+
+		return;
+	}
+
+	// bajo referencia del gfd. si no hay mas, saco de la lista
+	pthread_mutex_lock(&globalFileDescriptors->mutex);
+	filedescriptor->global->open -= 1;
+
+	if(filedescriptor->global->open == 0)
+	{
+		bool _findGlobalFD(t_global_fd* gFD){
+			return strcmp(gFD->path, filedescriptor->global->path)==0;
+		}
+		list_remove_and_destroy_by_condition(globalFileDescriptors->list, (void*)_findGlobalFD, file_descriptor_global_destroy);
+	}
+
+	pthread_mutex_unlock(&globalFileDescriptors->mutex);
+
+
+	//Borro el fd del proceso
+	bool _findFD(t_fd* fd){
+		return fd->value == filedescriptor->value;
+	}
+	list_remove_by_condition(cpu->program->fileDescriptors, (void*)_findFD);
+
+	free(filedescriptor->permissions);
+	free(filedescriptor);
+
+	if(socket_send_int(cpu->socket,1)<=0){
+		log_warning(logKernel, "[handle_cpu_cerrar/resultado=1] CPU desconectado");
+		cpu->disconnected = 1;
+		return;
+	}
 }
 
 void handle_cpu_mover_cursor(t_cpu* cpu){
@@ -553,7 +576,7 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 
 	t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
 	if(filedescriptor == NULL){
-		cpu->program->interruptionCode = -11;
+		cpu->program->interruptionCode = ERROR_FD_DOES_NOT_EXIST;
 		return;
 	}
 
@@ -564,6 +587,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 	printf("entramos a escribir\n");
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
+
 	int FD = 0;
 	//Recibo de CPU el descriptor de archivo
 	if (socket_recv_int(cpu->socket,&FD)<=0){
@@ -572,7 +596,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 	}
 
 	//Recibo de CPU la informacion con su tamanio
-	char* buffer = string_new(); // es necesario crear este str?
+	char* buffer;
 	int nbytes=0;
 	if ((nbytes = socket_recv(cpu->socket, (void**)&buffer, 1))<=0){
 		log_info(logKernel, "No se pudo obtener el buffer de: %i\n", cpu->socket);
@@ -596,33 +620,31 @@ void handle_cpu_escribir(t_cpu* cpu){
 		if(socket_send_string(cpu->program->socket, buffer)<=0){
 			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
 		}
-	}//SE PIDE ESCRIBIR EN UN ARCHIVO
-
-	else{
+	}else{ //SE PIDE ESCRIBIR EN UN ARCHIVO
 		//Verifico que tenga los permisos
 		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
-		if(file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
-			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
-			//Informo a FS que quiero escribir
-			t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
-			char* path=string_duplicate(filedescriptor->global->path);
 
-			int respuestaFromFS = filesystem_write(path, filedescriptor->cursor, buffer, nbytes);
+		if (filedescriptor == NULL)
+		{
+			cpu->program->interruptionCode = ERROR_FD_DOES_NOT_EXIST;
+		}
+		else if (!file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE))
+		{
+			cpu->program->interruptionCode = ERROR_FILE_NO_WRITE_PERMISION;
+			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
+		}
+		else
+		{
+			log_info(logKernel,"El programa con pid: %d tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
+
+			//Informo a FS que quiero escribir
+			int respuestaFromFS = filesystem_write(filedescriptor->global->path, filedescriptor->cursor, buffer, nbytes);
 
 			if(respuestaFromFS>0){
 				log_info(logKernel, "Se pudo escribir con exito");
 			}else{
 				log_info(logKernel, "Error al escribir en FS");
-			}
-
-			free(path);
-		}else{
-			log_info(logKernel,"El programa con pid: %d NO tiene permisos para escribir en el archivo con file descriptor: %d", cpu->program->pcb->pid, FD);
-			//Le nofitico a CPU el error de escritura por permisos
-			if(socket_send_int(cpu->socket,-4)>0){
-				log_info(logKernel, "Informo correctamente a CPU que el programa con pid %d NO puede escribir archivos", cpu->program->pcb->pid);
-			}else{
-				log_info(logKernel, "Error informando a CPU que el programa con pid %d NO puede escribir archivos", cpu->program->pcb->pid);
+				cpu->program->interruptionCode = ERROR_FS_OPERATION;
 			}
 		}
 
@@ -669,8 +691,8 @@ void handle_cpu_leer(t_cpu* cpu){
 
 	if(filedescriptor == NULL)
 	{
-		cpu->program->interruptionCode = -11;
-		readResult = -11;
+		cpu->program->interruptionCode = ERROR_FD_DOES_NOT_EXIST;
+		readResult = ERROR_FD_DOES_NOT_EXIST;
 	}
 	else
 	{
@@ -684,8 +706,8 @@ void handle_cpu_leer(t_cpu* cpu){
 		}
 		else
 		{
-			cpu->program->interruptionCode = -3;
-			readResult = -3;
+			cpu->program->interruptionCode = ERROR_FILE_NO_READ_PERMISION;
+			readResult = ERROR_FILE_NO_READ_PERMISION;
 		}
 	}
 

@@ -17,13 +17,6 @@
 #include "../commons/declarations.h"
 
 //Operaciones sobre file descriptors
-t_fd* file_descriptor_get_by_path(t_program* program, char* path){
-	bool _findFileDescriptor(t_fd* fd){
-		return strcmp(fd->global->path, path)==0;
-	}
-	return (t_fd*)list_find(program->fileDescriptors, (void*)_findFileDescriptor);
-}
-
 t_fd* file_descriptor_get_by_number(t_program* program, t_descriptor_archivo nFD){
 	bool _findFileDescriptor(t_fd* fd){
 		return fd->value==nFD;
@@ -51,15 +44,13 @@ t_fd* file_descriptor_create(t_program* program, t_global_fd* gFD, char* permiss
 }
 
 
-//Operaciones sobre global file descriptors
+// global file descriptors
 t_global_fd* file_descriptor_global_get_by_path(char* path){
 	bool _findGlobalFileDescriptor(t_global_fd* fd){
 		return strcmp(fd->path, path)==0;
 	}
 
-	pthread_mutex_lock(&globalFileDescriptors->mutex);
 	t_global_fd* ret = (t_global_fd*)list_find(globalFileDescriptors->list, (void*)_findGlobalFileDescriptor);
-	pthread_mutex_unlock(&globalFileDescriptors->mutex);
 
 	return ret;
 }
@@ -68,16 +59,16 @@ t_global_fd* file_descriptor_global_create(char* path){
 	t_global_fd* gFD = malloc(sizeof(t_global_fd));
 	gFD->path = string_duplicate(path);
 	gFD->open=0;
-	pthread_mutex_lock(&globalFileDescriptors->mutex);
 	list_add(globalFileDescriptors->list,gFD);
-	pthread_mutex_unlock(&globalFileDescriptors->mutex);
 
 	return gFD;
 }
 
 void file_descriptor_global_destroy(void* elem){
 	t_global_fd* gFD = (t_global_fd*) elem;
+
 	free(gFD->path);
+	free(gFD);
 }
 
 

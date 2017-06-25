@@ -193,8 +193,15 @@ void program_finish(t_program* program){
 	close_opened_files(program);
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
+	FD_CLR(program->socket, programMasterRecord);
 
 	if(socket_send_string(program->socket, "FinEjecucion")<=0){
+		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
+		close(program->socket);
+		return;
+	}
+
+	if(socket_send_int(program->socket, program->pcb->exitCode)<=0){
 		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
 		close(program->socket);
 		return;
@@ -225,6 +232,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	 * 	-14		Semaforo inexistente
 	 * 	-15		Shared variable inexistente
 	 * 	-16		El cpu se desconecto y dejo el programa en un estado inconsistente
+	 * 	-17		Finalizado a travez del comando finalizar programa de la consola del kernel
 	 * 	-20		Error sin definicion
 	 * */
 
