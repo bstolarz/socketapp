@@ -297,7 +297,7 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 t_puntero memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
-	if(size > (pageSize - 2*(sizeof(t_heapmetadata)))){
+	if(size > (pageSize - sizeof(t_heapmetadata))){
 		program->interruptionCode = -8;
 		return -8;
 	}
