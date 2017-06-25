@@ -130,6 +130,46 @@ int memory_get_pages(t_program* program, int cantPaginas){
 	return respuesta;
 }
 
+int memory_free_page(t_program* program, int page){
+	pthread_mutex_lock(&memoryServer.mutex);
+
+	//Pido el inicio de un nuevo programa
+	if(socket_send_string(memoryServer.socket, "free_page")<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	//Envio el PID
+	if(socket_send_int(memoryServer.socket, program->pcb->pid)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	//Envio la cantidad de paginas a pedir
+	if(socket_send_int(memoryServer.socket, page)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	//Obtengo respuesta del init
+	int respuesta =0;
+	if(socket_recv_int(memoryServer.socket, &respuesta)<=0){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return -20;
+	}
+
+	pthread_mutex_unlock(&memoryServer.mutex);
+	return respuesta;
+}
+
 int memory_read(t_program* program, int page, int offset, int size, void** buffer){
 	pthread_mutex_lock(&memoryServer.mutex);
 
@@ -257,7 +297,7 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 t_puntero memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
-	if(size >= (pageSize - 2*(sizeof(t_heapmetadata)))){
+	if(size > (pageSize - sizeof(t_heapmetadata))){
 		program->interruptionCode = -8;
 		return -8;
 	}
@@ -267,13 +307,6 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 	if(heap_find_space_available(program, size, &page, &offset) != 1){
 		page = heap_new_page(program);
 	}
-
-	printf("++++++++++++++++++++++\n");
-	printf("Page: %i\n", page);
-	printf("Offset: %i\n", offset);
-	printf("Size: %i\n", size);
-	printf("Ret: %i\n", (page * pageSize) + offset + sizeof(t_heapmetadata));
-	printf("----------------------\n");
 
 	heap_alloc(program, size, page, offset);
 

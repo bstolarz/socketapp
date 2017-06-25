@@ -118,17 +118,82 @@ void* thread_program(void * params){
 	char* printMessage = 0;
 	while(1){
 		if(socket_recv_string(program->socketKernel,&printMessage)<=0){
-			log_info(logConsole,"[%i] - Fallo recepcion de mensaje.", program->pid);
+			printf("[%i] - Fallo recepcion de mensaje.\n", program->pid);
 			thread_program_destroy(program, 1);
 			return params;
 		}
 
 		if(strcmp(printMessage, "FinEjecucion")==0){
+			int motivo;
+			if(socket_recv_int(program->socketKernel,&motivo)<=0){
+				printf("[%i] - Fallo recepcion del motivo.\n", program->pid);
+				thread_program_destroy(program, 1);
+				return params;
+			}
+			switch(motivo){
+				case 0:
+					printf("[%i] - Motivo: Finalizo exitosamente.\n", program->pid);
+					break;
+				case -1:
+					printf("[%i] - Motivo: No se pudieron reservar recursos para ejecutar el programa.\n", program->pid);
+					break;
+				case -2:
+					printf("[%i] - Motivo: El programa intento leer un archivo que no existe.\n", program->pid);
+					break;
+				case -3:
+					printf("[%i] - Motivo: El programa intento leer un archivo sin permisos.\n", program->pid);
+					break;
+				case -4:
+					printf("[%i] - Motivo: El programa intento escribir un archivo sin permisos.\n", program->pid);
+					break;
+				case -5:
+					printf("[%i] - Motivo: Excepcion de memoria.\n", program->pid);
+					break;
+				case -6:
+					printf("[%i] - Motivo: Finalizado a travez de desconexion de consola.\n", program->pid);
+					break;
+				case -7:
+					printf("[%i] - Motivo: Finalizado a travez del comando finalizar programa de la consola.\n", program->pid);
+					break;
+				case -8:
+					printf("[%i] - Motivo: Se intento reservar mas memoria que el tamaño de una pagina.\n", program->pid);
+					break;
+				case -9:
+					printf("[%i] - Motivo: No se pueden asignar mas paginas al proceso.\n", program->pid);
+					break;
+				case -10:
+					printf("[%i] - Motivo: Se intento borrar un archivo abierto por varios procesos.\n", program->pid);
+					break;
+				case -11:
+					printf("[%i] - Motivo: File descriptor inexistente.\n", program->pid);
+					break;
+				case -12:
+					printf("[%i] - Motivo: Se intento abrir un archivo inexistente.\n", program->pid);
+					break;
+				case -13:
+					printf("[%i] - Motivo: No se pudo borrar un archivo en FS.\n", program->pid);
+					break;
+				case -14:
+					printf("[%i] - Motivo: Semaforo inexistente.\n", program->pid);
+					break;
+				case -15:
+					printf("[%i] - Motivo: Shared variable inexistente.\n", program->pid);
+					break;
+				case -16:
+					printf("[%i] - Motivo: El cpu se desconecto y dejo el programa en un estado inconsistente.\n", program->pid);
+					break;
+				case -17:
+					printf("[%i] - Motivo: Finalizado a travez del comando finalizar programa de la consola del kernel.\n", program->pid);
+					break;
+				case -20:
+					printf("[%i] - Motivo: Error sin definicion.\n", program->pid);
+					break;
+			}
 			thread_program_destroy(program, 1);
 			return params;
 		}else if(strcmp(printMessage, "imprimir")==0){
 			if(socket_recv_string(program->socketKernel,&printMessage)<=0){
-				log_info(logConsole,"[%i] - Fallo recepcion de mensaje a imprimir.", program->pid);
+				printf("[%i] - Fallo recepcion de mensaje a imprimir.\n", program->pid);
 				thread_program_destroy(program, 1);
 				return params;
 			}
@@ -136,7 +201,7 @@ void* thread_program(void * params){
 			program->stats->cantImpresionesPantalla++;
 			printf("[%i] - Imprimo: %s\n", program->pid, printMessage);
 		}else{
-			log_info(logConsole,"[%i] - No se entendio el mensaje: %s", program->pid, printMessage);
+			printf("[%i] - No se entendio el mensaje: %s\n", program->pid, printMessage);
 			thread_program_destroy(program, 1);
 			return params;
 		}

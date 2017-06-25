@@ -473,8 +473,7 @@ void handle_cpu_borrar(t_cpu* cpu){
 		return;
 	}
 
-	if(filesystem_delete(filedescriptor->global->path) == 1)
-	{
+	if(filesystem_delete(filedescriptor->global->path) == 1){
 		//Borro el global file descriptor de la lista
 		bool _findGlobalFD(t_global_fd* gFD){
 			return strcmp(gFD->path, filedescriptor->global->path)==0;
@@ -499,7 +498,6 @@ void handle_cpu_borrar(t_cpu* cpu){
 			log_warning(logKernel, "[handle_cpu_borrar/respuesta=1] CPU desconectado");
 			cpu->disconnected = 1;
 		}
-
 	}else{
 		pthread_mutex_unlock(&globalFileDescriptors->mutex);
 		onDeleteError(ERROR_FS_OPERATION);
@@ -630,9 +628,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 		if(socket_send_string(cpu->program->socket, buffer)<=0){
 			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
 		}
-	}//SE PIDE ESCRIBIR EN UN ARCHIVO
-
-	else{
+	}else{ //SE PIDE ESCRIBIR EN UN ARCHIVO
 		//Verifico que tenga los permisos
 		t_fd* filedescriptor = file_descriptor_get_by_number(cpu->program, FD);
 

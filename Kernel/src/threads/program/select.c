@@ -23,6 +23,8 @@
 
 
 void select_program_socket_connection_lost(fd_set* master, int socket, int nbytes){
+	programMasterRecord = master;
+
 	log_info(logKernel, "[PROGRAMA] desconexion consola");
 	program_interrup(socket, -6, 0);
 	FD_CLR(socket, master);
@@ -30,6 +32,8 @@ void select_program_socket_connection_lost(fd_set* master, int socket, int nbyte
 }
 
 void select_program_socket_recive_package(fd_set* master, int socket, int nbytes, char* package){
+	programMasterRecord = master;
+
 	if(strcmp(package, "NewProgram") == 0){
 		log_info(logKernel, "[PROGRAMA] %s", package);
 		program_process_new(master, socket);
