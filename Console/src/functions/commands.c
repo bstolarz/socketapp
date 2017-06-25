@@ -33,7 +33,8 @@ const char* programNames[] = {
 	"fs_basico",
 	"fs_cursor",
 	"fs_leer",
-	"fs_escribir"
+	"fs_escribir",
+	"fs_borrar"
 };
 size_t programsCount = sizeof(programNames) / sizeof(char*);
 

@@ -16,6 +16,8 @@
 
 #include "../interface/memory.h"
 
+#include "heap.h"
+
 int heap_new_page(t_program* program){
 	int resp;
 	if((resp=memory_get_pages(program, 1))!= 0){
