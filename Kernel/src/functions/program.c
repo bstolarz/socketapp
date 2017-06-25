@@ -201,6 +201,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	 * 	-14		Semaforo inexistente
 	 * 	-15		Shared variable inexistente
 	 * 	-16		El cpu se desconecto y dejo el programa en un estado inconsistente
+	 * 	-17		Finalizado a travez del comando finalizar programa de la consola del kernel
 	 * 	-20		Error sin definicion
 	 * */
 

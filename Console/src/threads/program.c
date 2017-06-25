@@ -182,6 +182,9 @@ void* thread_program(void * params){
 				case -16:
 					printf("[%i] - Motivo: El cpu se desconecto y dejo el programa en un estado inconsistente.\n", program->pid);
 					break;
+				case -17:
+					printf("[%i] - Motivo: Finalizado a travez del comando finalizar programa de la consola del kernel.\n", program->pid);
+					break;
 				case -20:
 					printf("[%i] - Motivo: Error sin definicion.\n", program->pid);
 					break;
