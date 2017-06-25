@@ -158,9 +158,39 @@ int program_to_ready(t_program* program){
 
 	return 0;
 }
+/*int find_file_on_global_fd(t_fd* f){
+	int size=list_size(globalFileDescriptors->list);
+	int i;
+	for (i=0;i<size;i++){
+		t_fd* fileToCheck=(t_fd*)list_get(globalFileDescriptors->list,i);
+		if (fileToCheck->value==f->value){
+			return i;
+		}
+	}
+	return -1;
+}
+void close_opened_files(t_program* p){
+	int tam=list_size(p->fileDescriptors);
+	int i;
+	if (tam>0){
+		for(i=0;i<tam;i++){
+			t_fd* f=(t_fd*)list_get(p->fileDescriptors,i);
+			pthread_mutex_lock(&(globalFileDescriptors->mutex));
+			f->global->open--;
+			if(f->global->open==0){
+				int pos=find_file_on_global_fd(f);
+				if(pos!=-1){
+					list_remove(globalFileDescriptors->list,pos);
+				}
 
+			}
+			list_remove(p->fileDescriptors,i);
+		}
+	}
+}*/
 void program_finish(t_program* program){
 	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
+	close_opened_files(program);
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 
