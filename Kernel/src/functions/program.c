@@ -163,6 +163,7 @@ void program_finish(t_program* program){
 	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
+	FD_CLR(program->socket, programMasterRecord);
 
 	if(socket_send_string(program->socket, "FinEjecucion")<=0){
 		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
