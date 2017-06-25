@@ -170,6 +170,12 @@ void program_finish(t_program* program){
 		return;
 	}
 
+	if(socket_send_int(program->socket, program->pcb->exitCode)<=0){
+		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
+		close(program->socket);
+		return;
+	}
+
 	//TODO cerrar los archivos abiertos
 
 	close(program->socket);
