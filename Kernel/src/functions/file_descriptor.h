@@ -8,7 +8,6 @@
 #ifndef FUNCTIONS_FILE_DESCRIPTOR_H_
 #define FUNCTIONS_FILE_DESCRIPTOR_H_
 
-t_fd* file_descriptor_get_by_path(t_program* program, char* path);
 t_fd* file_descriptor_get_by_number(t_program* program, t_descriptor_archivo nFD);
 int file_descriptor_check_permission(t_fd* fd, char* permission);
 t_fd* file_descriptor_create(t_program* program, t_global_fd* gFD, char* permissions);

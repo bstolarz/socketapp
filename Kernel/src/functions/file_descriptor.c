@@ -17,13 +17,6 @@
 #include "../commons/declarations.h"
 
 //Operaciones sobre file descriptors
-t_fd* file_descriptor_get_by_path(t_program* program, char* path){
-	bool _findFileDescriptor(t_fd* fd){
-		return strcmp(fd->global->path, path)==0;
-	}
-	return (t_fd*)list_find(program->fileDescriptors, (void*)_findFileDescriptor);
-}
-
 t_fd* file_descriptor_get_by_number(t_program* program, t_descriptor_archivo nFD){
 	bool _findFileDescriptor(t_fd* fd){
 		return fd->value==nFD;
