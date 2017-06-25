@@ -16,6 +16,21 @@
 
 #include "../interface/memory.h"
 
+int heap_max_page_num(t_program* program)
+{
+	int max = program->pcb->cantPagsCodigo + configKernel->stack_size - 1;
+
+	void _get_max_page_num(t_heap_page* heapPage){
+		if (heapPage->page > max){
+			max = heapPage->page;
+		}
+	}
+
+	list_iterate(program->heapPages, (void*)_get_max_page_num);
+
+	return max;
+}
+
 int heap_new_page(t_program* program){
 	int resp;
 	if((resp=memory_get_pages(program, 1))!= 0){
@@ -182,21 +197,4 @@ int heap_free(t_program* program, int page, int offset){
 	heap_defrag(program, page);
 
 	return 1;
-}
-
-int heap_max_page_num(t_program* program)
-{
-	int max = program->pcb->cantPagsCodigo + configKernel->stack_size - 1;
-
-	void set_max_page_num(void* elem)
-	{
-		t_heap_page* heapPage = (t_heap_page*) elem;
-
-		if (heapPage->page > max)
-			max = heapPage->page;
-	};
-
-	list_iterate(program->heapPages, set_max_page_num);
-
-	return max;
 }
