@@ -455,14 +455,6 @@ void handle_cpu_borrar(t_cpu* cpu){
 		return;
 	}
 
-	// TODO: ver si en el foro responden.
-	// no pasa nada si qda así
-	if(!file_descriptor_check_permission(filedescriptor, FILE_DESCRIPTOR_PERMISSION_WRITE)){
-		onDeleteError(ERROR_FILE_NO_WRITE_PERMISION);
-		return;
-	}
-
-
 	// que nadie trate de buscar este gfd
 	pthread_mutex_lock(&globalFileDescriptors->mutex);
 
