@@ -257,7 +257,7 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 t_puntero memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
-	if(size >= (pageSize - 2*(sizeof(t_heapmetadata)))){
+	if(size > (pageSize - 2*(sizeof(t_heapmetadata)))){
 		program->interruptionCode = -8;
 		return -8;
 	}
@@ -267,13 +267,6 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 	if(heap_find_space_available(program, size, &page, &offset) != 1){
 		page = heap_new_page(program);
 	}
-
-	printf("++++++++++++++++++++++\n");
-	printf("Page: %i\n", page);
-	printf("Offset: %i\n", offset);
-	printf("Size: %i\n", size);
-	printf("Ret: %i\n", (page * pageSize) + offset + sizeof(t_heapmetadata));
-	printf("----------------------\n");
 
 	heap_alloc(program, size, page, offset);
 

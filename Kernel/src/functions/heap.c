@@ -57,17 +57,14 @@ int heap_new_page(t_program* program){
 
 // revisa c/pag de heap para ver si tiene espacio
 int heap_find_space_available(t_program* program, int size, int* page, int* offset){
-	printf("+++ Busco +++ %i\n", size);
 	int locatedSpace = 0;
 
 	void _hasFreeSpace(t_heap_page* pageMetadata){
-		printf("Page: %i, free: %i\n", pageMetadata->page, pageMetadata->freeSpace);
 		if(pageMetadata->freeSpace >= size){
 			int currentOffset = 0;
 			t_heapmetadata* metadata = NULL;
 			while(currentOffset < pageSize && locatedSpace==0){
 				if(memory_read(program, pageMetadata->page, currentOffset, sizeof(t_heapmetadata), (void**)&metadata) == sizeof(t_heapmetadata)){
-					printf("Size: %i Metadata: %i\n", size, metadata->size);
 					if(metadata->isFree==1 && (size==metadata->size || (size+sizeof(t_heapmetadata))<=metadata->size)){
 						*page = pageMetadata->page;
 						*offset = currentOffset;
@@ -82,7 +79,6 @@ int heap_find_space_available(t_program* program, int size, int* page, int* offs
 		}
 	}
 	list_iterate(program->heapPages, (void*)_hasFreeSpace);
-	printf("+++ Fin Busco +++\n");
 	return locatedSpace;
 }
 
@@ -119,7 +115,6 @@ void heap_defrag(t_program* program, int page){
 				offset = offset + sizeof(t_heapmetadata) + currentMetadata->size;
 			}
 		}
-		free(currentMetadata);
 	}else{
 		exit(EXIT_FAILURE);
 	}
