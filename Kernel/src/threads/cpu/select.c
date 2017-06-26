@@ -21,6 +21,8 @@
 #include "../../functions/cpu.h"
 
 #include "../../commons/declarations.h"
+#include "../../commons/error_codes.h"
+
 #include "handler.h"
 
 void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
@@ -34,8 +36,8 @@ void select_cpu_socket_connection_lost(fd_set* master, int socket, int nbytes){
 	list_remove_by_condition(queueCPUs->list, (void*)_removeCPUBySocket);
 
 	if(cpu->program != NULL){
-		cpu->program->interruptionCode = -16;
-		cpu->program->pcb->exitCode = -16;
+		cpu->program->interruptionCode = ERROR_CPU_DISCONNECTED;
+		cpu->program->pcb->exitCode = ERROR_CPU_DISCONNECTED;
 		program_finish(cpu->program);
 	}
 
@@ -107,8 +109,8 @@ void select_cpu_socket_recive_package(fd_set* master, int socket, int nbytes, ch
 		return cpu->disconnected==1;
 	}
 	void _destroyDisconnectedCPU(t_cpu* cpu){
-		cpu->program->interruptionCode = -16;
-		cpu->program->pcb->exitCode = -16;
+		cpu->program->interruptionCode = ERROR_CPU_DISCONNECTED;
+		cpu->program->pcb->exitCode = ERROR_CPU_DISCONNECTED;
 		program_finish(cpu->program);
 		FD_CLR(cpu->socket, master);
 		close(cpu->socket);

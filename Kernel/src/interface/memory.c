@@ -13,6 +13,7 @@
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+#include "../commons/error_codes.h"
 
 #include "../functions/heap.h"
 #include "memory.h"
@@ -322,8 +323,8 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
 	if(size > (pageSize - sizeof(t_heapmetadata))){
-		program->interruptionCode = -8;
-		return -8;
+		program->interruptionCode = ERROR_ALLOC_BIGGER_THAN_PAGE_SIZE;
+		return ERROR_ALLOC_BIGGER_THAN_PAGE_SIZE;
 	}
 
 	int page = 0;
@@ -345,12 +346,12 @@ void memory_heap_free(t_program* program, int page, int offset){
 	t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
 
 	if (heapPage == NULL){
-		program->interruptionCode = -5;
+		program->interruptionCode = ERROR_MEMORY;
 		return;
 	}
 
 	if(offset< 0 || offset>(pageSize-1)){
-		program->interruptionCode = -5;
+		program->interruptionCode = ERROR_MEMORY;
 		return;
 	}
 
