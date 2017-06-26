@@ -69,6 +69,8 @@ int borrar(char* path) {
 
 		list_destroy(archivo->bloques);
 		free(archivo);
+
+		borrarDirectorioSiEstaVacio(path);
 		return 1;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se lo puede borrar");

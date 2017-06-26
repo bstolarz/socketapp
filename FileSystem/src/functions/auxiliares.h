@@ -8,6 +8,8 @@
 #ifndef FUNCTIONS_AUXILIARES_H_
 #define FUNCTIONS_AUXILIARES_H_
 
+int isDirectoryEmpty(char *dirname);
+void borrarDirectorioSiEstaVacio(char* pathConArchivo);
 bool seVanAPoderCrearLosDirectoriosNecesarios(char* path);
 int crearDirectoriosNecesarios(char* pathDelKernel);
 int crearArchivo(char* path, int posBloqueLibre);

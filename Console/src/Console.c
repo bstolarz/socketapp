@@ -35,6 +35,12 @@ int main(int argc, char* argv[]) {
 	char* comando = malloc(sizeof(char)*cantidad);
 
 	while(1){
+		printf("[SISTEMA] - Los comandos permitidos son:\n");
+		printf("[SISTEMA] - 	start			Permite ejecutar un nuevo programa.\n");
+		printf("[SISTEMA] - 	finish			Aborta la ejecucion de un programa.\n");
+		printf("[SISTEMA] - 	clear 			Borra la  informacion en pantalla.\n");
+		printf("[SISTEMA] - 	disconnect 		Aborta la ejecucion de todos los programas.\n");
+
 		printf("[SISTEMA] - Ingrese un comando:\n");
 		size_t cantLeida = getline(&comando, &cantidad, stdin);
 		comando[cantLeida-1]='\0';
