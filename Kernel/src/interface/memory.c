@@ -170,6 +170,30 @@ int memory_free_page(t_program* program, int page){
 	return respuesta;
 }
 
+void memory_end_program(t_program* program)
+{
+	pthread_mutex_lock(&memoryServer.mutex);
+
+	// mensaje terminar
+	if(socket_send_string(memoryServer.socket, "end") == -1){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return;
+	}
+
+	// pid
+	if(socket_send_int(memoryServer.socket, program->pcb->pid) == -1){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return;
+	}
+
+	pthread_mutex_unlock(&memoryServer.mutex);
+
+}
+
 int memory_read(t_program* program, int page, int offset, int size, void** buffer){
 	pthread_mutex_lock(&memoryServer.mutex);
 
