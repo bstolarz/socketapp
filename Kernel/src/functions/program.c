@@ -177,6 +177,7 @@ void deleteFileFromProcessFileTable(t_fd* f){
 	f->global->open--;
 	t_global_fd* fileToRemove=list_remove_by_condition(globalFileDescriptors->list,(void*)fileIsNotOpenAnyMore);
 	free(fileToRemove);
+	pthread_mutex_unlock(&(globalFileDescriptors->mutex));
 	free(f->permissions);
 }
 void close_opened_files(t_program* p){
