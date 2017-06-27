@@ -190,7 +190,7 @@ void close_opened_files(t_program* p){
 }*/
 void program_finish(t_program* program){
 	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
-	close_opened_files(program);
+	//close_opened_files(program);
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 	FD_CLR(program->socket, programMasterRecord);
