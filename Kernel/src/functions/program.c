@@ -207,10 +207,11 @@ void program_finish(t_program* program){
 		return;
 	}
 
+	// TODO: program->memoryLeaks = heap_memory_leaks() o algo por el estilo que te diga cuanto falto liberar
 	//TODO cerrar los archivos abiertos
+	memory_end_program(program);
 
 	close(program->socket);
-
 }
 
 void program_interrup(int socket, int interruptionCode, int overrideInterruption){

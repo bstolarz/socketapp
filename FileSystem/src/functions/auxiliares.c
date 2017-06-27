@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <commons/config.h>
@@ -16,6 +17,23 @@ int is_regular_file(const char *path)
     struct stat path_stat;
     stat(path, &path_stat);
     return S_ISREG(path_stat.st_mode);
+}
+
+int isDirectoryEmpty(char *dirname) {
+  int n = 0;
+  struct dirent *d;
+  DIR *dir = opendir(dirname);
+  if (dir == NULL) //Not a directory or doesn't exist
+    return 1;
+  while ((d = readdir(dir)) != NULL) {
+    if(++n > 2)
+      break;
+  }
+  closedir(dir);
+  if (n <= 2) //Directory Empty
+    return 1;
+  else
+    return 0;
 }
 
 char* armarPathMetadataFS(){
@@ -66,6 +84,36 @@ int crearArchivo(char* path, int posBloqueLibre){
 		return -ENOENT;
 	}
 
+}
+
+void borrarDirectorioSiEstaVacio(char* pathConArchivo){
+	char** arrayPath = string_split(pathConArchivo, "/");
+	char* pathDirectorioABorrar = string_new();
+	size_t i=0;
+
+	while(arrayPath[i + 1] != NULL){
+		string_append(&pathDirectorioABorrar, arrayPath[i]);
+		string_append(&pathDirectorioABorrar, "/");
+		i++;
+	}
+
+	if(isDirectoryEmpty(pathDirectorioABorrar) == 1){
+		char* comando = string_from_format("rmdir %s", pathDirectorioABorrar);
+		system(comando);
+		free(comando);
+	}
+
+	// liberar strings
+	free(pathDirectorioABorrar);
+
+	i = 0;
+	while (arrayPath[i] != NULL)
+	{
+		free(arrayPath[i]); // el nombre del archivo
+		++i;
+	}
+
+	free(arrayPath);
 }
 
 bool seVanAPoderCrearLosDirectoriosNecesarios(char* pathDelKernel){

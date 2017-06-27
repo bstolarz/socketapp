@@ -13,6 +13,7 @@
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+#include "../commons/error_codes.h"
 
 #include "../functions/heap.h"
 #include "memory.h"
@@ -170,6 +171,30 @@ int memory_free_page(t_program* program, int page){
 	return respuesta;
 }
 
+void memory_end_program(t_program* program)
+{
+	pthread_mutex_lock(&memoryServer.mutex);
+
+	// mensaje terminar
+	if(socket_send_string(memoryServer.socket, "end") == -1){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return;
+	}
+
+	// pid
+	if(socket_send_int(memoryServer.socket, program->pcb->pid) == -1){
+		printf("Se perdio la conexion con la memoria\n");
+		log_warning(logKernel, "Se perdio la conexion con la memoria");
+		pthread_mutex_unlock(&memoryServer.mutex);
+		return;
+	}
+
+	pthread_mutex_unlock(&memoryServer.mutex);
+
+}
+
 int memory_read(t_program* program, int page, int offset, int size, void** buffer){
 	pthread_mutex_lock(&memoryServer.mutex);
 
@@ -298,8 +323,8 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
 	if(size > (pageSize - sizeof(t_heapmetadata))){
-		program->interruptionCode = -8;
-		return -8;
+		program->interruptionCode = ERROR_ALLOC_BIGGER_THAN_PAGE_SIZE;
+		return ERROR_ALLOC_BIGGER_THAN_PAGE_SIZE;
 	}
 
 	int page = 0;
@@ -321,12 +346,12 @@ void memory_heap_free(t_program* program, int page, int offset){
 	t_heap_page* heapPage = list_find(program->heapPages, (void*)_findPage);
 
 	if (heapPage == NULL){
-		program->interruptionCode = -5;
+		program->interruptionCode = ERROR_MEMORY;
 		return;
 	}
 
 	if(offset< 0 || offset>(pageSize-1)){
-		program->interruptionCode = -5;
+		program->interruptionCode = ERROR_MEMORY;
 		return;
 	}
 

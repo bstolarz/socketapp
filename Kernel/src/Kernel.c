@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 		printf("[SISTEMA] - 3: Obtener tabla global de archivos.\n");
 		printf("[SISTEMA] - 4: Modificar grado de multiprogramacion.\n");
 		printf("[SISTEMA] - 5: Finalizar proceso.\n");
-		printf("[SISTEMA] - 6): Detener planificacion.\n");
+		printf("[SISTEMA] - 6: Detener planificacion.\n");
 		printf("[SISTEMA] - 7: Iniciar planificacion.\n");
 		printf("Ejemplo: Para obtener el listado de procesos del sistema debe ingresar 1\n");
 		scanf("%d",&comando);

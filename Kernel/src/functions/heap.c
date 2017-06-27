@@ -13,6 +13,7 @@
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+#include "../commons/error_codes.h"
 
 #include "../interface/memory.h"
 
@@ -173,7 +174,7 @@ int heap_alloc(t_program* program, int size, int page, int offset){
 
 int heap_free(t_program* program, int page, int offset){
 	if(offset<sizeof(t_heapmetadata)){
-		program->interruptionCode = -5;
+		program->interruptionCode = ERROR_MEMORY;
 		return 0;
 	}
 

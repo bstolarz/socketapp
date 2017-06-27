@@ -13,5 +13,6 @@ int memory_read(t_program* program, int page, int offset, int size, void** buffe
 int memory_write(t_program* program, int page, int offset, void* buffer, int size);
 t_puntero memory_heap_alloc(t_program* program, int size);
 void memory_heap_free(t_program* program, int page, int offset);
+void memory_end_program(t_program* program); // libera paginas en Memoria
 
 #endif /* FUNCTIONS_MEMORY_H_ */

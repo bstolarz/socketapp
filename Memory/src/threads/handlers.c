@@ -95,13 +95,6 @@ int handle_end(int clientSocket){
 	//Proceso la peticion
 	program_end(PID);
 
-	//Envio el resultado
-	int nBytes = socket_send_int(clientSocket, 0);
-	if (nBytes<=0){
-		log_error(logMemory, "[end] request: problema send (PID: %d, socket %d)", PID, clientSocket);
-		return -1;
-	}
-
 	return 0;
 }
 

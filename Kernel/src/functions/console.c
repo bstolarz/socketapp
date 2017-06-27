@@ -17,6 +17,8 @@
 #include "../planner/ltp.h"
 #include "../functions/cpu.h"
 
+#include "../commons/error_codes.h"
+
 void console_process_list(){
 	void _printProccessList(t_program * program){
 		printf("	%i\n", program->pcb->pid);
@@ -352,7 +354,7 @@ void console_finish_process(){
 	scanf("%d",&p);
 	if(check_pid_is_running(p)==1){
 		t_program* pr=get_program(p);
-		program_interrup(pr->socket,-17,1);
+		program_interrup(pr->socket,INTERRUPT_KERNEL_CONSOLE,1);
 	}
 	if(check_pid_is_running(p)==0){
 		printf("El programa ha sido finalizado con exito\n");
