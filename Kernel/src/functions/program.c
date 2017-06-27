@@ -170,7 +170,6 @@ int program_to_ready(t_program* program){
 	return -1;
 }*/
 bool fileIsNotOpenAnyMore(t_global_fd* f){
-	printf("VALE: %d\n",f->open);
 	return f->open==0;
 }
 void deleteFileFromProcessFileTable(t_fd* f){
