@@ -96,7 +96,9 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 
 	log_debug(logCPU, "[dereferenciar] t_puntero = %d ---> page = %d, offset = %d", direccion_variable, pos.page, pos.off);
 
-	void* readResult = memory_read(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE);
+	// a pos.page se le sumaba pcb->cantPagsCodigo
+	// pero se lo saque para que funcione memoria dinamica
+	void* readResult = memory_read(pcb->pid, pos.page, pos.off, VAR_SIZE);
 
 	if (readResult == NULL)
 	{
@@ -115,7 +117,9 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	t_position pos = puntero_to_position(direccion_variable);
 	log_info(logCPU, "[asignar] page = %d, offset = %d, valor = %d", pos.page, pos.off, valor);
 
-	int writeResult = memory_write(pcb->pid, pcb->cantPagsCodigo + pos.page, pos.off, VAR_SIZE, &valor);
+	// a pos.page se le sumaba pcb->cantPagsCodigo
+	// pero se lo saque para que funcione memoria dinamica
+	int writeResult = memory_write(pcb->pid, pos.page, pos.off, VAR_SIZE, &valor);
 
 	if (writeResult == -1)
 	{
@@ -582,9 +586,9 @@ void AnSISOP_leer(t_descriptor_archivo descriptor_archivo, t_puntero posicionMem
 		log_info(logCPU, "Error enviando el descriptor de archivo: %d\n", descriptor_archivo);
 	}
 
-	// pos memoria.
-	// TODO: el pcb->cantPagsCodigo * pageSize +  puede que sea temporal
-	if (socket_send_int(serverKernel, (pcb->cantPagsCodigo * pageSize) + posicionMemoria)>0){
+	// antes le sumaba (pcb->cantPagsCodigo * pageSize) pero no es necesario
+	// porq obtPosVar ya se lo agrega
+	if (socket_send_int(serverKernel, posicionMemoria)>0){
 		log_info(logCPU, "Envio correctamente el puntero donde quiero se guarde la informacion leida: %d\n", posicionMemoria);
 	}else{
 		log_info(logCPU, "Error enviando el puntero donde quiero se guarde la informacion leida: %d\n", posicionMemoria);

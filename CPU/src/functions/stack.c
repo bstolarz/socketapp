@@ -56,6 +56,7 @@ void stack_add_arg(t_nombre_variable identificador_variable)
 
 	int index = identificador_variable - '0';
 	currentContext->args[index] = puntero_to_position(pcb->stackPosition);
+	currentContext->args[index].page += pcb->cantPagsCodigo; // agrego offset del stack (en pags) para no agregarlo en dereferenciar ni asignar
 	++(currentContext->argCount);
 
 	log_info(logCPU,"[definirVar] arg {%c} en (pag: %d, offset: %d y size: %d)\n",
@@ -70,6 +71,7 @@ void stack_add_var(t_nombre_variable identificador_variable)
 	t_indiceDelStack* currentContext = stack_context_current();
 	t_position* stackPositionAsPosition = malloc(sizeof(t_position));
 	*stackPositionAsPosition = puntero_to_position(pcb->stackPosition);
+	stackPositionAsPosition->page += pcb->cantPagsCodigo; // agrego offset del stack (en pags) para no agregarlo en dereferenciar ni asignar
 
 	dictionary_put(currentContext->vars, string_from_format("%c", identificador_variable), stackPositionAsPosition);
 
