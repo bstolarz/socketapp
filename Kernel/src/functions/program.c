@@ -158,9 +158,41 @@ int program_to_ready(t_program* program){
 
 	return 0;
 }
+/*int find_file_on_global_fd(t_fd* f){
+	int size=list_size(globalFileDescriptors->list);
+	int i;
+	for (i=0;i<size;i++){
+		t_fd* fileToCheck=(t_fd*)list_get(globalFileDescriptors->list,i);
+		if (fileToCheck->value==f->value){
+			return i;
+		}
+	}
+	return -1;
+}*/
+bool fileIsNotOpenAnyMore(t_global_fd* f){
+	return f->open==0;
+}
+void deleteFileFromProcessFileTable(t_fd* f){
+	pthread_mutex_lock(&(globalFileDescriptors->mutex));
+	f->global->open--;
+	t_global_fd* fileToRemove=list_remove_by_condition(globalFileDescriptors->list,(void*)fileIsNotOpenAnyMore);
+	free(fileToRemove);
+	pthread_mutex_unlock(&(globalFileDescriptors->mutex));
+	free(f->permissions);
+}
+void close_opened_files(t_program* p){
+	int tam=list_size(p->fileDescriptors);
+	int i;
+	if (tam>0){
+		for(i=0;i!=tam;i++){
+			list_remove_and_destroy_element(p->fileDescriptors,i,(void*)deleteFileFromProcessFileTable);
+		}
 
+	}
+}
 void program_finish(t_program* program){
 	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
+	close_opened_files(program);
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 	FD_CLR(program->socket, programMasterRecord);
