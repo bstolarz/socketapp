@@ -114,6 +114,11 @@ void heap_defrag(t_program* program, t_heap_page* heapPage){
 				offset = offset + sizeof(t_heapmetadata) + currentMetadata->size;
 			}
 		}
+		// TODO: jonatan fijate si esto previene leaks
+		// vi que en el if de mas arriba el q siempre queda no nulo es el prevMetadata
+		// antes habia un free(currentMetadata) que rompia porq mas arriba a veces se libera currentMetadata
+		// lo probe con heap.ansisop y no crasheaba
+		// free(prevMetadata);
 	}else{
 		exit(EXIT_FAILURE);
 	}
@@ -161,10 +166,16 @@ int heap_alloc(t_program* program, int size, int page, int offset){
 				printf("heap_alloc: PID:%i, Size:%i, Page:%i, Offset:%i - Tamaño menor parte 2\n", program->pcb->pid, size, page, offset);
 				exit(EXIT_FAILURE);
 			}
+
+			// TODO: jonatan fijate si este va
+			// free(newMetadata);
 		}else{
 			printf("heap_alloc: PID:%i, Size:%i, Page:%i, Offset:%i\n", program->pcb->pid, size, page, offset);
 			exit(EXIT_FAILURE);
 		}
+
+		// TODO: jonatan fijate si este va
+		// free(metadata);
 	}
 
 	heap_defrag(program, heapPage);
