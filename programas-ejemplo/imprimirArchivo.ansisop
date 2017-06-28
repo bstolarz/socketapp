@@ -1,0 +1,10 @@
+#!/usr/bin/ansisop
+
+begin
+	variables a, b
+	abrir b LC utn/zorro.txt
+	alocar a 30
+	leer b a 10 # b de mas
+	prints s a
+	#Sin cerrarlo
+end
