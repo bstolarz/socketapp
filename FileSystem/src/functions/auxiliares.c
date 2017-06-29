@@ -87,24 +87,57 @@ int crearArchivo(char* path, int posBloqueLibre){
 }
 
 void borrarDirectorioSiEstaVacio(char* pathConArchivo){
+	log_info(logs, "Entre en la funcion borrarDirectorioSiEstaVacio");
 	char** arrayPath = string_split(pathConArchivo, "/");
-	char* pathDirectorioABorrar = string_new();
+	char* directorioNoBorrable = string_from_format("%sArchivos/", configFileSystem->punto_montaje);
+	int cantDirectoriosEnArrayPath;
+
 	size_t i=0;
 
 	while(arrayPath[i + 1] != NULL){
-		string_append(&pathDirectorioABorrar, arrayPath[i]);
-		string_append(&pathDirectorioABorrar, "/");
+		cantDirectoriosEnArrayPath++;
 		i++;
 	}
 
-	if(isDirectoryEmpty(pathDirectorioABorrar) == 1){
-		char* comando = string_from_format("rmdir %s", pathDirectorioABorrar);
-		system(comando);
-		free(comando);
+	log_info(logs, "Cantidad de directorios en el array de %s es %d", pathConArchivo, cantDirectoriosEnArrayPath);
+	int n, m;
+	for(n=cantDirectoriosEnArrayPath;n>=0;n--){
+		log_info(logs, "N vale: %d", n);
+		char* pathDirectorioABorrar = string_new();
+		for(m=0; m<n; m++){
+			string_append(&pathDirectorioABorrar, arrayPath[m]);
+			string_append(&pathDirectorioABorrar, "/");
+			//log_info(logs, "Path armado: %s", pathDirectorioABorrar);
+		}
+		if(strcmp(directorioNoBorrable, pathDirectorioABorrar) != 0){
+			//Estoy en directorios que puedo borrar
+			if(isDirectoryEmpty(pathDirectorioABorrar) == 1){
+				char* comando = string_from_format("rmdir %s", pathDirectorioABorrar);
+				system(comando);
+				free(comando);
+				log_info(logs, "Borre el directorio %s", pathDirectorioABorrar);
+			}
+			else{
+				//Tengo un directorio con contenido -> no puedo seguir borrando mis directorios padre
+				log_info(logs, "Tengo un directorio con contenido, no sigo subiendo.");
+				free(pathDirectorioABorrar);
+				break;
+			}
+		}
+		else{
+			//Estoy en puntoMontaje/Archivos -> no puedo borrarlo
+			log_info(logs, "Directorio a borrar es igual a %s, termino aca.", directorioNoBorrable);
+			free(pathDirectorioABorrar);
+			break;
+		}
+
+
+		free(pathDirectorioABorrar);
 	}
 
+
 	// liberar strings
-	free(pathDirectorioABorrar);
+	free(directorioNoBorrable);
 
 	i = 0;
 	while (arrayPath[i] != NULL)
