@@ -35,10 +35,11 @@ const char* programNames[] = {
 	"fs_leer",
 	"fs_escribir",
 	"fs_borrar",
-	"editarFS",
 	"copiarArchivo",
 	"imprimirArchivo",
-	"heap_a_archivo"
+	"heap_a_archivo",
+	"escribirFS",
+	"leerFS",
 };
 size_t programsCount = sizeof(programNames) / sizeof(char*);
 
