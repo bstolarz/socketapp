@@ -28,6 +28,8 @@ void config_read(char* path){
 	configFileSystem->puerto=string_duplicate(config_get_string_value(config,"PUERTO"));
 	configFileSystem->punto_montaje=string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 
+	string_append(&(configFileSystem->punto_montaje), "/");
+
 	config_destroy(config);
 }
 
