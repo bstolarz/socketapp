@@ -205,6 +205,7 @@ t_cache_entry* cache_cache_contents(int PID, int page, char* content)
 
 	t_cache_entry* cacheEntry = lru(proccessEntries);
 
+	if (cacheEntry == NULL) return NULL; // caso choto cachePerProcess = 0
 	if (cacheEntry->PID == -1) // new cache entry, increment useCount and add to list
 	{
 		++cacheUseCount;

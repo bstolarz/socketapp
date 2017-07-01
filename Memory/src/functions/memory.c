@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <commons/log.h>
 #include "memory.h"
 #include "ram.h"
@@ -120,9 +121,16 @@ int memory_write(int PID, int page, int offset, int size, void* buffer)
 			cacheMiss = true;
 			cache_access_unlock(); // dejar el lock de acceso porq necesito reemplazar o buscar
 
+
 			pthread_mutex_lock(&replaceLock);
-			cacheEntry = cache_cache_contents(PID, page, frame); // cachear, con el contenido del frame ya actualizado
-			memcpy(cacheEntry->content + offset, buffer + wroteSize, currentPageSize);
+
+			// escribir en cache frame
+			cacheEntry = cache_cache_contents(PID, page, frame);
+			assert(cacheEntry != NULL || configMemory->cachePerProccess == 0);
+
+			if (cacheEntry != NULL)
+				memcpy(cacheEntry->content + offset, buffer + wroteSize, currentPageSize); // actualizar cache con lo q mandaron nuevo
+
 			pthread_mutex_unlock(&replaceLock);
 		}
 
