@@ -30,6 +30,7 @@ const char* programNames[] = {
 	"completo",
 	"testfuncall",
 	"heap",
+	"heap_riguroso",
 	"fs_basico",
 	"fs_cursor",
 	"fs_leer",
