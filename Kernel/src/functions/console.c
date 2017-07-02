@@ -224,7 +224,7 @@ int check_pid_is_incorrect(int pid){
 	tam=list_size(queueCPUs->list);
 	for (i=0;i<tam;i++){
 		t_cpu* cpu=(t_cpu*)list_get(queueCPUs->list,i);
-		if (cpu->program->pcb->pid==1){
+		if (cpu->program->pcb->pid==pid){
 			return 1;
 		}
 	}
