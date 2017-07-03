@@ -21,7 +21,7 @@
 #include "functions/ansisop.h"
 #include "functions/instruction_cycle.h"
 #include "functions/pcb.h"
-#include "others/tests.h"
+#include "functions/interruption.h"
 #include <signal.h>
 #include <unistd.h>
 

@@ -60,8 +60,8 @@ t_puntero AnSISOP_definirVariable (t_nombre_variable identificador_variable) {
 
 	// Incremento la pila
 	pcb->stackPosition += VAR_SIZE;
-	printf("Finalizo AnSISOP_definirVariable\n");
- 	return varStackPosition; // retorno donde empezaba la var que puse en stack*/
+
+	return varStackPosition; // retorno donde empezaba la var que puse en stack*/
 }
 
 t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variable)
@@ -85,7 +85,7 @@ t_puntero AnSISOP_obtenerPosicionVariable(t_nombre_variable identificador_variab
 	if (varPos == NULL){
 		log_error(logCPU, "[obtenerPosicionVariable] no encontre %c", identificador_variable);
 	}
-	printf("Finalizo AnSISOP_obtenerPosicionVariable\n");
+
 	return position_to_puntero(varPos);
 }
 
@@ -107,7 +107,7 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 	}
 
 	log_debug(logCPU, "El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
-	printf("Finalizo AnSISOP_dereferenciar\n");
+
 	return *((t_valor_variable*)readResult);
 }
 
@@ -127,18 +127,15 @@ void AnSISOP_asignar (t_puntero direccion_variable, t_valor_variable valor){
 	}
 	else if (writeResult == ERROR_MEMORY) // leyo en algun lugar q no existia para el proceso (ej: trata de leer con var din y un offset que se pasa)
 	{
+		log_error(logCPU, "[asignar] error escribiendo en memoria");
 		pcb->exitCode = ERROR_MEMORY;
 	}
-
-	printf("Finalizo AnSISOP_asignar\n");
 }
 
 // Cambia la linea de ejecucion a la correspondiente de la etiqueta buscada
 void AnSISOP_irAlLabel (t_nombre_etiqueta etiqueta){
-	printf("AnSISOP_irAlLabel [%s]\n",etiqueta);
 	log_debug(logCPU, "[irAlLabel] %s\n", etiqueta);
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
-	printf("Finalizo AnSISOP_irAlLabel\n");
 }
 
 // Preserva el contexto de ejecución actual para poder retornar luego al mismo.
@@ -157,7 +154,6 @@ void AnSISOP_llamarSinRetorno(t_nombre_etiqueta etiqueta){
 	// irallabel?
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
-	printf("Finalizo AnSISOP_llamarSinRetorno\n");
 }
 
 //Preserva el contexto de ejecución actual para poder retornar luego al mismo, junto con la posicion de la variable entregada por donde_retornar.
@@ -188,7 +184,6 @@ void AnSISOP_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorn
 
 	// mandarlo a ejecutar la funcion
 	pcb->pc = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->indiceDeEtiquetasCant);
-	printf("Finalizo AnSISOP_llamarConRetorno\n");
 }
 
 void AnSISOP_retornar(t_valor_variable retorno){
@@ -199,7 +194,6 @@ void AnSISOP_retornar(t_valor_variable retorno){
 	{
 		AnSISOP_asignar(position_to_puntero(currentContext->retVar), retorno);
 	}
-	printf("Finalizo AnSISOP_retornar\n");
 }
 
 //Cambia el Contexto de Ejecución Actual para volver al Contexto anterior al que se está ejecutando,
@@ -229,7 +223,7 @@ void AnSISOP_finalizar (void)
 
 
 //----------------------------------------------------------------------------------------------
-//Dummies, algunas voy a ver de llenarlas estos dias
+// Kernel
 t_valor_variable AnSISOP_obtenerValorCompartida(t_nombre_compartida variable){
 	printf("AnSISOP_obtenerValorCompartida [%s]\n",variable);
 	char* variable_compartida=string_new();
