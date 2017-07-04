@@ -38,7 +38,7 @@ int heap_new_page(t_program* program){
 	int resp;
 	if((resp=memory_get_pages(program, 1))!= 0){
 		program->interruptionCode = resp;
-		return 0;
+		return resp;
 	}
 
 	t_heap_page* pageMetadata = malloc(sizeof(t_heap_page));
@@ -46,7 +46,8 @@ int heap_new_page(t_program* program){
 	pageMetadata->page = heap_max_page_num(program) + 1;
 	list_add(program->heapPages, pageMetadata);
 
-	t_heapmetadata* metadata = malloc(sizeof(t_heapmetadata));
+	t_heapmetadata* metadata = malloc(sizeof(t_heapmetadata)); // crea pagina con tamanio disponible toda la pag (- metadata)
+	memset(metadata, 0, sizeof(t_heapmetadata)); // para q se vea mas claro en memoria
 	metadata->isFree = true;
 	metadata->size = pageSize - sizeof(t_heapmetadata);
 
@@ -118,7 +119,7 @@ void heap_defrag(t_program* program, t_heap_page* heapPage){
 		// vi que en el if de mas arriba el q siempre queda no nulo es el prevMetadata
 		// antes habia un free(currentMetadata) que rompia porq mas arriba a veces se libera currentMetadata
 		// lo probe con heap.ansisop y no crasheaba
-		// free(prevMetadata);
+		free(prevMetadata);
 	}else{
 		exit(EXIT_FAILURE);
 	}
@@ -151,6 +152,7 @@ int heap_alloc(t_program* program, int size, int page, int offset){
 			heapPage->freeSpace = heapPage->freeSpace - metadata->size;
 		}else if(size < metadata->size){
 			t_heapmetadata* newMetadata = malloc(sizeof(t_heapmetadata));
+			memset(newMetadata, 0, sizeof(t_heapmetadata)); // para q se vea mas claro en memoria
 			newMetadata->isFree = 0;
 			newMetadata->size = size;
 
@@ -167,15 +169,13 @@ int heap_alloc(t_program* program, int size, int page, int offset){
 				exit(EXIT_FAILURE);
 			}
 
-			// TODO: jonatan fijate si este va
-			// free(newMetadata);
+			free(newMetadata);
 		}else{
 			printf("heap_alloc: PID:%i, Size:%i, Page:%i, Offset:%i\n", program->pcb->pid, size, page, offset);
 			exit(EXIT_FAILURE);
 		}
 
-		// TODO: jonatan fijate si este va
-		// free(metadata);
+		free(metadata);
 	}
 
 	heap_defrag(program, heapPage);
