@@ -14,7 +14,7 @@
 
 int socket_recv(int clientSocket, void** buffer, int reserveSpace){
 	char* sizeStr = malloc(sizeof(char)*11);
-	if (recv(clientSocket, sizeStr, 11,  0) == 11){
+	if (recv(clientSocket, sizeStr, 11,  MSG_WAITALL) == 11){
 		int size = atoi(sizeStr);
 		free(sizeStr);
 
@@ -26,7 +26,7 @@ int socket_recv(int clientSocket, void** buffer, int reserveSpace){
 		char* bufAuxiliar = malloc(size);
 
 		if(size <= magicSocketNumber){
-			if(recv(clientSocket, bufAuxiliar, size, 0)==size){
+			if(recv(clientSocket, bufAuxiliar, size, MSG_WAITALL)==size){
 				memcpy(*buffer, bufAuxiliar, size);
 				free(bufAuxiliar);
 				return size;
@@ -45,7 +45,7 @@ int socket_recv(int clientSocket, void** buffer, int reserveSpace){
 			for(i=0 ; i<nPartes; i++){
 				char* bufferMagicNumber = malloc(magicSocketNumber*sizeof(char));
 
-				if(recv(clientSocket, bufferMagicNumber, magicSocketNumber, 0) == magicSocketNumber){
+				if(recv(clientSocket, bufferMagicNumber, magicSocketNumber, MSG_WAITALL) == magicSocketNumber){
 					memcpy(bufAuxiliar+desplazamientoBuffer, bufferMagicNumber, magicSocketNumber);
 					desplazamientoBuffer += magicSocketNumber;
 
@@ -58,7 +58,7 @@ int socket_recv(int clientSocket, void** buffer, int reserveSpace){
 
 			if(resto > 0){
 				char* bufferResto = malloc(resto*sizeof(char));
-				if(recv(clientSocket, bufferResto, resto, 0) == resto){
+				if(recv(clientSocket, bufferResto, resto, MSG_WAITALL) == resto){
 					memcpy(bufAuxiliar+desplazamientoBuffer, bufferResto, resto);
 					free(bufferResto);
 				}else{
@@ -85,7 +85,7 @@ int socket_recv_string(int clientSocket, char** text){
 
 int socket_recv_int(int clientSocket, int* value){
 	char* sizeStr = malloc(sizeof(char)*11);
-	if (recv(clientSocket, sizeStr, 11,  0) == 11){
+	if (recv(clientSocket, sizeStr, 11,  MSG_WAITALL) == 11){
 		*value = atoi(sizeStr);
 		free(sizeStr);
 		return sizeof(int);
