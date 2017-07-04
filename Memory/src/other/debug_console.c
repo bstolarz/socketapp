@@ -327,7 +327,7 @@ int str_to_PID(char* str)
 
 _Bool handle_delay(char** tokens, char** info)
 {
-	if (string_starts_with(tokens[0], "ret") && (tokens + 1) != NULL)
+	if (string_equals_ignore_case(tokens[0], "ret") && tokens[1] != NULL)
 	{
 		int newDelay = strtol(tokens[1], NULL, 10);
 
@@ -350,7 +350,7 @@ _Bool handle_delay(char** tokens, char** info)
 
 _Bool handle_flush(char** tokens, char** info)
 {
-	if (string_starts_with(tokens[0], "flu"))
+	if (string_equals_ignore_case(tokens[0], "flu"))
 	{
 		cache_flush();
 		*info = string_from_format("[flu] se limpio la cache");
@@ -382,20 +382,20 @@ _Bool handle_dump(char** tokens, char** info)
 		return stringify_frame_content_int;
 	};
 
-	if (string_starts_with(tokens[0], "dump") && (tokens + 1) != NULL)
+	if (string_equals_ignore_case(tokens[0], "dump") && (tokens + 1) != NULL)
 	{
-		if (string_starts_with(tokens[1], "cache"))
+		if (string_equals_ignore_case(tokens[1], "cache"))
 		{
 			*info = stringify_cache_contents(frame_stringifier_from_tokens(tokens));
 			return true;
 		}
-		else if (string_starts_with(tokens[1], "structs"))
+		else if (string_equals_ignore_case(tokens[1], "structs"))
 		{
 			// [dump structs] Muestra la Tabla de páginas y listado de procesos activos\n");
 			*info = stringify_admin_structs();
 			return true;
 		}
-		else if (string_starts_with(tokens[1], "cont"))
+		else if (string_equals_ignore_case(tokens[1], "cont"))
 		{
 
 
@@ -426,10 +426,11 @@ _Bool handle_dump(char** tokens, char** info)
 
 _Bool handle_size(char** tokens, char** info)
 {
-	if (string_starts_with(tokens[0], "size") &&
+
+	if (string_equals_ignore_case(tokens[0], "size") &&
 		(tokens + 1) != NULL)
 	{
-		if (string_starts_with(tokens[1], "mem"))
+		if (string_equals_ignore_case(tokens[1], "mem"))
 		{
 			*info = memory_size_str();
 		}
@@ -451,7 +452,7 @@ _Bool handle_size(char** tokens, char** info)
 
 _Bool handle_exit(char** tokens, char** info)
 {
-	if (string_starts_with(tokens[0], "exit"))
+	if (string_equals_ignore_case(tokens[0], "exit"))
 	{
 		done = true;
 		*info = string_from_format("Memoria se cierra");
