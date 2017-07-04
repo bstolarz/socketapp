@@ -1,6 +1,0 @@
-#!/usr/bin/ansisop
-begin
-	variables a
-	abrir a CLE utn/zorro.txt
-	cerrar a
-end
