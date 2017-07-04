@@ -184,6 +184,8 @@ void close_opened_files(t_program* p){
 	int tam=list_size(p->fileDescriptors);
 	int i;
 	if (tam>0){
+		log_info(logKernel,"Se detectaron %i archivos sin cerrar. Se procedera a cerrarlos\n", tam);
+		printf("Se detectaron %i archivos sin cerrar. Se procedera a cerrarlos\n", tam);
 		for(i=0;i!=tam;i++){
 			list_remove_and_destroy_element(p->fileDescriptors,i,(void*)deleteFileFromProcessFileTable);
 		}
