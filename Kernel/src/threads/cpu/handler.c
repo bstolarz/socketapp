@@ -596,12 +596,17 @@ void handle_cpu_escribir(t_cpu* cpu){
 
 		printf("%i %s\n", FD, buffer);
 
-		if(socket_send_string(cpu->program->socket, "imprimir")<=0){
-			log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
-		}
+		// fixucho para no mandar a consola a printear si se desconecto
+		if (cpu->program->interruptionCode != ERROR_CONSOLE_DISCONNECTED &&
+			cpu->program->interruptionCode != ERROR_CONSOLE_FINISH_COMMAND)
+		{
+			if(socket_send_string(cpu->program->socket, "imprimir")<=0){
+				log_info(logKernel,"No se pudo imprimir en: %i\n", cpu->program->socket);
+			}
 
-		if(socket_send_string(cpu->program->socket, buffer)<=0){
-			log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
+			if(socket_send_string(cpu->program->socket, buffer)<=0){
+				log_info(logKernel,"No se pudo imprimir el mensaje en: %i\n", cpu->program->socket);
+			}
 		}
 	}else{ //SE PIDE ESCRIBIR EN UN ARCHIVO
 		//Verifico que tenga los permisos

@@ -14,5 +14,7 @@ int program_to_ready(t_program* program);
 void program_finish(t_program* program);
 void program_interrup(int socket, int interruptionCode, int overrideInterruption);
 void program_unblock(t_semaforo* sem);
+_Bool program_did_finish(t_program*, _Bool lockQueue);
+
 
 #endif /* FUNCTIONS_PROGRAM_H_ */
