@@ -131,6 +131,7 @@ void heap_defrag(t_program* program, t_heap_page* heapPage){
 		if((resp=memory_free_page(program, heapPage->page))!= 0){
 			program->interruptionCode = resp;
 		}
+		// TODO: borrar la entrada de la lista de heap en program
 	}
 }
 

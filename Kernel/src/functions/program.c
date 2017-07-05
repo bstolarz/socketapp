@@ -239,7 +239,6 @@ void program_finish(t_program* program){
 		}
 	}
 
-	// TODO: program->memoryLeaks = heap_memory_leaks() o algo por el estilo que te diga cuanto falto liberar
 	close_opened_files(program);
 	memory_end_program(program);
 
