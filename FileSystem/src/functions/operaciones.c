@@ -158,8 +158,11 @@ int obtenerDatos(char* path, off_t offset, size_t size, char** buf) {
 			byteComienzoLectura=0;
 			munmap(bloqueArranqueFisico, configMetadata->tamanioBloques);
 			close(fileDesBF);
+			free(pathBloqueFisico);
 		}
 
+		list_destroy(archivo->bloques);
+		free(archivo);
 		return iSize;
 	} else {
 		log_info(logs, "No se encontro el archivo, por ende no se le puede obtener datos");
