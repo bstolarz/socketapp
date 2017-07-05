@@ -302,6 +302,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			munmap(bloqueFisicoMapped, configMetadata->tamanioBloques);
 			log_info(logs, "hizo el munmap");
 			close(bloqueFisico);
+			free(pathBloqueFisico);
 			log_info(logs, "cerro archivo fisico");
 		}
 
