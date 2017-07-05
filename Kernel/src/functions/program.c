@@ -199,6 +199,8 @@ void program_finish(t_program* program){
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 	FD_CLR(program->socket, programMasterRecord);
 
+	memory_end_program(program);
+
 	if(socket_send_string(program->socket, "FinEjecucion")<=0){
 		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
 		close(program->socket);
@@ -213,7 +215,7 @@ void program_finish(t_program* program){
 
 	// TODO: program->memoryLeaks = heap_memory_leaks() o algo por el estilo que te diga cuanto falto liberar
 	//TODO cerrar los archivos abiertos
-	memory_end_program(program);
+
 
 	close(program->socket);
 }
