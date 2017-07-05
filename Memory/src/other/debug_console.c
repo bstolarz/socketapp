@@ -511,7 +511,7 @@ void debug_console()
 		char** tokens = string_split(command, " ");
 		printf("\n");
 
-		if (tokens)
+		if (tokens && tokens[0])
 		{
 			char* resultInfo = NULL;
 			proccess_command(tokens, &resultInfo);
