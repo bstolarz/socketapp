@@ -220,6 +220,10 @@ void program_finish(t_program* program){
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 
+	close_opened_files(program);
+	memory_end_program(program);
+
+	// avisar a consola y cerrar
 	int informConsole = FD_ISSET(program->socket, programMasterRecord);
 	FD_CLR(program->socket, programMasterRecord);
 	log_debug(logKernel, "socket del programa (%d) estaba sacado? %d", program->socket, informConsole == 0);
@@ -238,9 +242,6 @@ void program_finish(t_program* program){
 			return;
 		}
 	}
-
-	close_opened_files(program);
-	memory_end_program(program);
 
 	close(program->socket);
 }
