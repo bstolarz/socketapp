@@ -99,13 +99,6 @@ void crearArchivos()
 
 void initSadica(){
 
-	//1. File System (Tiene tamanio bloques, cant bloques, magic number)
-	//2. bitmap (array con 0 y 1, inicializado con los bloques 40, 21, 82, 3)
-	//3. Metadata (tamanio real del archivo en bytes, array con nro bloques en orden
-		// TAMANIO=250  BLOQUES=[40,21,82,3]
-
-	//crearArchivos(); /*Por ahora solo creo el Bitmap*/
-
 	char* pathBitmap = string_new();
 	string_append(&pathBitmap, configFileSystem->punto_montaje);
 	string_append(&pathBitmap, "Metadata/Bitmap.bin");
@@ -113,15 +106,13 @@ void initSadica(){
 
 	int bitmapArchive = open(pathBitmap, O_RDWR);
 
-	//el file con metadata del archivo, se lee y se escribe con bloques si se agrega info al archivo
-	//FILE *md = open(strcat(configFileSystem->punto_montaje, "/Archivos/passwords/alumnosSIGA.bin"), O_RDWR);
-
 	//Mapeo bitmap.bin
 	char* bitmapMapped = mmap(0, configMetadata->cantidadBloques-1, PROT_WRITE, MAP_SHARED, bitmapArchive, 0);
 
 	//Crear bit array
 	bitarray = bitarray_create_with_mode(bitmapMapped, configMetadata->cantidadBloques / 8, MSB_FIRST);
 
+	free(pathBitmap);
 }
 
 void unmountSadica(){
