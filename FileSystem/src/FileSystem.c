@@ -18,7 +18,7 @@
 #include "functions/handler.h"
 #include "functions/bitmap.h"
 
-void soloParaProbarLasOperaciones();
+//void soloParaProbarLasOperaciones();
 
 int main(int arg, char* argv[]) {
 	if (arg != 2) {
@@ -45,8 +45,8 @@ int main(int arg, char* argv[]) {
 	log_info(logs, "Cantidad de bits en el bitmap: %d", bitarray_get_max_bit(bitarray));
 	log_info(logs, "Cantidad de bloques libres del bitmap: %d", cantBloquesLibresBitmap());
 
-	soloParaProbarLasOperaciones();
-	/*
+	//soloParaProbarLasOperaciones();
+
 	serverSocket = 0;
 	socket_server_create(&serverSocket, configFileSystem->puerto);
 
@@ -88,13 +88,13 @@ int main(int arg, char* argv[]) {
 			printf("Se conecto alguien que no es kernel. Te equivocaste de barrio papu!\n");
 			close(socketKernel);
 		}
-	}*/
+	}
 
 	log_destroy(logs);
 	return EXIT_SUCCESS;
 }
 
-void soloParaProbarLasOperaciones(){
+/*void soloParaProbarLasOperaciones(){
 	int resultado = -1;
 	while(1){
 		size_t cantidad = 10;
@@ -205,4 +205,4 @@ void soloParaProbarLasOperaciones(){
 		free(comando);
 
 	}
-}
+}*/
