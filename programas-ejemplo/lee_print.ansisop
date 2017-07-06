@@ -1,0 +1,12 @@
+begin
+  variables a, f
+  
+  abrir f L /archivo.bin
+  alocar a 100
+  
+  leer f a 100
+  prints s a
+  
+  cerrar f
+  liberar a
+end
