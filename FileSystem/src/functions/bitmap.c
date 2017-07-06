@@ -24,19 +24,25 @@ int encontrarUnBloqueLibre(){
 	return -1;
 }
 
-int hayNBloquesLibres(int cantBloquesNecesitados){
+bool hayNBloquesLibres(int cantBloquesNecesitados){
 
 	//Devuelve la cantidad de Bloques Libres
 
 	int cantBloquesLibres = 0, i=0;
 
-	while(cantBloquesLibres<cantBloquesNecesitados && i<bitarray_get_max_bit(bitarray)){
+	for(i=0;i<bitarray_get_max_bit(bitarray);i++)
+	{
 		if (!bitarray_test_bit(bitarray,i)){
 			cantBloquesLibres++;
+			if(cantBloquesLibres == cantBloquesNecesitados){
+				return true;
+			}
 		}
-		i++;
 	}
-	return cantBloquesLibres;
+
+	log_info(logs, "hay %i bloques libres", cantBloquesLibres);
+
+	return false;
 
 }
 void ocuparBloqueLibre(int posBloqueLibre){

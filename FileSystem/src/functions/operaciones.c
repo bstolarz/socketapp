@@ -200,6 +200,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
 		log_info(logs, "cantBloquesArchivo: %d", archivo->bloques->elements_count);
 
+		//TODO: si es una cantidad que no entra en un bloque, me esta devolviendo un bloque menos.
 		if(offset+size > archivo->bloques->elements_count*configMetadata->tamanioBloques){
 			double cantBloquesLibresAux = (float)(offset+size-(archivo->bloques->elements_count*configMetadata->tamanioBloques))
 																			/(float)configMetadata->tamanioBloques;
@@ -214,7 +215,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		if(cantBloquesLibresNuevos > 0){
 			if(!hayNBloquesLibres(cantBloquesLibresNuevos)){
 				log_info(logs, "No hay espacio para guardar los cambios");
-				return 0; // No hay espacio para guardar la nueva data
+				return -ENOENT;
 			}
 		}
 		else{
@@ -234,6 +235,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		int posPrimerBloqueLibre;
 		int cantAsignaciones = 0;
 		int i;
+		int bytesAEscribirEnBloque = 0;
 
 
 		log_info(logs, "Este archivo tiene asignados %i bloques", archivo->bloques->elements_count);
@@ -269,7 +271,20 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
 
 			int espacioLibreEnBloqueActual = configMetadata->tamanioBloques - (offset - posBloqueArranque * configMetadata->tamanioBloques);
+			if(sizeAux <= configMetadata->tamanioBloques){
+				bytesAEscribirEnBloque = sizeAux;
+				log_info(logs, "lo que resta por escribir entra en el bloque actual");
+			}
+			else{
+				log_info(logs, "lo que resta por escribir excede al bloque actual");
+				bytesAEscribirEnBloque = configMetadata->tamanioBloques;
+			}
 
+			memcpy(bloqueFisicoMapped+byteComienzoEscritura, buffer+((int)size-sizeAux), bytesAEscribirEnBloque);
+			log_info(logs, "Size aux vale %d y byte comienzo vale %d", sizeAux, byteComienzoEscritura);
+			actualizarBytesEscritos(&bytesEscritos, sizeAux);
+
+			/*
 			//Si lo que me queda por escribir (sizeAux) es mayor al espacio libre en el bloque
 			if(sizeAux >= espacioLibreEnBloqueActual){
 				log_info(logs, "lo que resta por escribir excede al bloque actual");
@@ -283,6 +298,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 				actualizarBytesEscritos(&bytesEscritos, sizeAux);
 
 			}
+			*/
 
 			/*
 			//Ocupo bloque si se pudo mapear archivo correctamente
@@ -293,7 +309,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			*/
 			sizeAux=sizeAux-(configMetadata->tamanioBloques-byteComienzoEscritura);
 
-			log_info(logs, "Se han escrito %d bytes en el bloque %d\n",bytesEscritos, posBloqueArranque);
+			log_info(logs, "Se han escrito %d bytes en el bloque %d",bytesEscritos, posBloqueArranque);
 			byteComienzoEscritura=0;
 			posBloqueArranque = posBloqueArranque + 1;
 			cantAsignaciones++;
@@ -303,7 +319,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 			log_info(logs, "hizo el munmap");
 			close(bloqueFisico);
 			free(pathBloqueFisico);
-			log_info(logs, "cerro archivo fisico");
+			log_info(logs, "cerro archivo fisico \n");
 		}
 
 		if((offset+size)>archivo->tamanio)
