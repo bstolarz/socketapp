@@ -12,6 +12,7 @@
 
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+#include "../commons/error_codes.h"
 
 #include "../interface/memory.h"
 #include "../planner/ltp.h"
@@ -118,7 +119,7 @@ void program_process_new(fd_set* master, int socket){
 	log_info(logKernel,"Se agrego a %i a la lista de programas", program->pcb->pid);
 
 	planificador_largo_plazo();
-	cpu_inactive_planner();
+	cpu_inactive_planner(1);
 
 	return;
 }
@@ -128,6 +129,7 @@ int program_to_ready(t_program* program){
 	//Obtengo el frame size
 	int frameSize = memory_frame_size();
 	if(frameSize<=0){
+		log_error(logKernel, "[program_to_ready] no pude obtener el frame size");
 		return -20;
 	}
 
@@ -224,9 +226,14 @@ void program_finish(t_program* program){
 	memory_end_program(program);
 
 	// avisar a consola y cerrar
-	int informConsole = FD_ISSET(program->socket, programMasterRecord);
+	// con FD_ISSET(program->socket, programMasterRecord) funca pero
+	// esto le da un poco de mas de sentido;
+	int informConsole =	program->interruptionCode != ERROR_CONSOLE_DISCONNECTED &&
+						program->interruptionCode != ERROR_CONSOLE_FINISH_COMMAND;
 	FD_CLR(program->socket, programMasterRecord);
+
 	log_debug(logKernel, "socket del programa (%d) estaba sacado? %d", program->socket, informConsole == 0);
+
 
 	if (informConsole)
 	{
@@ -275,7 +282,7 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	}
 
 	bool _buscarProgramaSocketInCPUs(t_cpu* cpu){
-		return cpu->program->socket==socket;
+		return cpu->program != NULL && cpu->program->socket==socket;
 	}
 
 	int programaEncontrado = 0;
@@ -315,8 +322,8 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 		pthread_mutex_lock(&(queueBlockedPrograms->mutex));
 		t_program* program = list_remove_by_condition(queueBlockedPrograms->list, (void*)_buscarProgramaSocket);
 		if(program != NULL){
-			log_info(logKernel, "El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i.", program->pcb->pid, interruptionCode);
-			printf("El programa %i fue encontrado en la lista de listos y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
+			log_info(logKernel, "El programa %i fue encontrado en la lista de bloqueados y se le puso el interruption code: %i.", program->pcb->pid, interruptionCode);
+			printf("El programa %i fue encontrado en la lista de bloqueados y se le puso el interruption code: %i\n", program->pcb->pid, interruptionCode);
 			programaEncontrado = 1;
 			program->pcb->exitCode = interruptionCode;
 			program_finish(program);
@@ -354,18 +361,22 @@ void program_unblock(t_semaforo* sem){
 	pthread_mutex_unlock(&queueBlockedPrograms->mutex);
 
 	if (blockedProgram != NULL){
+
 		blockedProgram->waiting = 0;
 		free(blockedProgram->waitingReason);
 		blockedProgram->waitingReason = NULL;
 
 		pthread_mutex_lock(&queueReadyPrograms->mutex);
-		sem->value = sem->value - 1;
 		list_add(queueReadyPrograms->list, blockedProgram);
 		pthread_mutex_unlock(&queueReadyPrograms->mutex);
 
-		pthread_mutex_unlock(&queueCPUs->mutex);
-		cpu_inactive_planner();
-		pthread_mutex_lock(&queueCPUs->mutex);
+		printf("[prog_unblovk] se desbloqueo %d\n", blockedProgram->pcb->pid);
+
+		cpu_inactive_planner(0 /*no lockear cpus, ya vienen loqueadas desde el handler*/);
+	}
+	else
+	{
+		printf("[prog_unblovk] no se desbloquea ningun programa\n");
 	}
 
 	pthread_mutex_unlock(&sem->mutex);

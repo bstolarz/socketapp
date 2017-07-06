@@ -213,7 +213,7 @@ void handle_cpu_wait(t_cpu* cpu){
 		return;
 	}
 
-	//Busco la shared variable
+	//Busco sem
 	int _es_el_semaforo(t_semaforo* var){
 		return strcmp(semaforo,var->nombre)==0;
 	}
@@ -237,18 +237,20 @@ void handle_cpu_wait(t_cpu* cpu){
 		return;
 	}
 
-	//Envio el valor de la shared variable
 	pthread_mutex_lock(&sem->mutex);
 
 	int resp;
-	if(sem->value > 0){
-		sem->value = sem->value -1;
+	sem->value -= 1;
+
+	if(sem->value >= 0){
 		resp = 1;
-	}else{
+	}else{ // val neg -> bloquear programa
 		resp = 0;
 		cpu->program->waiting = 1;
 		cpu->program->waitingReason = string_duplicate(semaforo);
 	}
+
+	printf("[wait] %s = %d (%s)\n", sem->nombre, sem->value, resp ? "sigue" : "frena");
 
 	if(socket_send_int(cpu->socket, resp)<=0){
 		log_warning(logKernel, "[handle_cpu_wait/Resultado] CPU desconectado");
@@ -298,6 +300,8 @@ void handle_cpu_signal(t_cpu* cpu){
 	pthread_mutex_lock(&sem->mutex);
 	sem->value = sem->value + 1;
 	pthread_mutex_unlock(&sem->mutex);
+
+	printf("[signal] %s = %d\n", sem->nombre, sem->value);
 
 	program_unblock(sem);
 }
@@ -567,7 +571,6 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
-	printf("entramos a escribir\n");
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
 
@@ -586,15 +589,13 @@ void handle_cpu_escribir(t_cpu* cpu){
 		return;
 	}
 
-	log_info(logKernel, "FS %i", FD);
+	log_info(logKernel, "[escribir] fd = %i", FD);
 	if(FD == DESCRIPTOR_SALIDA){
 		if(buffer[nbytes] != '\0'){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';
 			nbytes = nbytes + 1;
 		}
-
-		printf("%i %s\n", FD, buffer);
 
 		// fixucho para no mandar a consola a printear si se desconecto
 		if (cpu->program->interruptionCode != ERROR_CONSOLE_DISCONNECTED &&
