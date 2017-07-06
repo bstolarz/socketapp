@@ -567,7 +567,6 @@ void handle_cpu_mover_cursor(t_cpu* cpu){
 }
 
 void handle_cpu_escribir(t_cpu* cpu){
-	printf("entramos a escribir\n");
 	cpu->program->stats.syscallEjecutadas++;
 	cpu->program->stats.syscallPrivilegiadas++;
 
@@ -592,9 +591,7 @@ void handle_cpu_escribir(t_cpu* cpu){
 			buffer = realloc(buffer, nbytes+1);
 			buffer[nbytes] = '\0';
 			nbytes = nbytes + 1;
-		}
-
-		printf("%i %s\n", FD, buffer);
+		};
 
 		// fixucho para no mandar a consola a printear si se desconecto
 		if (cpu->program->interruptionCode != ERROR_CONSOLE_DISCONNECTED &&

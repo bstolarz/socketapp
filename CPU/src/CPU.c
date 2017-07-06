@@ -42,7 +42,6 @@ int main(int arg, char* argv[]) {
 		return 1;
 	}
 	printf("Checkout logCPU%d\n",(int)getpid());
-	printf("PID of Linux: %d\n",(int)getpid());
 	//Inicializo
 	configCPU = malloc(sizeof(t_cpu));
 	config_read(argv[1]);
