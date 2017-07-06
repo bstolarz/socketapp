@@ -22,25 +22,33 @@
 
 const char* ruta_programas = "../../programas-ejemplo/";
 const char* programNames[] = {
+	// basicos
 	"facil",
 	"for",
 	"productor",
 	"consumidor",
-	"stackoverflow",
-	"completo",
-	"testfuncall",
-	"heap",
-	"fs_basico",
-	"fs_cursor",
-	"fs_leer",
-	"fs_escribir",
-	"fs_borrar",
-	"copiarArchivo",
+
+	// fs
 	"imprimirArchivo",
-	"heap_a_archivo",
+	"copiarArchivo",
+
+	"creaArchivo",
+	"leeBorra",
 	"escribirFS",
 	"leerFS",
+	"creaGigante",
+
+	// heap
+	"heapbasico",
+	"heappasado",
+	"heapcompactar",
+	"llenandomemoria",
+
+	"completo",
+	"stackoverflow",
+	"stackoverflow_rapido",
 };
+
 size_t programsCount = sizeof(programNames) / sizeof(char*);
 
 void program_create(char* path_copy){

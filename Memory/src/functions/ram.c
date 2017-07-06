@@ -7,6 +7,7 @@
 
 #include "../commons/declarations.h"
 #include "../commons/structures.h"
+#include "../commons/error_codes.h"
 #include "ram.h"
 #include "hash_function.h"
 #include "utils.h"
@@ -86,7 +87,7 @@ int ram_get_pages_for_proccess(int PID, size_t pageCount, size_t startPage)
 		pthread_mutex_unlock(&freeFrameMutex);
 		log_error(logMemory, "no obtuvo frames para proceso [%d], cant pags %d", PID, pageCount);
 
-		return ERROR_NO_RESOURCES_FOR_PROCCESS;
+		return ERROR_NO_PAGES_FOR_PROCESS;
 	}
 
 	// hay frames para proceso

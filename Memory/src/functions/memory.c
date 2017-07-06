@@ -8,6 +8,7 @@
 #include "cache.h"
 #include "../commons/structures.h"
 #include "../commons/declarations.h"
+#include "../commons/error_codes.h"
 
 void memory_init()
 {

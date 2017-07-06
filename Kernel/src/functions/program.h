@@ -15,5 +15,7 @@ void program_finish(t_program* program);
 void program_interrup(int socket, int interruptionCode, int overrideInterruption);
 void program_unblock(t_semaforo* sem);
 int get_memory_leaks(t_program* program);
+_Bool program_did_finish(t_program*, _Bool lockQueue);
+
 
 #endif /* FUNCTIONS_PROGRAM_H_ */

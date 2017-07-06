@@ -28,9 +28,6 @@ int main(int argc, char* argv[]){
 	threadsList->list = list_create();
 	pthread_mutex_init(&(threadsList->mutex),NULL);
 
-	ERROR_NO_RESOURCES_FOR_PROCCESS = -1;
-	ERROR_MEMORY = -5;
-
 	memory_init();
 
 	pthread_t serverThread;

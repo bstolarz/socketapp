@@ -1,0 +1,19 @@
+begin
+	variables a
+	a <- f
+	prints n a
+end
+
+function f
+	variables a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+	z=1
+	a <- g
+	return a
+end
+
+function g
+	variables a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+	z=1
+	a <- f
+	return a
+end

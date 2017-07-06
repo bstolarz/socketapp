@@ -1,10 +1,5 @@
-/*
- * interruption.c
- *
- *  Created on: 7/6/2017
- *      Author: utnso
- */
-
+#include "interruption.h"
+#include <stdio.h>
 
 void print_interruption(int err){
 	switch(err){

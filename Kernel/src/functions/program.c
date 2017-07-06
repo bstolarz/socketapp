@@ -192,24 +192,50 @@ void close_opened_files(t_program* p){
 
 	}
 }
+
+_Bool program_did_finish(t_program* program, _Bool lockQueue)
+{
+	_Bool is_the_program(void* elem)
+	{
+		t_program* alreadyEndedProgram = (t_program*) elem;
+		return alreadyEndedProgram->pcb->pid == program->pcb->pid;
+	};
+
+	if (lockQueue) pthread_mutex_lock(&(queueFinishedPrograms->mutex));
+	t_program* findResult = list_find(queueFinishedPrograms->list, is_the_program);
+	if (lockQueue) pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
+
+	return findResult == program;
+}
+
 void program_finish(t_program* program){
+	// TODO: esto no se si hace falta
+	if (program_did_finish(program, 1))
+	{
+		log_info(logKernel, "[program_finish] program %d ya habia finalizado", program->pcb->pid);
+		return;
+	}
+
 	pthread_mutex_lock(&(queueFinishedPrograms->mutex));
-	close_opened_files(program);
 	list_add(queueFinishedPrograms->list, program);
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
+
+	close_opened_files(program);
+	memory_end_program(program);
+
+	// avisar a consola y cerrar
+	int informConsole = FD_ISSET(program->socket, programMasterRecord);
 	FD_CLR(program->socket, programMasterRecord);
+	log_debug(logKernel, "socket del programa (%d) estaba sacado? %d", program->socket, informConsole == 0);
 
-	if(socket_send_string(program->socket, "FinEjecucion")<=0){
-		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
-		close(program->socket);
-		return;
-	}
+	if (informConsole)
+	{
+		if(socket_send_string(program->socket, "FinEjecucion")<=0){
+			log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
+			close(program->socket);
+			return;
+		}
 
-	if(socket_send_int(program->socket, program->pcb->exitCode)<=0){
-		log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
-		close(program->socket);
-		return;
-	}
 
 	int memory_leak = get_memory_leaks(program);
 
@@ -220,6 +246,12 @@ void program_finish(t_program* program){
 
 	//TODO cerrar los archivos abiertos
 	memory_end_program(program);
+		if(socket_send_int(program->socket, program->pcb->exitCode)<=0){
+			log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
+			close(program->socket);
+			return;
+		}
+	}
 
 	close(program->socket);
 }
@@ -288,10 +320,10 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 	//Reviso los cpus para ver si  el programa  esta ejecutando
 	t_cpu* cpu = list_find(queueCPUs->list, (void*)_buscarProgramaSocketInCPUs);
 	if(cpu != NULL){
-		log_info(logKernel, "El programa %i fue encontrado en la lista de cpus y se le puso el interruption code: %i.", cpu->program->pcb->pid, interruptionCode);
-		printf("El programa %i fue encontrado en la lista de cpus y se le puso el interruption code: %i\n", cpu->program->pcb->pid, interruptionCode);
 		programaEncontrado = 1;
 		if(cpu->program->interruptionCode == 0 || overrideInterruption == 1){
+			log_info(logKernel, "El programa %i fue encontrado en la lista de cpus y se le puso el interruption code: %i.", cpu->program->pcb->pid, interruptionCode);
+			printf("El programa %i fue encontrado en la lista de cpus y se le puso el interruption code: %i\n", cpu->program->pcb->pid, interruptionCode);
 			cpu->program->interruptionCode = interruptionCode;
 		}
 	}

@@ -319,7 +319,7 @@ int memory_write(t_program* program, int page, int offset, void* buffer, int siz
 	return respuesta;
 }
 
-t_puntero memory_heap_alloc(t_program* program, int size){
+int memory_heap_alloc(t_program* program, int size){
 
 	//Verifico que se pueda reservar el tamaño solicitado
 	if(size > (pageSize - sizeof(t_heapmetadata))){
@@ -330,7 +330,17 @@ t_puntero memory_heap_alloc(t_program* program, int size){
 	int page = 0;
 	int offset = 0;
 	if(heap_find_space_available(program, size, &page, &offset) != 1){
-		page = heap_new_page(program);
+		int newPageResult = heap_new_page(program);
+
+		if (newPageResult < 0)
+		{
+			program->interruptionCode = ERROR_NO_PAGES_FOR_PROCESS;
+			return ERROR_NO_PAGES_FOR_PROCESS;
+		}
+		else
+		{
+			page = newPageResult;
+		}
 	}
 
 	heap_alloc(program, size, page, offset);
