@@ -19,6 +19,8 @@ t_log* log_create_file() {
 
 	t_log* logs = log_create(path, "Console", false, LOG_LEVEL_DEBUG);
 
+	free(path);
+
 	if (logs == NULL) {
 		printf("[SISTEMA] - No se pudo generar el archivo de logueo.\n");
 		return NULL;

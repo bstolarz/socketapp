@@ -65,5 +65,6 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	free(comando);
 	return EXIT_SUCCESS;
 }
