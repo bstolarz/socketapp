@@ -47,7 +47,12 @@ char* armarPathMetadataFS(){
 char* armarPathArchivo(char* pathDelKernel){
 	char* pathTotal = string_new();
 	string_append(&pathTotal, configFileSystem->punto_montaje);
-	string_append(&pathTotal, "Archivos/");
+	if(string_starts_with(pathDelKernel, "/")){
+		string_append(&pathTotal, "Archivos");
+	}
+	else{
+		string_append(&pathTotal, "Archivos/");
+	}
 	string_append(&pathTotal, pathDelKernel);
 
 	return pathTotal;
