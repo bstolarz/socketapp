@@ -236,6 +236,16 @@ void program_finish(t_program* program){
 			return;
 		}
 
+
+	int memory_leak = get_memory_leaks(program);
+
+	if(memory_leak>0){
+		log_info(logKernel,"Se detecta %i B de heap del proceso sin liberar. \n", memory_leak);
+		printf("Se detecta %i B de heap del proceso sin liberar. \n",memory_leak);
+	}
+
+	//TODO cerrar los archivos abiertos
+	memory_end_program(program);
 		if(socket_send_int(program->socket, program->pcb->exitCode)<=0){
 			log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
 			close(program->socket);
@@ -244,6 +254,29 @@ void program_finish(t_program* program){
 	}
 
 	close(program->socket);
+}
+
+int get_memory_leaks(t_program* program){
+
+	int leak = 0, i;
+
+
+	if(list_size(program->heapPages) > 0){ // aca guarda las paginas del heap
+
+		t_heap_page* page = list_get(program->heapPages, i);
+		for(i=0;i<list_size(program->heapPages);i++){
+
+			int freeSpace = ((t_heap_page*)list_get(program->heapPages, i))->freeSpace;
+			if(freeSpace < pageSize - sizeof(t_heapmetadata)){
+				leak = leak + (pageSize - 2*sizeof(t_heapmetadata) - freeSpace);
+			}
+
+			log_info(logKernel, "page size: %i \n", pageSize);
+			log_info(logKernel, "freeSpace: %i \n", freeSpace);
+		}
+	}
+
+	return leak;
 }
 
 void program_interrup(int socket, int interruptionCode, int overrideInterruption){
