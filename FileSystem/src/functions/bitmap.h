@@ -12,5 +12,6 @@ int encontrarUnBloqueLibre();
 int hayNBloquesLibres(int n);
 void ocuparBloqueLibre(int posBloqueLibre);
 void liberarBloqueDelBitmap(int bloque);
+int cantBloquesLibresBitmap();
 
 #endif /* FUNCTIONS_BITMAP_H_ */

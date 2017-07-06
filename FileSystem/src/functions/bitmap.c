@@ -54,3 +54,15 @@ void liberarBloqueDelBitmap(int bloque){
 	bitarray_clean_bit(bitarray, bloque);
 	log_info(logs, "Se libera el bloque %d del bitmap", bloque);
 }
+
+int cantBloquesLibresBitmap(){
+	int bloquesLibres = 0;
+	//Recorro todo el bitmap para ir contando los bloques libres
+	int i;
+	for(i=0; i<configMetadata->cantidadBloques; i++){
+		if(!bitarray_test_bit(bitarray,i)){
+			bloquesLibres++;
+		}
+	}
+	return bloquesLibres;
+}
