@@ -65,7 +65,6 @@ void send_pcb(t_pcb* pcb){
 		log_error(logCPU, "[send_pcb] no pude mandar el pcb del proceso: %d\n",pcb->pid);
 	}
 	else {
-		printf("[send_pcb] mande %d bytes", sentSize);
 		log_info(logCPU, "[send_pcb] mande %d bytes", sentSize);
 	}
 

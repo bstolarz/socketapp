@@ -41,7 +41,7 @@ int cycle_still_burst(){
 }
 
 char * cycle_fetch(t_intructions* currentInstruction){
-	printf("empieza en %d y tiene length %d\n", currentInstruction->start, currentInstruction->offset);
+	log_info(logCPU,"La instruccion empieza en %d y tiene length %d\n", currentInstruction->start, currentInstruction->offset);
 
 	int codePage = currentInstruction->start / pageSize;
 	int codeOffset = currentInstruction->start % pageSize;

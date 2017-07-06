@@ -17,7 +17,7 @@
 #include "functions/auxiliares.h"
 #include "functions/handler.h"
 
-void soloParaProbarLasOperaciones();
+//void soloParaProbarLasOperaciones();
 
 int main(int arg, char* argv[]) {
 	if (arg != 2) {
