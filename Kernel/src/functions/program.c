@@ -223,13 +223,22 @@ void program_finish(t_program* program){
 	pthread_mutex_unlock(&(queueFinishedPrograms->mutex));
 
 	close_opened_files(program);
+	int memory_leak = get_memory_leaks(program);
+
+	if(memory_leak>0){
+		log_info(logKernel,"Se detecta %i B de heap del proceso sin liberar. \n", memory_leak);
+		printf("Se detecta %i B de heap del proceso sin liberar. \n",memory_leak);
+	}
 	memory_end_program(program);
+
 
 	// avisar a consola y cerrar
 	// con FD_ISSET(program->socket, programMasterRecord) funca pero
 	// esto le da un poco de mas de sentido;
 	int informConsole =	program->interruptionCode != ERROR_CONSOLE_DISCONNECTED &&
-						program->interruptionCode != ERROR_CONSOLE_FINISH_COMMAND;
+						program->interruptionCode != ERROR_CONSOLE_FINISH_COMMAND &&
+						program->pcb->exitCode != ERROR_CONSOLE_DISCONNECTED &&
+						program->pcb->exitCode != ERROR_CONSOLE_FINISH_COMMAND;
 	FD_CLR(program->socket, programMasterRecord);
 
 	log_debug(logKernel, "socket del programa (%d) estaba sacado? %d", program->socket, informConsole == 0);
@@ -243,16 +252,6 @@ void program_finish(t_program* program){
 			return;
 		}
 
-
-	int memory_leak = get_memory_leaks(program);
-
-	if(memory_leak>0){
-		log_info(logKernel,"Se detecta %i B de heap del proceso sin liberar. \n", memory_leak);
-		printf("Se detecta %i B de heap del proceso sin liberar. \n",memory_leak);
-	}
-
-	//TODO cerrar los archivos abiertos
-	memory_end_program(program);
 		if(socket_send_int(program->socket, program->pcb->exitCode)<=0){
 			log_info(logKernel,"No se pudo conectar con el programa %i para que finalizo\n", program->pcb->pid);
 			close(program->socket);
@@ -265,12 +264,11 @@ void program_finish(t_program* program){
 
 int get_memory_leaks(t_program* program){
 
-	int leak = 0, i;
+	int leak = 0, i = 0;
 
 
 	if(list_size(program->heapPages) > 0){ // aca guarda las paginas del heap
 
-		t_heap_page* page = list_get(program->heapPages, i);
 		for(i=0;i<list_size(program->heapPages);i++){
 
 			int freeSpace = ((t_heap_page*)list_get(program->heapPages, i))->freeSpace;
