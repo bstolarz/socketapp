@@ -195,7 +195,7 @@ int heap_free(t_program* program, int page, int offset){
 		printf("heap_free read\n");
 		exit(EXIT_FAILURE);
 	}
-
+	program->stats.bytesFree+=metadata->size;
 	metadata->isFree=1;
 
 	if(memory_write(program, page, offset-sizeof(t_heapmetadata), metadata, sizeof(t_heapmetadata)) != sizeof(t_heapmetadata)){
