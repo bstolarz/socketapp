@@ -80,8 +80,10 @@ typedef struct{
 	int rafagas;
 	int syscallEjecutadas;
 	int syscallPrivilegiadas;
-	int pagesAlloc;
-	int pagesFree;
+	int cantCallAlloc;
+	int cantCallFree;
+	int bytesAlloc;
+	int bytesFree;
 }t_stat;
 typedef struct{
 	int socket;
