@@ -143,8 +143,14 @@ void* config_observe_changes(void* configPathAsVoid)
 				t_config* config=config_create(configPath);
 				if (config_has_property(config, "QUANTUM_SLEEP"))
 				{
-					configKernel->quantum_sleep		= config_get_int_value(config,"QUANTUM_SLEEP");
-					printf("QUANTUM_SLEEP actualizado a %d\n", configKernel->quantum_sleep);
+					int prevValue = configKernel->quantum_sleep;
+					int newValue = config_get_int_value(config,"QUANTUM_SLEEP");
+
+					if (prevValue != newValue)
+					{
+						configKernel->quantum_sleep	= newValue;
+						printf("QUANTUM_SLEEP actualizado a %d\n", configKernel->quantum_sleep);
+					}
 				}
 				config_destroy(config);
 			}

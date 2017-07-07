@@ -116,22 +116,26 @@ void* thread_program(void * params){
 	}
 	free(code);
 
-	char* printMessage = 0;
+	char* kernelMessage = 0;
+
 	while(1){
-		if(socket_recv_string(program->socketKernel,&printMessage)<=0){
+		if(socket_recv_string(program->socketKernel,&kernelMessage)<=0){
 			printf("[%i] - Fallo recepcion de mensaje.\n", program->pid);
 			thread_program_destroy(program, 1);
 			return params;
 		}
 
-		if(strcmp(printMessage, "FinEjecucion")==0){
+		if(strcmp(kernelMessage, "FinEjecucion")==0){
+
 			int motivo;
+
 			if(socket_recv_int(program->socketKernel,&motivo)<=0){
 				printf("[%i] - Fallo recepcion del motivo.\n", program->pid);
 				thread_program_destroy(program, 1);
-				free(printMessage);
+				free(kernelMessage);
 				return params;
 			}
+
 			switch(motivo){
 				case 0:
 					printf("[%i] - Motivo: Finalizo exitosamente.\n", program->pid);
@@ -191,23 +195,27 @@ void* thread_program(void * params){
 					printf("[%i] - Motivo: Error sin definicion.\n", program->pid);
 					break;
 			}
+			free(kernelMessage);
 			thread_program_destroy(program, 1);
 			return params;
-		}else if(strcmp(printMessage, "imprimir")==0){
-			if(socket_recv_string(program->socketKernel,&printMessage)<=0){
+
+		}else if(strcmp(kernelMessage, "imprimir")==0){
+			char* printMessage;
+			if(socket_recv_string(program->socketKernel, &printMessage)<=0){
 				printf("[%i] - Fallo recepcion de mensaje a imprimir.\n", program->pid);
 				thread_program_destroy(program, 1);
-				free(printMessage);
+				free(kernelMessage);
 				return params;
 			}
 
 			program->stats->cantImpresionesPantalla++;
-			printf("[%i] - Imprimo: %s\n", program->pid, printMessage);
+			printf("[%i] - Imprimo: [%s]\n", program->pid, printMessage);
 			free(printMessage);
+			free(kernelMessage);
 		}else{
-			printf("[%i] - No se entendio el mensaje: %s\n", program->pid, printMessage);
+			printf("[%i] - No se entendio el mensaje: %s\n", program->pid, kernelMessage);
 			thread_program_destroy(program, 1);
-			free(printMessage);
+			free(kernelMessage);
 			return params;
 		}
 	}

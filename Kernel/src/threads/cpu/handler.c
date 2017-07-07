@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <unistd.h>
 #include <sys/socket.h>
 
 #include <commons/collections/list.h>
@@ -63,6 +64,9 @@ void handle_still_burst(t_cpu* cpu){
 			}
 		}
 	}
+
+	// TODO: testear
+	usleep(configKernel->quantum_sleep /* in ms */ * 1000 /* in microsecs */);
 
 	if(socket_send_int(cpu->socket, burst)<=0){
 		log_warning(logKernel, "[handle_still_burst/burst] CPU desconectado");
