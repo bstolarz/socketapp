@@ -172,8 +172,8 @@ void* thread_program(void * params){
 				case -12:
 					printf("[%i] - Motivo: Se intento abrir un archivo inexistente.\n", program->pid);
 					break;
-				case -13:
-					printf("[%i] - Motivo: No se pudo borrar un archivo en FS.\n", program->pid);
+				case -28:
+					printf("[%i] - Motivo: No hay espacio libre en FS.\n", program->pid);
 					break;
 				case -14:
 					printf("[%i] - Motivo: Semaforo inexistente.\n", program->pid);
