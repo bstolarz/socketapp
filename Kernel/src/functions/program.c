@@ -183,18 +183,18 @@ void deleteFileFromProcessFileTable(t_fd* f){
 	free(fileToRemove);
 	pthread_mutex_unlock(&(globalFileDescriptors->mutex));
 	free(f->permissions);
+	free(f);
 }
 void close_opened_files(t_program* p){
 	int tam=list_size(p->fileDescriptors);
-	int i;
+
 	if (tam>0){
 		log_info(logKernel,"Se detectaron %i archivos sin cerrar. Se procedera a cerrarlos\n", tam);
 		printf("Se detectaron %i archivos sin cerrar. Se procedera a cerrarlos\n", tam);
-		for(i=0;i!=tam;i++){
-			list_remove_and_destroy_element(p->fileDescriptors,i,(void*)deleteFileFromProcessFileTable);
-		}
-
 	}
+
+	// uso esto porq iterando por indice rompe si hay varios
+	list_destroy_and_destroy_elements(p->fileDescriptors, (void*)deleteFileFromProcessFileTable);
 }
 
 _Bool program_did_finish(t_program* program, _Bool lockQueue)
