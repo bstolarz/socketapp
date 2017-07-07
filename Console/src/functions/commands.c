@@ -115,6 +115,8 @@ void command_finish(){
 
 	int pid = atoi(pidS);
 
+	free(pidS);
+
 	bool _buscarProgramaPID(t_program* programa){
 		return programa->pid==pid;
 	}

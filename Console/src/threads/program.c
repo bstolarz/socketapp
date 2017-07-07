@@ -111,9 +111,10 @@ void* thread_program(void * params){
 	if(socket_send(program->socketKernel, code, fileSize) != fileSize){
 		log_info(logConsole,"[%i] - Fallo el envio del codigo fuente.", program->pid);
 		thread_program_destroy(program, 1);
+		free(code);
 		return params;
 	}
-
+	free(code);
 
 	char* printMessage = 0;
 	while(1){
@@ -128,6 +129,7 @@ void* thread_program(void * params){
 			if(socket_recv_int(program->socketKernel,&motivo)<=0){
 				printf("[%i] - Fallo recepcion del motivo.\n", program->pid);
 				thread_program_destroy(program, 1);
+				free(printMessage);
 				return params;
 			}
 			switch(motivo){
@@ -195,14 +197,17 @@ void* thread_program(void * params){
 			if(socket_recv_string(program->socketKernel,&printMessage)<=0){
 				printf("[%i] - Fallo recepcion de mensaje a imprimir.\n", program->pid);
 				thread_program_destroy(program, 1);
+				free(printMessage);
 				return params;
 			}
 
 			program->stats->cantImpresionesPantalla++;
 			printf("[%i] - Imprimo: %s\n", program->pid, printMessage);
+			free(printMessage);
 		}else{
 			printf("[%i] - No se entendio el mensaje: %s\n", program->pid, printMessage);
 			thread_program_destroy(program, 1);
+			free(printMessage);
 			return params;
 		}
 	}
