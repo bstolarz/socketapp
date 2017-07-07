@@ -276,7 +276,7 @@ void print_head_pages_used(int p){
 	printf("Proceso con PID [%d] aloco %d bytes del heap\n",program->pcb->pid,program->stats.bytesAlloc);
 	printf("Proceso con PID [%d] libero %d bytes del heap\n",program->pcb->pid,program->stats.bytesFree);
 	printf("Proceso con PID [%d] hizo %d llamadas 'alocar'\n",program->pcb->pid,program->stats.cantCallAlloc);
-	printf("Proceso con PID [%d] hizo %d llamadas 'alocar'\n",program->pcb->pid,program->stats.cantCallFree);
+	printf("Proceso con PID [%d] hizo %d llamadas 'liberar'\n",program->pcb->pid,program->stats.cantCallFree);
 }
 void console_get_process_stats(){
 	int pidProceso;
