@@ -267,8 +267,9 @@ void program_finish(t_program* program){
 int get_memory_leaks(t_program* program){
 
 	int leak = 0, i = 0;
+	leak = program->stats.cantCallAlloc - program->stats.cantCallFree;
 
-
+	/*
 	if(list_size(program->heapPages) > 0){ // aca guarda las paginas del heap
 
 		for(i=0;i<list_size(program->heapPages);i++){
@@ -282,6 +283,7 @@ int get_memory_leaks(t_program* program){
 			log_info(logKernel, "freeSpace: %i \n", freeSpace);
 		}
 	}
+	*/
 
 	return leak;
 }
