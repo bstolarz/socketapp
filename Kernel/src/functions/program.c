@@ -36,8 +36,10 @@ void program_process_new(fd_set* master, int socket){
 
 	program->stats.syscallEjecutadas=0;
 	program->stats.rafagas=0;
-	program->stats.pagesAlloc=0;
-	program->stats.pagesFree=0;
+	program->stats.bytesAlloc=0;
+	program->stats.bytesFree=0;
+	program->stats.cantCallAlloc=0;
+	program->stats.cantCallFree=0;
 	program->stats.syscallPrivilegiadas=0;
 	program->pcb = malloc(sizeof(t_pcb));
 
