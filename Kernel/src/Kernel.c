@@ -25,8 +25,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	char* configPath = argv[1];
 	configKernel=malloc(sizeof(t_kernel));
-	config_read(argv[1]);
+	config_read(configPath);
 	//config_read("/home/utnso/git/tp-2017-1c-SocketApp/kernel");
 
 	logKernel=log_create_file();
@@ -71,6 +72,7 @@ int main(int argc, char* argv[]) {
 	globalFileDescriptors->list = list_create();
 	pthread_mutex_init(&(globalFileDescriptors->mutex),NULL);
 
+	pthread_create(&observeConfigChangesThread, NULL, config_observe_changes, configPath);
 	pthread_create(&selectProgramThread,NULL,select_program_thread_launcher, NULL);
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);
 
@@ -115,7 +117,9 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	pthread_join(observeConfigChangesThread, NULL);
 	pthread_join(selectProgramThread, NULL);
 	pthread_join(selectCPUThread, NULL);
+
 	return EXIT_SUCCESS;
 }

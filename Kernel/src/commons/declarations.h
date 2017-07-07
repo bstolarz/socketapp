@@ -17,6 +17,7 @@ int pageSize;
 
 pthread_t selectProgramThread;
 pthread_t selectCPUThread;
+pthread_t observeConfigChangesThread; // para cambiar el quantum sleep
 
 t_kernel* configKernel;
 t_log* logKernel;

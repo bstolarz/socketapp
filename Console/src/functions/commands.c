@@ -27,6 +27,7 @@ const char* programNames[] = {
 	"for",
 	"productor",
 	"consumidor",
+	"signal_b",
 
 	// fs
 	"imprimirArchivo",

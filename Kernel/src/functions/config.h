@@ -13,7 +13,7 @@
 void config_read_semaforos(t_config* config);
 void config_read_shared_vars(t_config* config);
 void config_read(char* path);
-
+void* config_observe_changes(void* configPath);
 
 
 #endif /* FUNCTIONS_CONFIG_H_ */
