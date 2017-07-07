@@ -101,10 +101,9 @@ t_valor_variable AnSISOP_dereferenciar(t_puntero direccion_variable){
 
 	if (readResult == NULL)
 	{
-		//TODO se pone return 0 porque en creaGigante cuando se setea error_memory la cpu rompe
-		return 0;
-		pcb->exitCode = ERROR_MEMORY;
 		log_error(logCPU, "[dereferenciar] no leyo bien de memoria");
+		pcb->exitCode = ERROR_MEMORY;
+		return 0;
 	}
 
 	log_debug(logCPU, "El valor de la variable ubicada en %d es: %d\n", direccion_variable, *((int*)readResult));
