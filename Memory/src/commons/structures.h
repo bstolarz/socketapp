@@ -29,6 +29,7 @@ typedef struct{
 	int socket;
 	char* command;
 	int nbytes;
+	pthread_t threadId;
 }t_socket_thread_arg;
 
 typedef struct{

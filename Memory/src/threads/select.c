@@ -17,17 +17,15 @@ void socket_select_recv_package(fd_set* selectSockets, int socket, int byteCount
     // saco al socket de los sockets del select
     FD_CLR(socket, selectSockets);
 
-    pthread_t* socketThread = malloc(sizeof(pthread_t));
-
     t_socket_thread_arg* args = malloc(sizeof(t_socket_thread_arg));
     args->socket = socket;
     args->command = data;
     args->nbytes = byteCount;
 
-	pthread_create(socketThread, NULL, &socket_thread_requests, args);
+	pthread_create(&(args->threadId), NULL, &socket_thread_requests, args);
 
 	pthread_mutex_lock(&threadsList->mutex);
-	list_add(threadsList->list, socketThread);
+	list_add(threadsList->list, &args->threadId);
 	pthread_mutex_unlock(&threadsList->mutex);
 }
 

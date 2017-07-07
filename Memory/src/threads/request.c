@@ -31,11 +31,13 @@ void* socket_thread_requests(void* args){
 			response = handle_free_page(request->socket);
 		}else if (strcmp("frame_size", command) == 0){
 			response = handle_frame_size(request->socket);
-		}else{
+		} else {
 			log_error(logMemory, "No logre comprender el comando: %s del socket %d", command, request->socket);
 		}
 
 		if(response>=0){
+			free(command);
+			command = NULL;
 			nBytes = socket_recv_string(request->socket, &command);
 		}else{
 			nBytes = -1;
@@ -43,12 +45,23 @@ void* socket_thread_requests(void* args){
 		}
 	}
 
-	// Free's
-	close(request->socket);
-	free(request->command);
-	free(request);
+	// saco de lista de threads
+	pthread_mutex_lock(&threadsList->mutex);
+	_Bool same_thread(void* elem)
+	{
+		// puse un puntero
+		pthread_t threadId = *((pthread_t*) elem);
+		return threadId == request->threadId;
+	};
 
-	//TODO falta borrar de la lista de threadsList
+	list_remove_by_condition(threadsList->list, same_thread);
+	pthread_mutex_unlock(&threadsList->mutex);
+
+	// Free's
+	if (command != NULL) free(command);
+	// request->command ya fue liberado por algun free(command)
+	close(request->socket);
+	free(request);
 
 	return NULL;
 }
