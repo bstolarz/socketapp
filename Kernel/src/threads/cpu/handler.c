@@ -324,6 +324,8 @@ void handle_cpu_alocar(t_cpu* cpu){
 		cpu->disconnected = 1;
 		return;
 	}
+	cpu->program->stats.cantCallAlloc++;
+	cpu->program->stats.bytesAlloc+=size;
 }
 
 void handle_cpu_liberar(t_cpu* cpu){
@@ -336,9 +338,9 @@ void handle_cpu_liberar(t_cpu* cpu){
 		cpu->disconnected = 1;
 		return;
 	}
-
 	div_t pos = div(posicion, pageSize);
 	memory_heap_free(cpu->program, pos.quot, pos.rem);
+	cpu->program->stats.cantCallFree++;
 }
 
 void handle_cpu_abrir(t_cpu* cpu){
