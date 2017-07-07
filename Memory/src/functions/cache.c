@@ -130,7 +130,6 @@ t_cache_entry* unusedEntry()
 
 t_cache_entry* lruAnyProccess()
 {
-	int proccessMaxUsed = 0;
 	time_t lruTime = time(NULL);
 	t_cache_entry* lruEntry = NULL;
 
@@ -143,17 +142,10 @@ t_cache_entry* lruAnyProccess()
 
 		t_cache_entry* lruCurrentProccess = lruProccess(entries);
 
-		if ( entryCount > proccessMaxUsed ||
-			(entryCount == proccessMaxUsed && lruCurrentProccess->lastAccess < lruTime))
+		if (lruCurrentProccess->lastAccess < lruTime)
 		{
-			//printf("[expropiating]");
-			//if (entryCount > proccessMaxUsed) printf("mas entryCont\n");
-			//else printf("older\n");
-
-			proccessMaxUsed = entryCount;
 			lruTime = lruCurrentProccess->lastAccess;
 			lruEntry = lruCurrentProccess;
-
 		}
 	};
 
