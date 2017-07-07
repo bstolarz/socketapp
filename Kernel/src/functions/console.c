@@ -273,8 +273,10 @@ void print_file_process_table(int p){
 }
 void print_head_pages_used(int p){
 	t_program* program=get_program(p);
-	printf("Proceso con PID [%d] aloco %d paginas del heap\n",program->pcb->pid,program->stats.pagesAlloc);
-	printf("Proceso con PID [%d] libero %d paginas del heap\n",program->pcb->pid,program->stats.pagesFree);
+	printf("Proceso con PID [%d] aloco %d bytes del heap\n",program->pcb->pid,program->stats.bytesAlloc);
+	printf("Proceso con PID [%d] libero %d bytes del heap\n",program->pcb->pid,program->stats.bytesFree);
+	printf("Proceso con PID [%d] hizo %d llamadas 'alocar'\n",program->pcb->pid,program->stats.cantCallAlloc);
+	printf("Proceso con PID [%d] hizo %d llamadas 'alocar'\n",program->pcb->pid,program->stats.cantCallFree);
 }
 void console_get_process_stats(){
 	int pidProceso;
@@ -287,7 +289,6 @@ void console_get_process_stats(){
 		if (pidProceso==0){
 			return;
 		}
-
 	}
 	printf("Has ingresado el PID: %d\n",pidProceso);
 	printf("[SISTEMA] - Ingrese el numero de comando:\n");
