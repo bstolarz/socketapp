@@ -254,8 +254,6 @@ void handle_cpu_wait(t_cpu* cpu){
 		cpu->program->waitingReason = string_duplicate(semaforo);
 	}
 
-	printf("[wait] %s = %d (%s)\n", sem->nombre, sem->value, resp ? "sigue" : "frena");
-
 	if(socket_send_int(cpu->socket, resp)<=0){
 		log_warning(logKernel, "[handle_cpu_wait/Resultado] CPU desconectado");
 		cpu->disconnected = 1;
@@ -304,8 +302,6 @@ void handle_cpu_signal(t_cpu* cpu){
 	pthread_mutex_lock(&sem->mutex);
 	sem->value = sem->value + 1;
 	pthread_mutex_unlock(&sem->mutex);
-
-	printf("[signal] %s = %d\n", sem->nombre, sem->value);
 
 	program_unblock(sem);
 }
