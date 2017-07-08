@@ -356,9 +356,6 @@ void console_finish_process(){
 	if(check_pid_is_running(p)==1){
 		t_program* pr=get_program(p);
 		program_interrup(pr->socket,INTERRUPT_KERNEL_CONSOLE,1);
-	}
-	if(check_pid_is_running(p)==0){
-		printf("El programa ha sido finalizado con exito\n");
 	}else{
 		printf("El programa no pudo ser finalizado\n");
 	}
