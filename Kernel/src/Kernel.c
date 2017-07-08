@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 	pthread_create(&selectCPUThread,NULL,select_cpu_thread_launcher, NULL);
 
 
-	int comando;
+	char* comando=malloc(sizeof(char));
 
 	while(1){
 		printf("[SISTEMA] - Ingrese el NUMERO de comando:\n");
@@ -89,33 +89,36 @@ int main(int argc, char* argv[]) {
 		printf("[SISTEMA] - 6: Detener planificacion.\n");
 		printf("[SISTEMA] - 7: Iniciar planificacion.\n");
 		printf("Ejemplo: Para obtener el listado de procesos del sistema debe ingresar 1\n");
-		scanf("%d",&comando);
-		switch(comando){
-		case 1:
-			console_process_list();
-			break;
-		case 2:
-			console_get_process_stats();
-			break;
-		case 3:
-			console_get_global_file_table();
-			break;
-		case 4:
-			console_multiprogram_degree();
-			break;
-		case 5:
-			console_finish_process();
-			break;
-		case 6:
-			console_stop_planning();
-			break;
-		case 7:
-			console_start_planning();
-			break;
-		default:
-			printf("Comando erroneo. Reintente\n");
+		scanf("%s",comando);
+		while(strcmp(comando,"1")!=0 && strcmp(comando,"2")!=0 && strcmp(comando,"3")!=0 && strcmp(comando,"4")!=0 && strcmp(comando,"5")!=0 && strcmp(comando,"6")!=0 && strcmp(comando,"7")!=0){
+			printf("\n***********Comando erroneo. Reintente*********\n");
+			printf("[SISTEMA] - Ingrese el NUMERO de comando:\n");
+			printf("[SISTEMA] - 1: Listado de procesos del sistema.\n");
+			printf("[SISTEMA] - 2: Obtener estadistica de proceso.\n");
+			printf("[SISTEMA] - 3: Obtener tabla global de archivos.\n");
+			printf("[SISTEMA] - 4: Modificar grado de multiprogramacion.\n");
+			printf("[SISTEMA] - 5: Finalizar proceso.\n");
+			printf("[SISTEMA] - 6: Detener planificacion.\n");
+			printf("[SISTEMA] - 7: Iniciar planificacion.\n");
+			printf("Ejemplo: Para obtener el listado de procesos del sistema debe ingresar 1\n");
+			scanf("%s",comando);
 		}
-	}
+		if (strcmp(comando,"1")==0){
+			console_process_list();
+		}else if((strcmp(comando,"2")==0)){
+			console_get_process_stats();
+		}else if((strcmp(comando,"3")==0)){
+			console_get_global_file_table();
+		}else if((strcmp(comando,"4")==0)){
+			console_multiprogram_degree();
+		}else if((strcmp(comando,"5")==0)){
+			console_finish_process();
+		}else if((strcmp(comando,"6")==0)){
+			console_stop_planning();
+		}else {
+			console_start_planning();
+		}
+		}
 
 	pthread_join(observeConfigChangesThread, NULL);
 	pthread_join(selectProgramThread, NULL);
