@@ -350,18 +350,23 @@ void console_multiprogram_degree(){
 }
 
 void console_finish_process(){
+	pthread_mutex_lock(&(queueBlockedPrograms->mutex));
+	pthread_mutex_lock(&(queueCPUs->mutex));
+	pthread_mutex_lock(&(queueReadyPrograms->mutex));
+	pthread_mutex_lock(&(queueNewPrograms->mutex));
 	printf("Ingrese el PID del proceso que desea finalizar\n");
 	int p;
 	scanf("%d",&p);
 	if(check_pid_is_running(p)==1){
 		t_program* pr=get_program(p);
 		program_interrup(pr->socket,INTERRUPT_KERNEL_CONSOLE,1);
-	}
-	if(check_pid_is_running(p)==0){
-		printf("El programa ha sido finalizado con exito\n");
 	}else{
 		printf("El programa no pudo ser finalizado\n");
 	}
+	pthread_mutex_unlock(&(queueBlockedPrograms->mutex));
+		pthread_mutex_unlock(&(queueCPUs->mutex));
+		pthread_mutex_unlock(&(queueReadyPrograms->mutex));
+		pthread_mutex_unlock(&(queueNewPrograms->mutex));
 }
 
 void console_stop_planning(){

@@ -1,0 +1,46 @@
+#!/bin/bash
+# My first script
+
+echo "Instalo las commons"
+cd ../so-commons-library
+sudo make all
+sudo make install
+echo "Commons instaladas con exito"
+
+echo "Instalo el parser"
+cd ../ansisop-parser/parser
+sudo make all
+sudo make install
+echo "Parser instalado con exito"
+
+echo "Buildeo Consola"
+cd ../../tp-2017-1c-SocketApp/Console/Debug
+sudo make all
+echo "Consola buildeado con exito"
+
+echo "Buildeo CPU"
+cd ../../CPU/Debug
+sudo make all
+echo "CPU buildeado con exito"
+
+echo "Buildeo Kernel"
+cd ../../Kernel/Debug
+sudo make all
+echo "Kernel buildeado con exito"
+
+echo "Buildeo Memory"
+cd ../../Memory/Debug
+sudo make all
+echo "Memory buildeado con exito"
+
+echo "Buildeo FileSystem"
+cd ../../FileSystem/Debug
+sudo make all
+echo "FileSystem buildeado con exito"
+
+echo "Extract FileSystem"
+cd ../../../ansisop-parser/programas-ejemplo/evaluacion-final-esther/FS-ejemplo
+tar -xvf FS.tgz
+sudo cp -rf FS ../../../../tp-2017-1c-SocketApp/FileSystem/Debug/FS
+echo "Extract FileSystem Completo"
+
