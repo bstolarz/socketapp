@@ -350,6 +350,10 @@ void console_multiprogram_degree(){
 }
 
 void console_finish_process(){
+	pthread_mutex_lock(&(queueBlockedPrograms->mutex));
+	pthread_mutex_lock(&(queueCPUs->mutex));
+	pthread_mutex_lock(&(queueReadyPrograms->mutex));
+	pthread_mutex_lock(&(queueNewPrograms->mutex));
 	printf("Ingrese el PID del proceso que desea finalizar\n");
 	int p;
 	scanf("%d",&p);
@@ -359,6 +363,10 @@ void console_finish_process(){
 	}else{
 		printf("El programa no pudo ser finalizado\n");
 	}
+	pthread_mutex_unlock(&(queueBlockedPrograms->mutex));
+		pthread_mutex_unlock(&(queueCPUs->mutex));
+		pthread_mutex_unlock(&(queueReadyPrograms->mutex));
+		pthread_mutex_unlock(&(queueNewPrograms->mutex));
 }
 
 void console_stop_planning(){
