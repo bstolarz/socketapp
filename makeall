@@ -14,7 +14,7 @@ sudo make install
 echo "Parser instalado con exito"
 
 echo "Buildeo Consola"
-cd ../tp-2017-1c-SocketApp/Console/Debug
+cd ../../tp-2017-1c-SocketApp/Console/Debug
 sudo make all
 echo "Consola buildeado con exito"
 
@@ -37,3 +37,10 @@ echo "Buildeo FileSystem"
 cd ../../FileSystem/Debug
 sudo make all
 echo "FileSystem buildeado con exito"
+
+echo "Extract FileSystem"
+cd ../../../ansisop-parser/programas-ejemplo/evaluacion-final-esther/FS-ejemplo
+tar -xvf FS.tgz
+sudo cp -rf FS ../../../../tp-2017-1c-SocketApp/FileSystem/Debug/FS
+echo "Extract FileSystem Completo"
+
