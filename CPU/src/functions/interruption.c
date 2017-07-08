@@ -1,5 +1,6 @@
 #include "interruption.h"
 #include <stdio.h>
+#include <errno.h>
 
 void print_interruption(int err){
 	switch(err){
@@ -52,7 +53,7 @@ void print_interruption(int err){
 		printf("Se intento abrir un archivo inexistente\n");
 		break;
 	case -13:
-		printf("No se pudo borrar un archivo en FS\n");
+		printf("operacion invalida en FS\n");
 		break;
 	case -14:
 		printf("Semaforo inexistente\n");
@@ -63,7 +64,13 @@ void print_interruption(int err){
 	case -16:
 		printf("La CPU se desconecto y dejo al programa en un estado incosistente\n");
 		break;
-	case -20:
+	case -17:
+		printf("Finalizado a travez del comando finalizar programa de la consola del kernel.\n");
+		break;
+	case -ENOSPC:
+		printf("No hay espacio en disco\n");
+		break;
+	default:
 		printf("Error sin definir\n");
 		break;
 	}

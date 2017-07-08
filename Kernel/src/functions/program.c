@@ -411,6 +411,26 @@ void program_unblock(t_semaforo* sem){
 	}
 	else
 	{
-		printf("[prog_unblovk] no se desbloquea ningun programa\n");
+		// buscar en los que van a blockearse
+		int es_cpu_block_por_sem(t_cpu* cpu){
+			return	cpu->program != NULL &&
+					cpu->program->waiting == 1 &&
+					(strcmp(cpu->program->waitingReason, sem->nombre)==0);
+		};
+
+		// no lockear, lockeado por handler
+		t_cpu* cpu = list_find(queueCPUs->list, (void*)es_cpu_block_por_sem);
+
+		if (cpu != NULL)
+		{
+			printf("desblockeando prog %d waiting por sem %s\n", cpu->program->pcb->pid, sem->nombre);
+			cpu->program->waiting = 0;
+			free(cpu->program->waitingReason);
+			cpu->program->waitingReason = NULL;
+		}
+		else
+		{
+			printf("[prog_unblovk] no se desbloquea ningun programa\n");
+		}
 	}
 }
