@@ -39,7 +39,7 @@ sudo make all
 echo "FileSystem buildeado con exito"
 
 echo "Extract FileSystem"
-cd ../../../ansisop-parser/programas-ejemplo/evaluacion-final-esther/prueba-basica
+cd ../../../ansisop-parser/programas-ejemplo/evaluacion-final-esther/FS-ejemplo
 tar -xvf FS.tgz
 sudo cp -rf FS ../../../../tp-2017-1c-SocketApp/FileSystem/Debug/FS
 echo "Extract FileSystem Completo"
