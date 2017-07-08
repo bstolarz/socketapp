@@ -97,13 +97,6 @@ void handle_end_burst(t_cpu* cpu){
 			pthread_mutex_lock(&queueBlockedPrograms->mutex);
 			list_add(queueBlockedPrograms->list, program);
 			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
-
-			int _es_el_semaforo(t_semaforo* var){
-				return strcmp(program->waitingReason,var->nombre)==0;
-			}
-			t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
-
-			pthread_mutex_unlock(&sem->mutex);
 		}else{
 			pthread_mutex_lock(&queueReadyPrograms->mutex);
 			list_add(queueReadyPrograms->list, program);
@@ -255,12 +248,13 @@ void handle_cpu_wait(t_cpu* cpu){
 
 	if(sem->value >= 0){
 		resp = 1;
-		pthread_mutex_unlock(&sem->mutex);
 	}else{ // val neg -> bloquear programa
 		resp = 0;
 		cpu->program->waiting = 1;
 		cpu->program->waitingReason = string_duplicate(semaforo);
 	}
+
+	pthread_mutex_unlock(&sem->mutex);
 
 	if(socket_send_int(cpu->socket, resp)<=0){
 		log_warning(logKernel, "[handle_cpu_wait/Resultado] CPU desconectado");
