@@ -5,6 +5,7 @@ src/functions/program.d: ../src/functions/program.c \
  ../src/functions/../commons/structures.h \
  ../src/functions/../commons/declarations.h \
  ../src/functions/../commons/structures.h \
+ ../src/functions/../commons/error_codes.h \
  ../src/functions/../interface/memory.h \
  ../src/functions/../interface/../commons/structures.h \
  ../src/functions/../interface/../commons/declarations.h \
@@ -34,6 +35,8 @@ src/functions/program.d: ../src/functions/program.c \
 ../src/functions/../commons/declarations.h:
 
 ../src/functions/../commons/structures.h:
+
+../src/functions/../commons/error_codes.h:
 
 ../src/functions/../interface/memory.h:
 
