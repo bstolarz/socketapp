@@ -123,6 +123,6 @@ int main(int argc, char* argv[]) {
 	pthread_join(observeConfigChangesThread, NULL);
 	pthread_join(selectProgramThread, NULL);
 	pthread_join(selectCPUThread, NULL);
-
+	free(comando);
 	return EXIT_SUCCESS;
 }
