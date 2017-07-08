@@ -266,7 +266,8 @@ void program_finish(t_program* program){
 
 int get_memory_leaks(t_program* program){
 
-	int leak = 0, i = 0;
+	int leak = 0;
+	//int i = 0;
 	leak = program->stats.cantCallAlloc - program->stats.cantCallFree;
 
 	/*
@@ -385,7 +386,6 @@ void program_interrup(int socket, int interruptionCode, int overrideInterruption
 }
 
 void program_unblock(t_semaforo* sem){
-	pthread_mutex_lock(&sem->mutex);
 
 	bool is_blocked_by_sem(t_program* program){
 		return 	program->waiting==1 && (strcmp(program->waitingReason, sem->nombre) == 0);
@@ -413,6 +413,4 @@ void program_unblock(t_semaforo* sem){
 	{
 		printf("[prog_unblovk] no se desbloquea ningun programa\n");
 	}
-
-	pthread_mutex_unlock(&sem->mutex);
 }

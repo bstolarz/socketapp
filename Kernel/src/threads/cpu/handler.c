@@ -97,6 +97,13 @@ void handle_end_burst(t_cpu* cpu){
 			pthread_mutex_lock(&queueBlockedPrograms->mutex);
 			list_add(queueBlockedPrograms->list, program);
 			pthread_mutex_unlock(&queueBlockedPrograms->mutex);
+
+			int _es_el_semaforo(t_semaforo* var){
+				return strcmp(program->waitingReason,var->nombre)==0;
+			}
+			t_semaforo* sem = list_find(configKernel->semaforos,(void*)_es_el_semaforo);
+
+			pthread_mutex_unlock(&sem->mutex);
 		}else{
 			pthread_mutex_lock(&queueReadyPrograms->mutex);
 			list_add(queueReadyPrograms->list, program);
@@ -248,6 +255,7 @@ void handle_cpu_wait(t_cpu* cpu){
 
 	if(sem->value >= 0){
 		resp = 1;
+		pthread_mutex_unlock(&sem->mutex);
 	}else{ // val neg -> bloquear programa
 		resp = 0;
 		cpu->program->waiting = 1;
@@ -260,7 +268,6 @@ void handle_cpu_wait(t_cpu* cpu){
 		return;
 	}
 
-	pthread_mutex_unlock(&sem->mutex);
 }
 
 void handle_cpu_signal(t_cpu* cpu){
@@ -301,9 +308,9 @@ void handle_cpu_signal(t_cpu* cpu){
 	//Envio el valor de la shared variable
 	pthread_mutex_lock(&sem->mutex);
 	sem->value = sem->value + 1;
-	pthread_mutex_unlock(&sem->mutex);
 
 	program_unblock(sem);
+	pthread_mutex_unlock(&sem->mutex);
 }
 
 void handle_cpu_alocar(t_cpu* cpu){
