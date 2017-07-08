@@ -194,7 +194,7 @@ void close_opened_files(t_program* p){
 	}
 
 	// uso esto porq iterando por indice rompe si hay varios
-	list_destroy_and_destroy_elements(p->fileDescriptors, (void*)deleteFileFromProcessFileTable);
+	list_clean_and_destroy_elements(p->fileDescriptors, (void*)deleteFileFromProcessFileTable);
 }
 
 _Bool program_did_finish(t_program* program, _Bool lockQueue)
