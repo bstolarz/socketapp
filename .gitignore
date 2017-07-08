@@ -32,6 +32,14 @@
 *.dSYM/
 *.su
 
+Kernel/Debug/Kernel
+FileSystem/Debug/FileSystem
+CPU/Debug/CPU
+Memory/Debug/Memory
+Console/Debug/Console
+
 logMemory
 logKernel
 logFileSystem
+logCPU*
+logConsole*
