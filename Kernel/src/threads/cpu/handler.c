@@ -635,7 +635,11 @@ void handle_cpu_escribir(t_cpu* cpu){
 				log_info(logKernel, "Se pudo escribir con exito");
 			}else{
 				log_info(logKernel, "Error al escribir en FS");
-				cpu->program->interruptionCode = ERROR_FS_OPERATION;
+
+				if (respuestaFromFS == -ENOSPC)
+					cpu->program->interruptionCode = -ENOSPC;
+				else
+					cpu->program->interruptionCode = ERROR_FS_OPERATION;
 			}
 		}
 

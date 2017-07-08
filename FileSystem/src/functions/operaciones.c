@@ -176,7 +176,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 
 	if(offset+size >= configMetadata->cantidadBloques*configMetadata->tamanioBloques){
 		printf("Lo que desea escribir excede el tamanio del disco. No se pueden guardar los datos. \n");
-		return -ENOENT;
+		return -ENOSPC;
 	}
 
 	if(size == 0){
@@ -215,7 +215,7 @@ int guardarDatos(char* path, off_t offset, size_t size, void* buffer) {
 		if(cantBloquesLibresNuevos > 0){
 			if(!hayNBloquesLibres(cantBloquesLibresNuevos)){
 				log_info(logs, "No hay espacio para guardar los cambios");
-				return -ENOENT;
+				return -ENOSPC;
 			}
 		}
 		else{
